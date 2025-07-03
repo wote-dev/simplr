@@ -1,0 +1,769 @@
+//
+//  TaskRowView.swift
+//  Simplr
+//
+//  Created by Daniel Zverev on 2/7/2025.
+//
+
+import SwiftUI
+
+struct TaskRowView: View {
+    @Environment(\.theme) var theme
+    @EnvironmentObject var categoryManager: CategoryManager
+    @EnvironmentObject var taskManager: TaskManager
+    let task: Task
+    let namespace: Namespace.ID
+    let onToggleCompletion: () -> Void
+    let onEdit: () -> Void
+    let onDelete: () -> Void
+    @State private var isPressed = false
+    @State private var showCompletionParticles = false
+    @State private var completionScale: CGFloat = 1.0
+    @State private var completionOpacity: Double = 1.0
+    @State private var checkmarkScale: CGFloat = 0.1
+    @State private var showCheckmark = false
+    
+    // Gesture states
+    @State private var dragOffset: CGFloat = 0
+    @State private var isDragging = false
+    @State private var dragProgress: CGFloat = 0
+    @State private var showCompletionIcon = false
+    @State private var showDeleteIcon = false
+    @State private var hasTriggeredHaptic = false
+    @State private var gestureCompleted = false
+    
+    // Confirmation states
+    @State private var showCompletionConfirmation = false
+    @State private var showDeleteConfirmation = false
+    @State private var confirmationProgress: CGFloat = 0
+    
+    // Constants for gesture thresholds
+    private let completionThreshold: CGFloat = 100
+    private let deletionThreshold: CGFloat = -100
+    private let maxDragDistance: CGFloat = 150
+    
+    var body: some View {
+        ZStack {
+            // Background action indicators
+            HStack {
+                // Completion background (left side)
+                if dragOffset > 0 {
+                    HStack {
+                        ZStack {
+                            Circle()
+                                .fill(showCompletionConfirmation ? theme.success : theme.success.opacity(0.3))
+                                .frame(width: showCompletionConfirmation ? 50 : 40, height: showCompletionConfirmation ? 50 : 40)
+                                .scaleEffect(showCompletionIcon ? 1.2 : 0.8)
+                                .animation(.interpolatingSpring(stiffness: 600, damping: 20), value: showCompletionIcon)
+                                .animation(.interpolatingSpring(stiffness: 400, damping: 20), value: showCompletionConfirmation)
+                            
+                            if showCompletionConfirmation {
+                                // Confirmation button
+                                Button(action: {
+                                    confirmCompletionAction()
+                                }) {
+                                    Image(systemName: task.isCompleted ? "arrow.uturn.backward" : "checkmark")
+                                        .font(.system(size: 18, weight: .bold))
+                                        .foregroundColor(getIconColor(for: theme.success))
+                                }
+                                .buttonStyle(PlainButtonStyle())
+                            } else {
+                                // Preview icon
+                                Image(systemName: task.isCompleted ? "arrow.uturn.backward" : "checkmark")
+                                    .font(.system(size: 18, weight: .bold))
+                                    .foregroundColor(getIconColor(for: theme.success))
+                                    .scaleEffect(showCompletionIcon ? 1.0 : 0.5)
+                                    .animation(.interpolatingSpring(stiffness: 600, damping: 20), value: showCompletionIcon)
+                            }
+                        }
+                        .opacity(showCompletionConfirmation ? 1.0 : dragProgress)
+                        .animation(.easeOut(duration: 0.2), value: dragProgress)
+                        
+                        Spacer()
+                    }
+                    .padding(.leading, 20)
+                }
+                
+                Spacer()
+                
+                // Deletion background (right side)
+                if dragOffset < 0 {
+                    HStack {
+                        Spacer()
+                        
+                        ZStack {
+                            Circle()
+                                .fill(showDeleteConfirmation ? theme.error : theme.error.opacity(0.3))
+                                .frame(width: showDeleteConfirmation ? 50 : 40, height: showDeleteConfirmation ? 50 : 40)
+                                .scaleEffect(showDeleteIcon ? 1.2 : 0.8)
+                                .animation(.interpolatingSpring(stiffness: 600, damping: 20), value: showDeleteIcon)
+                                .animation(.interpolatingSpring(stiffness: 400, damping: 20), value: showDeleteConfirmation)
+                            
+                            if showDeleteConfirmation {
+                                // Confirmation button
+                                Button(action: {
+                                    confirmDeleteAction()
+                                }) {
+                                    Image(systemName: "trash")
+                                        .font(.system(size: 18, weight: .bold))
+                                        .foregroundColor(getIconColor(for: theme.error))
+                                }
+                                .buttonStyle(PlainButtonStyle())
+                            } else {
+                                // Preview icon
+                                Image(systemName: "trash")
+                                    .font(.system(size: 18, weight: .bold))
+                                    .foregroundColor(getIconColor(for: theme.error))
+                                    .scaleEffect(showDeleteIcon ? 1.0 : 0.5)
+                                    .animation(.interpolatingSpring(stiffness: 600, damping: 20), value: showDeleteIcon)
+                            }
+                        }
+                        .opacity(showDeleteConfirmation ? 1.0 : abs(dragProgress))
+                        .animation(.easeOut(duration: 0.2), value: dragProgress)
+                    }
+                    .padding(.trailing, 20)
+                }
+            }
+            
+            // Main task content
+            HStack(spacing: 16) {
+                // Completion toggle with enhanced animations
+                Button(action: {
+                    performCompletionToggle()
+                }) {
+                    ZStack {
+                        // Base circle
+                        Circle()
+                            .fill(task.isCompleted ? theme.success : theme.surface)
+                            .frame(width: 32, height: 32)
+                            .overlay(
+                                Circle()
+                                    .stroke(task.isCompleted ? theme.success : theme.textTertiary, lineWidth: 2)
+                            )
+                            .applyNeumorphicShadow(task.isCompleted ? theme.neumorphicPressedStyle : theme.neumorphicButtonStyle)
+                            .scaleEffect(completionScale)
+                            .animation(.interpolatingSpring(stiffness: 400, damping: 25), value: completionScale)
+                        
+                        // Checkmark with smooth animation
+                        if task.isCompleted || showCheckmark {
+                            Image(systemName: "checkmark")
+                                .font(.system(size: 14, weight: .bold))
+                                .foregroundColor(getIconColor(for: theme.success))
+                                .scaleEffect(task.isCompleted ? 1.0 : checkmarkScale)
+                                .opacity(task.isCompleted ? 1.0 : 0.8)
+                                .animation(.interpolatingSpring(stiffness: 600, damping: 20), value: task.isCompleted)
+                                .matchedGeometryEffect(id: "\(task.id)-checkmark", in: namespace)
+                        }
+                        
+                        // Particle effect for completion
+                        if showCompletionParticles {
+                            ForEach(0..<8, id: \.self) { index in
+                                Circle()
+                                    .fill(theme.success)
+                                    .frame(width: 4, height: 4)
+                                    .offset(
+                                        x: cos(Double(index) * .pi / 4) * 30,
+                                        y: sin(Double(index) * .pi / 4) * 30
+                                    )
+                                    .scaleEffect(showCompletionParticles ? 0 : 1)
+                                    .opacity(showCompletionParticles ? 0 : 1)
+                                    .animation(
+                                        .easeOut(duration: 0.6).delay(Double(index) * 0.05),
+                                        value: showCompletionParticles
+                                    )
+                            }
+                        }
+                    }
+                }
+                .buttonStyle(PlainButtonStyle())
+                .scaleEffect(isPressed ? 0.95 : 1.0)
+                .animation(.interpolatingSpring(stiffness: 600, damping: 30), value: isPressed)
+                
+                VStack(alignment: .leading, spacing: 8) {
+                    // Task title with category indicator
+                    HStack(spacing: 8) {
+                        Text(task.title)
+                            .font(.headline)
+                            .fontWeight(.semibold)
+                            .strikethrough(task.isCompleted)
+                            .foregroundColor(task.isCompleted ? theme.textSecondary : theme.text)
+                            .opacity(task.isCompleted ? 0.7 : 1.0)
+                            .scaleEffect(task.isCompleted ? 0.98 : 1.0, anchor: .leading)
+                            .animation(.easeInOut(duration: 0.3), value: task.isCompleted)
+                            .matchedGeometryEffect(id: "\(task.id)-title", in: namespace)
+                        
+                        // Category indicator
+                        if let category = categoryManager.category(for: task) {
+                            HStack(spacing: 4) {
+                                Circle()
+                                    .fill(category.color.gradient)
+                                    .frame(width: 8, height: 8)
+                                    .overlay(
+                                        Circle()
+                                            .stroke(category.color.darkColor, lineWidth: 0.5)
+                                            .opacity(0.3)
+                                    )
+                                
+                                Text(category.name)
+                                    .font(.caption2)
+                                    .fontWeight(.medium)
+                                    .foregroundColor(category.color.darkColor)
+                            }
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(
+                                Capsule()
+                                    .fill(category.color.lightColor)
+                                    .overlay(
+                                        Capsule()
+                                            .stroke(category.color.color.opacity(0.2), lineWidth: 0.5)
+                                    )
+                            )
+                            .scaleEffect(task.isCompleted ? 0.95 : 1.0)
+                            .opacity(task.isCompleted ? 0.6 : 1.0)
+                            .animation(.easeInOut(duration: 0.3).delay(0.05), value: task.isCompleted)
+                        }
+                        
+                        Spacer()
+                    }
+                    
+                    // Task description with fade animation
+                    if !task.description.isEmpty {
+                        Text(task.description)
+                            .font(.subheadline)
+                            .foregroundColor(theme.textSecondary)
+                            .lineLimit(2)
+                            .opacity(task.isCompleted ? 0.5 : 0.8)
+                            .scaleEffect(task.isCompleted ? 0.98 : 1.0, anchor: .leading)
+                            .animation(.easeInOut(duration: 0.3).delay(0.1), value: task.isCompleted)
+                            .matchedGeometryEffect(id: "\(task.id)-description", in: namespace)
+                    }
+                    
+                    // Due date and reminder info with slide animation
+                    if task.dueDate != nil || (task.hasReminder && !task.isCompleted) {
+                        HStack(spacing: 8) {
+                            if let dueDate = task.dueDate {
+                                HStack(spacing: 3) {
+                                    Image(systemName: task.isOverdue ? "exclamationmark.triangle.fill" : 
+                                          task.isPending ? "clock" : "calendar")
+                                        .font(.caption2)
+                                        .shadow(
+                                            color: theme.background == .black ? Color.white.opacity(0.05) : Color.clear,
+                                            radius: 0.5,
+                                            x: 0,
+                                            y: 0.3
+                                        )
+                                    
+                                    Text(formatDueDate(dueDate))
+                                        .font(.caption2)
+                                        .fontWeight(.medium)
+                                }
+                                .foregroundColor(
+                                    task.isOverdue ? theme.error : 
+                                    task.isPending ? theme.warning : 
+                                    theme.textSecondary
+                                )
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 3)
+                                .background(
+                                    Capsule()
+                                        .fill(
+                                            task.isOverdue ? theme.error.opacity(0.15) :
+                                            task.isPending ? theme.warning.opacity(0.1) :
+                                            theme.surfaceSecondary
+                                        )
+                                )
+                                .overlay(
+                                    Capsule()
+                                        .stroke(
+                                            task.isOverdue ? theme.error.opacity(0.3) :
+                                            task.isPending ? theme.warning.opacity(0.2) :
+                                            Color.clear,
+                                            lineWidth: 1
+                                        )
+                                )
+                                .scaleEffect(task.isCompleted ? 0.95 : 1.0)
+                                .opacity(task.isCompleted ? 0.6 : 1.0)
+                                .animation(.easeInOut(duration: 0.3).delay(0.15), value: task.isCompleted)
+                            }
+                            
+                            if task.hasReminder && !task.isCompleted {
+                                HStack(spacing: 3) {
+                                    Image(systemName: "bell.fill")
+                                        .font(.caption2)
+                                        .shadow(
+                                            color: theme.background == .black ? Color.white.opacity(0.05) : Color.clear,
+                                            radius: 0.5,
+                                            x: 0,
+                                            y: 0.3
+                                        )
+                                    
+                                    if let reminderDate = task.reminderDate {
+                                        Text(formatReminderTime(reminderDate))
+                                            .font(.caption2)
+                                            .fontWeight(.medium)
+                                    }
+                                }
+                                .foregroundColor(theme.warning)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 3)
+                                .background(
+                                    Capsule()
+                                        .fill(theme.warning.opacity(0.1))
+                                )
+                                .scaleEffect(task.isCompleted ? 0.95 : 1.0)
+                                .opacity(task.isCompleted ? 0.6 : 1.0)
+                                .animation(.easeInOut(duration: 0.3).delay(0.2), value: task.isCompleted)
+                            }
+                            
+                            Spacer()
+                        }
+                    }
+                }
+                
+                Spacer()
+                
+                // Action buttons with enhanced interactions (hidden during drag)
+                if !isDragging && !showCompletionConfirmation && !showDeleteConfirmation {
+                    HStack(spacing: 12) {
+                        Button(action: {
+                            HapticManager.shared.buttonTap()
+                            onEdit()
+                        }) {
+                            ZStack {
+                                Circle()
+                                    .fill(theme.surfaceGradient)
+                                    .frame(width: 36, height: 36)
+                                    .applyNeumorphicShadow(theme.neumorphicButtonStyle)
+                                
+                                Image(systemName: "pencil")
+                                    .font(.system(size: 14, weight: .medium))
+                                    .foregroundColor(theme.primary)
+                                    .shadow(
+                                        color: theme.background == .black ? Color.white.opacity(0.1) : Color.clear,
+                                        radius: 1,
+                                        x: 0,
+                                        y: 0.5
+                                    )
+                            }
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                        .scaleEffect(task.isCompleted ? 0.9 : 1.0)
+                        .opacity(task.isCompleted ? 0.6 : 1.0)
+                        .animation(.easeInOut(duration: 0.3).delay(0.1), value: task.isCompleted)
+                    }
+                    .opacity(isDragging ? 0 : 1.0)
+                    .animation(.easeInOut(duration: 0.2), value: isDragging)
+                }
+            }
+            .padding(20)
+            .neumorphicCard(theme, cornerRadius: 16)
+            .scaleEffect(isPressed ? 0.98 : 1.0)
+            .opacity(completionOpacity)
+            .animation(.interpolatingSpring(stiffness: 400, damping: 25), value: isPressed)
+            .offset(x: dragOffset)
+            .scaleEffect(isDragging ? 0.95 : 1.0)
+            .animation(.interpolatingSpring(stiffness: 400, damping: 25), value: isDragging)
+        }
+        .gesture(
+            DragGesture()
+                .onChanged { value in
+                    handleDragChanged(value)
+                }
+                .onEnded { value in
+                    handleDragEnded(value)
+                }
+        )
+        .onTapGesture {
+            // Dismiss confirmations if tapped elsewhere
+            if showCompletionConfirmation || showDeleteConfirmation {
+                dismissConfirmations()
+            } else {
+                // Subtle tap feedback
+                withAnimation(.easeInOut(duration: 0.1)) {
+                    isPressed = true
+                }
+                withAnimation(.easeInOut(duration: 0.1).delay(0.1)) {
+                    isPressed = false
+                }
+            }
+        }
+        .contextMenu {
+            contextMenuContent
+        } preview: {
+            taskDetailPreview
+        }
+        .onLongPressGesture(minimumDuration: 0) {
+            // Handle long press for potential context menu
+        } onPressingChanged: { pressing in
+            withAnimation(.easeInOut(duration: 0.2)) {
+                isPressed = pressing
+            }
+        }
+        .onAppear {
+            // Initial animation when task appears
+            withAnimation(.interpolatingSpring(stiffness: 300, damping: 30).delay(0.1)) {
+                completionOpacity = 1.0
+            }
+        }
+    }
+    
+    // MARK: - Context Menu and Preview
+    
+    private var taskDetailPreview: some View {
+        TaskDetailPreviewView(task: task)
+            .environmentObject(categoryManager)
+            .environment(\.theme, theme)
+            .onAppear {
+                HapticManager.shared.previewAppears()
+            }
+            .onDisappear {
+                HapticManager.shared.previewDismissed()
+            }
+    }
+    
+    private var contextMenuContent: some View {
+        VStack {
+            // Toggle completion action
+            Button(action: {
+                HapticManager.shared.contextMenuAction()
+                withAnimation(.interpolatingSpring(stiffness: 300, damping: 30)) {
+                    onToggleCompletion()
+                }
+            }) {
+                Label(
+                    task.isCompleted ? "Mark as Incomplete" : "Mark as Complete",
+                    systemImage: task.isCompleted ? "arrow.uturn.backward" : "checkmark"
+                )
+            }
+            
+            // Edit action
+            Button(action: {
+                HapticManager.shared.contextMenuAction()
+                onEdit()
+            }) {
+                Label("Edit Task", systemImage: "pencil")
+            }
+            
+            // Duplicate action
+            Button(action: {
+                HapticManager.shared.contextMenuAction()
+                duplicateTask()
+            }) {
+                Label("Duplicate Task", systemImage: "doc.on.doc")
+            }
+            
+            Divider()
+            
+            // Delete action
+            Button(role: .destructive, action: {
+                HapticManager.shared.contextMenuAction()
+                onDelete()
+            }) {
+                Label("Delete Task", systemImage: "trash")
+            }
+        }
+    }
+    
+    // MARK: - Helper Methods
+    
+    /// Returns the appropriate icon color based on the theme background
+    private func getIconColor(for baseColor: Color) -> Color {
+        // In dark theme, use contrasting color for better visibility
+        if theme.background == .black {
+            return Color.black // Black icons on colored backgrounds in dark mode
+        } else {
+            return Color.white // White icons on colored backgrounds in light mode
+        }
+    }
+    
+    private func handleDragChanged(_ value: DragGesture.Value) {
+        guard !gestureCompleted else { return }
+        
+        let translation = value.translation.width
+        
+        // If confirmations are showing, handle dismissal gesture
+        if showCompletionConfirmation || showDeleteConfirmation {
+            // Allow dismissal by swiping in opposite direction or back to center
+            let dismissThreshold: CGFloat = 30
+            
+            if showCompletionConfirmation && translation < -dismissThreshold {
+                // Swiping left while completion confirmation is showing - dismiss
+                HapticManager.shared.gestureCancelled()
+                resetGestureState()
+                return
+            } else if showDeleteConfirmation && translation > dismissThreshold {
+                // Swiping right while delete confirmation is showing - dismiss
+                HapticManager.shared.gestureCancelled()
+                resetGestureState()
+                return
+            }
+            
+            // If swiping in same direction as confirmation, don't do anything
+            return
+        }
+        
+        // Trigger gesture start haptic on first movement
+        if !isDragging && abs(translation) > 5 {
+            HapticManager.shared.gestureStart()
+            HapticManager.shared.prepareForGestures()
+        }
+        
+        // Limit drag distance for better UX
+        let limitedTranslation = max(-maxDragDistance, min(maxDragDistance, translation))
+        
+        withAnimation(.interpolatingSpring(stiffness: 600, damping: 30)) {
+            dragOffset = limitedTranslation
+            isDragging = abs(limitedTranslation) > 10
+        }
+        
+        // Calculate progress for visual feedback
+        if translation > 0 {
+            dragProgress = min(1.0, translation / completionThreshold)
+            showCompletionIcon = translation > 30
+            showDeleteIcon = false
+        } else {
+            dragProgress = min(1.0, abs(translation) / abs(deletionThreshold))
+            showDeleteIcon = abs(translation) > 30
+            showCompletionIcon = false
+        }
+        
+        // Trigger haptic feedback at threshold
+        if !hasTriggeredHaptic {
+            if translation > completionThreshold {
+                HapticManager.shared.gestureThreshold()
+                hasTriggeredHaptic = true
+            } else if translation < deletionThreshold {
+                HapticManager.shared.gestureThreshold()
+                hasTriggeredHaptic = true
+            }
+        }
+        
+        // Reset haptic flag if user pulls back
+        if abs(translation) < abs(completionThreshold * 0.8) && abs(translation) < abs(deletionThreshold * 0.8) {
+            hasTriggeredHaptic = false
+        }
+    }
+    
+    private func handleDragEnded(_ value: DragGesture.Value) {
+        let translation = value.translation.width
+        let velocity = value.velocity.width
+        
+        // If confirmations are already showing, handle dismissal
+        if showCompletionConfirmation || showDeleteConfirmation {
+            let dismissThreshold: CGFloat = 30
+            
+            if showCompletionConfirmation && translation < -dismissThreshold {
+                // Dismiss completion confirmation by swiping left
+                HapticManager.shared.gestureCancelled()
+                resetGestureState()
+            } else if showDeleteConfirmation && translation > dismissThreshold {
+                // Dismiss delete confirmation by swiping right
+                HapticManager.shared.gestureCancelled()
+                resetGestureState()
+            } else {
+                // Not enough movement to dismiss, snap back to confirmation position
+                withAnimation(.interpolatingSpring(stiffness: 400, damping: 25)) {
+                    if showCompletionConfirmation {
+                        dragOffset = 80
+                    } else if showDeleteConfirmation {
+                        dragOffset = -80
+                    }
+                }
+            }
+            return
+        }
+        
+        // Check if gesture should trigger confirmation
+        let shouldShowCompletionConfirmation = translation > completionThreshold || (translation > 50 && velocity > 500)
+        let shouldShowDeleteConfirmation = translation < deletionThreshold || (translation < -50 && velocity < -500)
+        
+        if shouldShowCompletionConfirmation {
+            // Show completion confirmation
+            HapticManager.shared.gestureThreshold()
+            withAnimation(.interpolatingSpring(stiffness: 400, damping: 25)) {
+                showCompletionConfirmation = true
+                dragOffset = 80 // Keep some offset to show the confirmation button
+            }
+        } else if shouldShowDeleteConfirmation {
+            // Show deletion confirmation
+            HapticManager.shared.gestureThreshold()
+            withAnimation(.interpolatingSpring(stiffness: 400, damping: 25)) {
+                showDeleteConfirmation = true
+                dragOffset = -80 // Keep some offset to show the confirmation button
+            }
+        } else {
+            // Snap back to original position with cancel haptic
+            HapticManager.shared.gestureCancelled()
+            resetGestureState()
+        }
+    }
+    
+    private func confirmCompletionAction() {
+        // Execute the completion action
+        gestureCompleted = true
+        HapticManager.shared.swipeToComplete()
+        
+        withAnimation(.interpolatingSpring(stiffness: 400, damping: 25)) {
+            dragOffset = UIScreen.main.bounds.width
+        }
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            performCompletionToggle()
+            resetGestureState()
+        }
+    }
+    
+    private func confirmDeleteAction() {
+        // Execute the deletion action
+        gestureCompleted = true
+        HapticManager.shared.swipeToDelete()
+        
+        withAnimation(.interpolatingSpring(stiffness: 400, damping: 25)) {
+            dragOffset = -UIScreen.main.bounds.width
+            completionOpacity = 0
+        }
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            onDelete()
+        }
+    }
+    
+    private func dismissConfirmations() {
+        HapticManager.shared.gestureCancelled()
+        resetGestureState()
+    }
+    
+    private func performCompletionToggle() {
+        // Prepare haptic feedback for better responsiveness
+        HapticManager.shared.prepareForInteraction()
+        
+        withAnimation(.interpolatingSpring(stiffness: 400, damping: 25)) {
+            if !task.isCompleted {
+                // Animate completion
+                completionScale = 1.3
+                showCompletionParticles = true
+                showCheckmark = true
+                checkmarkScale = 1.0
+                HapticManager.shared.taskCompleted()
+            } else {
+                // Animate un-completion
+                showCheckmark = false
+                checkmarkScale = 0.1
+                HapticManager.shared.taskUncompleted()
+            }
+        }
+        
+        // Trigger the actual completion toggle after a brief delay
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            onToggleCompletion()
+        }
+        
+        // Reset animation states
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            withAnimation(.easeOut(duration: 0.3)) {
+                completionScale = 1.0
+                showCompletionParticles = false
+            }
+        }
+    }
+    
+    private func resetGestureState() {
+        withAnimation(.interpolatingSpring(stiffness: 400, damping: 25)) {
+            dragOffset = 0
+            isDragging = false
+            dragProgress = 0
+            showCompletionIcon = false
+            showDeleteIcon = false
+            showCompletionConfirmation = false
+            showDeleteConfirmation = false
+        }
+        
+        hasTriggeredHaptic = false
+        gestureCompleted = false
+        confirmationProgress = 0
+    }
+    
+    private func duplicateTask() {
+        taskManager.duplicateTask(task)
+    }
+    
+    private func formatDueDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        let calendar = Calendar.current
+        
+        if calendar.isDateInToday(date) {
+            formatter.timeStyle = .short
+            return "Today \(formatter.string(from: date))"
+        } else if calendar.isDateInTomorrow(date) {
+            formatter.timeStyle = .short
+            return "Tomorrow \(formatter.string(from: date))"
+        } else if calendar.isDateInYesterday(date) {
+            formatter.timeStyle = .short
+            return "Yesterday \(formatter.string(from: date))"
+        } else {
+            // For other dates, show compact date and time
+            formatter.dateFormat = "MMM d, h:mm a"
+            return formatter.string(from: date)
+        }
+    }
+    
+    private func formatReminderTime(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        let calendar = Calendar.current
+        
+        if calendar.isDateInToday(date) {
+            formatter.timeStyle = .short
+            return formatter.string(from: date)
+        } else if calendar.isDateInTomorrow(date) {
+            formatter.timeStyle = .short
+            return "Tomorrow \(formatter.string(from: date))"
+        } else {
+            // For other dates, show compact format
+            formatter.dateFormat = "MMM d, h:mm a"
+            return formatter.string(from: date)
+        }
+    }
+    
+
+}
+
+#Preview {
+    VStack(spacing: 16) {
+        TaskRowView(
+            task: Task(title: "Sample Task", description: "This is a sample task description", dueDate: Date(), hasReminder: true),
+            namespace: Namespace().wrappedValue,
+            onToggleCompletion: {},
+            onEdit: {},
+            onDelete: {}
+        )
+        
+        TaskRowView(
+            task: {
+                var task = Task(title: "Completed Task", description: "This task is completed")
+                task.isCompleted = true
+                return task
+            }(),
+            namespace: Namespace().wrappedValue,
+            onToggleCompletion: {},
+            onEdit: {},
+            onDelete: {}
+        )
+        
+        TaskRowView(
+            task: {
+                var task = Task(title: "Overdue Task", description: "This task is overdue", dueDate: Calendar.current.date(byAdding: .day, value: -1, to: Date())!)
+                return task
+            }(),
+            namespace: Namespace().wrappedValue,
+            onToggleCompletion: {},
+            onEdit: {},
+            onDelete: {}
+        )
+    }
+    .padding()
+    .background(LightTheme().backgroundGradient)
+    .environment(\.theme, LightTheme())
+    .environmentObject(TaskManager())
+    .environmentObject(CategoryManager())
+}

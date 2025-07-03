@@ -1,0 +1,184 @@
+{
+  "source": "/Users/danielzverev/Documents/Simplr/Simplr/AddEditTaskView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 67
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cancel",
+        "location": {
+          "startingColumn": 32,
+          "startingLine": 71
+        }
+      },
+      {
+        "comment": "",
+        "key": "Save",
+        "location": {
+          "startingColumn": 32,
+          "startingLine": 81
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add New Task",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 137
+        }
+      },
+      {
+        "comment": "",
+        "key": "Edit Task",
+        "location": {
+          "startingColumn": 55,
+          "startingLine": 137
+        }
+      },
+      {
+        "comment": "",
+        "key": "Create a new task to stay organized",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 143
+        }
+      },
+      {
+        "comment": "",
+        "key": "Update your task details",
+        "location": {
+          "startingColumn": 78,
+          "startingLine": 143
+        }
+      },
+      {
+        "comment": "",
+        "key": "Title",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 170
+        }
+      },
+      {
+        "comment": "",
+        "key": "Enter task title",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 174
+        }
+      },
+      {
+        "comment": "",
+        "key": "Description",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 193
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add details (optional)",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 197
+        }
+      },
+      {
+        "comment": "",
+        "key": "Due date",
+        "location": {
+          "startingColumn": 32,
+          "startingLine": 248
+        }
+      },
+      {
+        "comment": "",
+        "key": "",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 241
+        }
+      },
+      {
+        "comment": "",
+        "key": "Set due date",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 230
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add a deadline for this task",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 234
+        }
+      },
+      {
+        "comment": "",
+        "key": "Set reminder",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 274
+        }
+      },
+      {
+        "comment": "",
+        "key": "Reminder set for %@",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 279
+        }
+      },
+      {
+        "comment": "",
+        "key": "Get notified at a custom time",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 284
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cancel",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 330
+        }
+      },
+      {
+        "comment": "",
+        "key": "Save Task",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 361
+        }
+      },
+      {
+        "comment": "",
+        "key": "Task Created!",
+        "location": {
+          "startingColumn": 46,
+          "startingLine": 406
+        }
+      },
+      {
+        "comment": "",
+        "key": "Task Updated!",
+        "location": {
+          "startingColumn": 64,
+          "startingLine": 406
+        }
+      }
+    ]
+  },
+  "version": 1
+}
