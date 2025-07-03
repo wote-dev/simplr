@@ -299,11 +299,16 @@ struct CompletedView: View {
     
     private func clearAllCompleted() {
         let completedTasksToDelete = completedTasks
+        let clearedCount = completedTasksToDelete.count
+        
         withAnimation(.smoothSpring) {
             for task in completedTasksToDelete {
                 taskManager.deleteTask(task)
             }
         }
+        
+        // Trigger celebration for clearing completed tasks
+        CelebrationManager.shared.checkClearAllMilestone(clearedCount: clearedCount)
         HapticManager.shared.successFeedback()
     }
 }

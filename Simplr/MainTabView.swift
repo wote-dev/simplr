@@ -91,6 +91,9 @@ struct MainTabView: View {
                 // Custom tab bar
                 customTabBar
             }
+            
+            // Celebration overlay
+            CelebrationOverlayView(celebrationManager: CelebrationManager.shared)
         }
         .onAppear {
             startBackgroundAnimation()

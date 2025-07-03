@@ -103,6 +103,9 @@ class TaskManager: ObservableObject {
                 tasks[index].completedAt = Date()
                 HapticManager.shared.taskCompleted()
                 cancelNotification(for: tasks[index])
+                
+                // Check for milestone celebrations after completing a task
+                CelebrationManager.shared.checkMilestones(taskManager: self)
             } else {
                 tasks[index].completedAt = nil
                 HapticManager.shared.taskUncompleted()
