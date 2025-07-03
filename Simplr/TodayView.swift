@@ -23,6 +23,9 @@ struct TodayView: View {
     @State private var showingSettings = false
     @Namespace private var taskNamespace
     
+    // Spotlight navigation
+    @Binding var selectedTaskId: UUID?
+    
     enum TaskFilter: CaseIterable {
         case all, pending, overdue
         
@@ -134,7 +137,7 @@ struct TodayView: View {
             SettingsView()
                 .environmentObject(themeManager)
         }
-        .alert("Delete Task", isPresented: $showingDeleteAlert, presenting: taskToDelete) { task in
+        .confirmationDialog("Delete Task", isPresented: $showingDeleteAlert, presenting: taskToDelete) { task in
             Button("Delete", role: .destructive) {
                 withAnimation(.smoothSpring) {
                     taskManager.deleteTask(task)
@@ -143,6 +146,33 @@ struct TodayView: View {
             Button("Cancel", role: .cancel) { }
         } message: { task in
             Text("Are you sure you want to delete '\(task.title)'?")
+        }
+        .onChange(of: selectedTaskId) { _, newTaskId in
+            handleSpotlightTaskSelection(newTaskId)
+        }
+    }
+    
+    // MARK: - Spotlight Navigation
+    
+    private func handleSpotlightTaskSelection(_ taskId: UUID?) {
+        guard let taskId = taskId,
+              let task = taskManager.task(with: taskId) else {
+            return
+        }
+        
+        // Check if this task belongs in today's view
+        let belongsInTodayView = todayTasks.contains { $0.id == taskId }
+        
+        if belongsInTodayView {
+            // Clear the selectedTaskId to prevent repeated navigation
+            DispatchQueue.main.async {
+                selectedTaskId = nil
+            }
+            
+            // Open the task for editing
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                taskToEdit = task
+            }
         }
     }
     

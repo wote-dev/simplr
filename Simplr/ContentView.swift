@@ -361,19 +361,17 @@ struct ContentView: View {
             // Check for overdue tasks when view appears
             taskManager.checkForOverdueTasks()
         }
-        .alert("Delete Task", isPresented: $showingDeleteAlert) {
+        .confirmationDialog("Delete Task", isPresented: $showingDeleteAlert, presenting: taskToDelete) { task in
             Button("Delete", role: .destructive) {
-                if let task = taskToDelete {
-                    withAnimation(.interpolatingSpring(stiffness: 300, damping: 30)) {
-                        taskManager.deleteTask(task)
-                    }
+                withAnimation(.interpolatingSpring(stiffness: 300, damping: 30)) {
+                    taskManager.deleteTask(task)
                 }
             }
             Button("Cancel", role: .cancel) {
                 HapticManager.shared.buttonTap()
             }
-        } message: {
-            Text("Are you sure you want to delete this task?")
+        } message: { task in
+            Text("Are you sure you want to delete '\(task.title)'?")
         }
     }
     

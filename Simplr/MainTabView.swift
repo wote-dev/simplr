@@ -9,6 +9,7 @@ import SwiftUI
 
 struct MainTabView: View {
     @EnvironmentObject var themeManager: ThemeManager
+    @EnvironmentObject var taskManager: TaskManager
     @Environment(\.theme) var theme
     @State private var selectedTab: Tab = .today
     @State private var animationPhase: CGFloat = 0
@@ -21,6 +22,13 @@ struct MainTabView: View {
     @State private var lastBoundaryFeedback: Date = Date()
     @State private var gestureStartTime: Date = Date()
     @State private var dragHistory: [(offset: CGFloat, time: Date)] = []
+    
+    // Spotlight navigation
+    @Binding var selectedTaskId: UUID?
+    
+    // Quick Actions
+    @Binding var quickActionTriggered: SimplrApp.QuickAction?
+    @State private var showingAddTask = false
     
     enum Tab: String, CaseIterable {
         case today = "today"
@@ -87,6 +95,68 @@ struct MainTabView: View {
         .onAppear {
             startBackgroundAnimation()
         }
+        .onChange(of: selectedTaskId) { _, newTaskId in
+            handleSpotlightNavigation(newTaskId)
+        }
+        .onChange(of: quickActionTriggered) { _, action in
+            handleQuickAction(action)
+        }
+        .sheet(isPresented: $showingAddTask) {
+            AddEditTaskView(taskManager: taskManager)
+        }
+    }
+    
+    // MARK: - Spotlight Navigation
+    
+    private func handleSpotlightNavigation(_ taskId: UUID?) {
+        guard let taskId = taskId,
+              let task = taskManager.task(with: taskId) else { return }
+        
+        // Determine which tab should contain this task
+        let targetTab: Tab
+        
+        if task.isCompleted {
+            targetTab = .completed
+        } else if task.isPending && task.isDueFuture {
+            targetTab = .upcoming
+        } else {
+            // For today's tasks, overdue tasks, or tasks without due dates
+            targetTab = .today
+        }
+        
+        // Navigate to the appropriate tab if not already there
+        if selectedTab != targetTab {
+            withAnimation(.interpolatingSpring(stiffness: 420, damping: 26)) {
+                selectedTab = targetTab
+            }
+            HapticManager.shared.selectionChanged()
+        }
+    }
+    
+    // MARK: - Quick Action Handling
+    
+    private func handleQuickAction(_ action: SimplrApp.QuickAction?) {
+        guard let action = action else { return }
+        
+        switch action {
+        case .addTask:
+            // Show add task sheet
+            showingAddTask = true
+            
+        case .viewToday:
+            // Navigate to today tab if not already there
+            if selectedTab != .today {
+                withAnimation(.interpolatingSpring(stiffness: 420, damping: 26)) {
+                    selectedTab = .today
+                }
+                HapticManager.shared.selectionChanged()
+            }
+        }
+        
+        // Clear the action to prevent repeated handling
+        DispatchQueue.main.async {
+            quickActionTriggered = nil
+        }
     }
     
     private var backgroundView: some View {
@@ -136,15 +206,15 @@ struct MainTabView: View {
     private var contentView: some View {
         GeometryReader { geometry in
             HStack(spacing: 0) {
-                TodayView()
+                TodayView(selectedTaskId: $selectedTaskId)
                     .frame(width: geometry.size.width)
                     .clipped()
                 
-                UpcomingView()
+                UpcomingView(selectedTaskId: $selectedTaskId)
                     .frame(width: geometry.size.width)
                     .clipped()
                 
-                CompletedView()
+                CompletedView(selectedTaskId: $selectedTaskId)
                     .frame(width: geometry.size.width)
                     .clipped()
             }
@@ -432,8 +502,9 @@ struct MainTabView: View {
 // MARK: - Preview
 struct MainTabView_Previews: PreviewProvider {
     static var previews: some View {
-        MainTabView()
+        MainTabView(selectedTaskId: .constant(nil), quickActionTriggered: .constant(nil))
             .themedEnvironment(ThemeManager())
             .environmentObject(ThemeManager())
+            .environmentObject(TaskManager())
     }
 } 

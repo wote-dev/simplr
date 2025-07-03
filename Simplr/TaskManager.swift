@@ -15,10 +15,33 @@ class TaskManager: ObservableObject {
     private let userDefaults = UserDefaults(suiteName: "group.com.danielzverev.simplr") ?? UserDefaults.standard
     private let tasksKey = "SavedTasks"
     
+    // Reference to CategoryManager for Spotlight integration
+    private var categoryManager: CategoryManager?
+    
     init() {
         loadTasks()
         requestNotificationPermission()
         setupNotificationHandling()
+    }
+    
+    // MARK: - Spotlight Integration Setup
+    
+    /// Set the category manager reference for Spotlight integration
+    func setCategoryManager(_ categoryManager: CategoryManager) {
+        self.categoryManager = categoryManager
+        // Re-index all tasks with category information
+        updateSpotlightIndex()
+    }
+    
+    /// Update the entire Spotlight index with current tasks
+    func updateSpotlightIndex() {
+        let categories = categoryManager?.categories ?? []
+        SpotlightManager.shared.updateTasksIndex(tasks, categories: categories)
+    }
+    
+    /// Find a task by its ID (useful for Spotlight result handling)
+    func task(with id: UUID) -> Task? {
+        return tasks.first { $0.id == id }
     }
     
     // MARK: - Task Management
@@ -26,6 +49,10 @@ class TaskManager: ObservableObject {
     func addTask(_ task: Task) {
         tasks.append(task)
         saveTasks()
+        
+        // Index the new task in Spotlight
+        let categories = categoryManager?.categories ?? []
+        SpotlightManager.shared.indexTask(task, categories: categories)
         
         // Haptic feedback for adding a task
         HapticManager.shared.taskAdded()
@@ -43,6 +70,10 @@ class TaskManager: ObservableObject {
             tasks[index] = task
             saveTasks()
             
+            // Update the task in Spotlight
+            let categories = categoryManager?.categories ?? []
+            SpotlightManager.shared.indexTask(task, categories: categories)
+            
             // Schedule new notification if needed
             if task.hasReminder, let reminderDate = task.reminderDate {
                 scheduleNotification(for: task, at: reminderDate)
@@ -52,6 +83,10 @@ class TaskManager: ObservableObject {
     
     func deleteTask(_ task: Task) {
         cancelNotification(for: task)
+        
+        // Remove from Spotlight index
+        SpotlightManager.shared.removeTask(task)
+        
         tasks.removeAll { $0.id == task.id }
         saveTasks()
         
@@ -75,6 +110,10 @@ class TaskManager: ObservableObject {
                     scheduleNotification(for: tasks[index], at: reminderDate)
                 }
             }
+            
+            // Update the task in Spotlight with new completion status
+            let categories = categoryManager?.categories ?? []
+            SpotlightManager.shared.indexTask(tasks[index], categories: categories)
             
             saveTasks()
         }
@@ -299,6 +338,10 @@ class TaskManager: ObservableObject {
             }
         }
         saveTasks()
+        
+        // Update Spotlight index for affected tasks
+        updateSpotlightIndex()
+        
         HapticManager.shared.selectionChange()
     }
     
@@ -313,6 +356,8 @@ class TaskManager: ObservableObject {
             
             for task in tasksToDelete {
                 cancelNotification(for: task)
+                // Remove from Spotlight index
+                SpotlightManager.shared.removeTask(task)
             }
             
             tasks.removeAll { $0.shouldBeAutoDeleted }
@@ -324,6 +369,8 @@ class TaskManager: ObservableObject {
     func performMaintenanceTasks() {
         cleanupOldCompletedTasks()
         checkForOverdueTasks()
+        // Refresh Spotlight index to ensure it's up to date
+        updateSpotlightIndex()
     }
 }
 
@@ -339,7 +386,7 @@ class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
         HapticManager.shared.reminderReceived()
         
         // Show notification even when app is in foreground
-        completionHandler([.alert, .sound, .badge])
+        completionHandler([.banner, .sound, .badge])
     }
     
     func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {

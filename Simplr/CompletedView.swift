@@ -17,6 +17,9 @@ struct CompletedView: View {
     @State private var taskToEdit: Task?
     @Namespace private var taskNamespace
     
+    // Spotlight navigation
+    @Binding var selectedTaskId: UUID?
+    
     private var completedTasks: [Task] {
         taskManager.tasks.filter { task in
             // Only show completed tasks
@@ -104,7 +107,7 @@ struct CompletedView: View {
         .sheet(item: $taskToEdit) { task in
             AddEditTaskView(taskManager: taskManager, taskToEdit: task)
         }
-        .alert("Delete Task", isPresented: $showingDeleteAlert, presenting: taskToDelete) { task in
+        .confirmationDialog("Delete Task", isPresented: $showingDeleteAlert, presenting: taskToDelete) { task in
             Button("Delete", role: .destructive) {
                 withAnimation(.smoothSpring) {
                     taskManager.deleteTask(task)
@@ -113,6 +116,33 @@ struct CompletedView: View {
             Button("Cancel", role: .cancel) { }
         } message: { task in
             Text("Are you sure you want to delete '\(task.title)'?")
+        }
+        .onChange(of: selectedTaskId) { _, newTaskId in
+            handleSpotlightTaskSelection(newTaskId)
+        }
+    }
+    
+    // MARK: - Spotlight Navigation
+    
+    private func handleSpotlightTaskSelection(_ taskId: UUID?) {
+        guard let taskId = taskId,
+              let task = taskManager.task(with: taskId) else {
+            return
+        }
+        
+        // Check if this task belongs in completed view
+        let belongsInCompletedView = completedTasks.contains { $0.id == taskId }
+        
+        if belongsInCompletedView {
+            // Clear the selectedTaskId to prevent repeated navigation
+            DispatchQueue.main.async {
+                selectedTaskId = nil
+            }
+            
+            // Open the task for editing
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                taskToEdit = task
+            }
         }
     }
     
