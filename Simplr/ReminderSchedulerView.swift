@@ -208,7 +208,7 @@ struct ReminderSchedulerView: View {
                         .applyNeumorphicShadow(theme.neumorphicButtonStyle)
                 )
             }
-            .magicalActionButton()
+            .animatedButton(pressedScale: 0.97)
             .hapticFeedback(.medium)
         }
     }

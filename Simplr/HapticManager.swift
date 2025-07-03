@@ -71,14 +71,14 @@ class HapticManager {
     
     /// Warning haptic for overdue tasks
     func taskOverdue() {
-        let notification = UINotificationFeedbackGenerator()
-        notification.notificationOccurred(.warning)
+        let impact = UIImpactFeedbackGenerator(style: .soft)
+        impact.impactOccurred(intensity: 0.4)
     }
     
     /// Error haptic for validation failures
     func validationError() {
-        let notification = UINotificationFeedbackGenerator()
-        notification.notificationOccurred(.error)
+        let impact = UIImpactFeedbackGenerator(style: .soft)
+        impact.impactOccurred(intensity: 0.5)
     }
     
     /// Subtle haptic for drag and reorder operations
@@ -127,7 +127,7 @@ class HapticManager {
     
     /// Strong haptic for swipe to complete gesture
     func swipeToComplete() {
-        let impact = UIImpactFeedbackGenerator(style: .heavy)
+        let impact = UIImpactFeedbackGenerator(style: .medium)
         impact.impactOccurred()
         
         // Add a slight delay for a satisfying double-tap effect
@@ -139,21 +139,15 @@ class HapticManager {
     
     /// Strong haptic for swipe to delete gesture
     func swipeToDelete() {
-        let notification = UINotificationFeedbackGenerator()
-        notification.notificationOccurred(.warning)
-        
-        // Add impact for more substantial feedback
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-            let impact = UIImpactFeedbackGenerator(style: .heavy)
-            impact.impactOccurred()
-        }
+        let impact = UIImpactFeedbackGenerator(style: .medium)
+        impact.impactOccurred()
     }
     
     // MARK: - Context Menu and Preview Haptics
     
     /// Haptic feedback when context menu preview appears
     func previewAppears() {
-        let impact = UIImpactFeedbackGenerator(style: .medium)
+        let impact = UIImpactFeedbackGenerator(style: .soft)
         impact.impactOccurred()
     }
     
@@ -191,8 +185,8 @@ class HapticManager {
         let mediumImpact = UIImpactFeedbackGenerator(style: .medium)
         mediumImpact.prepare()
         
-        let heavyImpact = UIImpactFeedbackGenerator(style: .heavy)
-        heavyImpact.prepare()
+        let lightImpact = UIImpactFeedbackGenerator(style: .light)
+        lightImpact.prepare()
         
         let notification = UINotificationFeedbackGenerator()
         notification.prepare()

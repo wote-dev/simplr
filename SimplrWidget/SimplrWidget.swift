@@ -11,30 +11,71 @@ import Foundation
 
 struct TaskEntry: TimelineEntry {
     let date: Date
-    let tasks: [Task]
+    let nextTask: Task?
+    let todayTasks: [Task]
+    let weekTasks: [Task]
     let categories: [TaskCategory]
 }
 
 struct TaskProvider: TimelineProvider {
     func placeholder(in context: Context) -> TaskEntry {
-        TaskEntry(date: Date(), tasks: getSampleTasks(), categories: getSampleCategories())
+        let sampleTasks = getSampleTasks()
+        let sampleCategories = getSampleCategories()
+        return TaskEntry(
+            date: Date(),
+            nextTask: sampleTasks.first,
+            todayTasks: Array(sampleTasks.prefix(3)),
+            weekTasks: sampleTasks,
+            categories: sampleCategories
+        )
     }
     
     func getSnapshot(in context: Context, completion: @escaping (TaskEntry) -> ()) {
-        let (tasks, categories) = getTasksAndCategories()
-        let entry = TaskEntry(date: Date(), tasks: tasks, categories: categories)
+        let (allTasks, categories) = getTasksAndCategories()
+        let entry = createEntry(from: allTasks, categories: categories)
         completion(entry)
     }
     
     func getTimeline(in context: Context, completion: @escaping (Timeline<TaskEntry>) -> ()) {
         let currentDate = Date()
-        let (tasks, categories) = getTasksAndCategories()
-        let entry = TaskEntry(date: currentDate, tasks: tasks, categories: categories)
+        let (allTasks, categories) = getTasksAndCategories()
+        let entry = createEntry(from: allTasks, categories: categories)
         
         // Update every hour
         let nextUpdate = Calendar.current.date(byAdding: .hour, value: 1, to: currentDate)!
         let timeline = Timeline(entries: [entry], policy: .after(nextUpdate))
         completion(timeline)
+    }
+    
+    private func createEntry(from allTasks: [Task], categories: [TaskCategory]) -> TaskEntry {
+        let calendar = Calendar.current
+        let now = Date()
+        
+        // Get next task (highest priority incomplete task)
+        let nextTask = allTasks.first
+        
+        // Get today's tasks
+        let todayTasks = allTasks.filter { task in
+            guard let dueDate = task.dueDate else { return false }
+            return calendar.isDateInToday(dueDate)
+        }
+        
+        // Get this week's tasks
+        let startOfWeek = calendar.dateInterval(of: .weekOfYear, for: now)?.start ?? now
+        let endOfWeek = calendar.date(byAdding: .day, value: 6, to: startOfWeek) ?? now
+        
+        let weekTasks = allTasks.filter { task in
+            guard let dueDate = task.dueDate else { return false }
+            return dueDate >= startOfWeek && dueDate <= endOfWeek
+        }
+        
+        return TaskEntry(
+            date: now,
+            nextTask: nextTask,
+            todayTasks: Array(todayTasks.prefix(5)),
+            weekTasks: Array(weekTasks.prefix(10)),
+            categories: categories
+        )
     }
     
     private func getTasksAndCategories() -> ([Task], [TaskCategory]) {
@@ -58,7 +99,7 @@ struct TaskProvider: TimelineProvider {
                     return task1.createdAt < task2.createdAt
                 }
             }
-            tasks = Array(sortedTasks.prefix(3))
+            tasks = sortedTasks
         } else {
             tasks = getSampleTasks()
         }
@@ -82,7 +123,9 @@ struct TaskProvider: TimelineProvider {
         return [
             Task(title: "Review project proposal", description: "Check the new client requirements", dueDate: Calendar.current.date(byAdding: .day, value: 1, to: Date()), categoryId: workCategory.id),
             Task(title: "Team meeting", description: "Weekly sync with the development team", dueDate: Calendar.current.date(byAdding: .day, value: 2, to: Date()), categoryId: workCategory.id),
-            Task(title: "Update documentation", description: "Add new API endpoints to docs", categoryId: personalCategory.id)
+            Task(title: "Update documentation", description: "Add new API endpoints to docs", categoryId: personalCategory.id),
+            Task(title: "Buy groceries", description: "Milk, bread, eggs", dueDate: Date(), categoryId: personalCategory.id),
+            Task(title: "Call dentist", description: "Schedule cleaning appointment", dueDate: Calendar.current.date(byAdding: .day, value: 3, to: Date()), categoryId: personalCategory.id)
         ]
     }
     
@@ -100,39 +143,155 @@ struct TaskProvider: TimelineProvider {
 
 struct SimplrWidgetEntryView: View {
     var entry: TaskProvider.Entry
+    @Environment(\.widgetFamily) var family
+    @Environment(\.colorScheme) var colorScheme
+    
+    var body: some View {
+        Group {
+            switch family {
+            case .systemSmall:
+                SmallWidgetView(entry: entry)
+            case .systemMedium:
+                MediumWidgetView(entry: entry)
+            case .systemLarge:
+                LargeWidgetView(entry: entry)
+            default:
+                MediumWidgetView(entry: entry)
+            }
+        }
+        .containerBackground(for: .widget) {
+            Color.clear
+        }
+    }
+}
+
+// MARK: - Small Widget (Next Task)
+struct SmallWidgetView: View {
+    let entry: TaskEntry
+    @Environment(\.colorScheme) var colorScheme
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            // Header
+            HStack {
+                Image(systemName: "target")
+                    .foregroundColor(.blue)
+                    .font(.title2)
+                Text("Next")
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(colorScheme == .dark ? .white : .primary)
+                Spacer()
+            }
+            
+            Spacer()
+            
+            // Next task or empty state
+            if let nextTask = entry.nextTask {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(nextTask.title)
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundColor(colorScheme == .dark ? .white : .primary)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
+                    
+                    if let dueDate = nextTask.dueDate {
+                        Text(formatDueDate(dueDate))
+                            .font(.caption)
+                            .foregroundColor(dueDate < Date() ? .red : .secondary)
+                    }
+                    
+                    // Category indicator
+                    if let categoryId = nextTask.categoryId,
+                       let category = entry.categories.first(where: { $0.id == categoryId }) {
+                        HStack(spacing: 4) {
+                            Circle()
+                                .fill(category.color.color)
+                                .frame(width: 6, height: 6)
+                            Text(category.name)
+                                .font(.caption2)
+                                .foregroundColor(category.color.color)
+                        }
+                    }
+                }
+            } else {
+                VStack(spacing: 4) {
+                    Image(systemName: "checkmark.circle")
+                        .font(.title)
+                        .foregroundColor(.green)
+                    Text("All done!")
+                        .font(.caption)
+                        .fontWeight(.medium)
+                        .foregroundColor(.secondary)
+                }
+            }
+            
+            Spacer()
+        }
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(colorScheme == .dark ? Color(.systemGray6) : Color.white)
+                .shadow(color: Color.black.opacity(0.1), radius: 6, x: 0, y: 3)
+        )
+    }
+}
+
+// MARK: - Medium Widget (Today's Tasks)
+struct MediumWidgetView: View {
+    let entry: TaskEntry
     @Environment(\.colorScheme) var colorScheme
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             // Header
             HStack {
-                Image(systemName: "checkmark.circle.fill")
+                Image(systemName: "calendar.badge.clock")
                     .foregroundColor(.blue)
                     .font(.title2)
-                Text("Upcoming Tasks")
+                Text("Today")
                     .font(.headline)
                     .fontWeight(.semibold)
                     .foregroundColor(colorScheme == .dark ? .white : .primary)
                 Spacer()
+                
+                Text("\(entry.todayTasks.count)")
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.secondary)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(
+                        Capsule()
+                            .fill(Color.secondary.opacity(0.2))
+                    )
             }
             .padding(.bottom, 4)
             
-            // Tasks
-            if entry.tasks.isEmpty {
+            // Today's tasks
+            if entry.todayTasks.isEmpty {
                 VStack(spacing: 8) {
-                    Image(systemName: "checkmark.circle")
+                    Image(systemName: "sun.max")
                         .font(.title)
-                        .foregroundColor(.green)
-                    Text("All caught up!")
+                        .foregroundColor(.orange)
+                    Text("No tasks today!")
                         .font(.subheadline)
                         .fontWeight(.medium)
                         .foregroundColor(.secondary)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                VStack(alignment: .leading, spacing: 8) {
-                    ForEach(entry.tasks.prefix(3), id: \.id) { task in
-                        TaskRowWidget(task: task, categories: entry.categories)
+                VStack(alignment: .leading, spacing: 6) {
+                    ForEach(entry.todayTasks.prefix(3), id: \.id) { task in
+                        TaskRowWidget(task: task, categories: entry.categories, isCompact: true)
+                    }
+                    
+                    if entry.todayTasks.count > 3 {
+                        Text("+ \(entry.todayTasks.count - 3) more")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .padding(.top, 2)
                     }
                 }
             }
@@ -145,16 +304,171 @@ struct SimplrWidgetEntryView: View {
                 .fill(colorScheme == .dark ? Color(.systemGray6) : Color.white)
                 .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 4)
         )
-        .containerBackground(for: .widget) {
-            Color.clear
+    }
+}
+
+// MARK: - Large Widget (Week Overview)
+struct LargeWidgetView: View {
+    let entry: TaskEntry
+    @Environment(\.colorScheme) var colorScheme
+    
+    private var weekDays: [(String, [Task])] {
+        let calendar = Calendar.current
+        let startOfWeek = calendar.dateInterval(of: .weekOfYear, for: entry.date)?.start ?? entry.date
+        
+        var days: [(String, [Task])] = []
+        
+        for i in 0..<7 {
+            if let day = calendar.date(byAdding: .day, value: i, to: startOfWeek) {
+                let dayName = calendar.isDateInToday(day) ? "Today" : 
+                             calendar.isDateInTomorrow(day) ? "Tomorrow" :
+                             DateFormatter().weekdaySymbols[calendar.component(.weekday, from: day) - 1].prefix(3).capitalized
+                
+                let tasksForDay = entry.weekTasks.filter { task in
+                    guard let dueDate = task.dueDate else { return false }
+                    return calendar.isDate(dueDate, inSameDayAs: day)
+                }
+                
+                days.append((String(dayName), tasksForDay))
+            }
         }
+        
+        return days
+    }
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            // Header
+            HStack {
+                Image(systemName: "calendar.week")
+                    .foregroundColor(.blue)
+                    .font(.title2)
+                Text("This Week")
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(colorScheme == .dark ? .white : .primary)
+                Spacer()
+                
+                Text("\(entry.weekTasks.count) tasks")
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.secondary)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(
+                        Capsule()
+                            .fill(Color.secondary.opacity(0.2))
+                    )
+            }
+            .padding(.bottom, 4)
+            
+            // Week grid
+            VStack(alignment: .leading, spacing: 8) {
+                ForEach(Array(weekDays.enumerated()), id: \.offset) { index, dayData in
+                    let (dayName, tasks) = dayData
+                    
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack {
+                            Text(dayName)
+                                .font(.caption)
+                                .fontWeight(.semibold)
+                                .foregroundColor(dayName == "Today" ? .blue : .secondary)
+                            
+                            Spacer()
+                            
+                            if !tasks.isEmpty {
+                                Text("\(tasks.count)")
+                                    .font(.caption2)
+                                    .fontWeight(.medium)
+                                    .foregroundColor(.secondary)
+                                    .padding(.horizontal, 4)
+                                    .padding(.vertical, 1)
+                                    .background(
+                                        Circle()
+                                            .fill(Color.secondary.opacity(0.2))
+                                    )
+                            }
+                        }
+                        
+                        if tasks.isEmpty {
+                            HStack {
+                                Circle()
+                                    .fill(Color.clear)
+                                    .frame(width: 4, height: 4)
+                                Text("No tasks")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary.opacity(0.7))
+                                Spacer()
+                            }
+                        } else {
+                            ForEach(tasks.prefix(2), id: \.id) { task in
+                                HStack(spacing: 6) {
+                                    // Category indicator
+                                    Circle()
+                                        .fill(getCategoryColor(for: task))
+                                        .frame(width: 4, height: 4)
+                                    
+                                    Text(task.title)
+                                        .font(.caption2)
+                                        .foregroundColor(colorScheme == .dark ? .white : .primary)
+                                        .lineLimit(1)
+                                    
+                                    Spacer()
+                                }
+                            }
+                            
+                            if tasks.count > 2 {
+                                HStack {
+                                    Circle()
+                                        .fill(Color.clear)
+                                        .frame(width: 4, height: 4)
+                                    Text("+ \(tasks.count - 2) more")
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
+                                    Spacer()
+                                }
+                            }
+                        }
+                    }
+                    .padding(.vertical, 2)
+                    
+                    if index < weekDays.count - 1 {
+                        Divider()
+                            .opacity(0.3)
+                    }
+                }
+            }
+            
+            Spacer(minLength: 0)
+        }
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(colorScheme == .dark ? Color(.systemGray6) : Color.white)
+                .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 4)
+        )
+    }
+    
+    private func getCategoryColor(for task: Task) -> Color {
+        guard let categoryId = task.categoryId,
+              let category = entry.categories.first(where: { $0.id == categoryId }) else {
+            return task.isOverdue ? .red : .blue
+        }
+        return category.color.color
     }
 }
 
 struct TaskRowWidget: View {
     let task: Task
     let categories: [TaskCategory]
+    let isCompact: Bool
     @Environment(\.colorScheme) var colorScheme
+    
+    init(task: Task, categories: [TaskCategory], isCompact: Bool = false) {
+        self.task = task
+        self.categories = categories
+        self.isCompact = isCompact
+    }
     
     private var taskCategory: TaskCategory? {
         guard let categoryId = task.categoryId else { return nil }
@@ -162,57 +476,57 @@ struct TaskRowWidget: View {
     }
     
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
+        HStack(alignment: .top, spacing: 10) {
             // Category indicator or default circle
             Circle()
                 .fill(categoryIndicatorColor)
-                .frame(width: 8, height: 8)
-                .padding(.top, 6)
+                .frame(width: isCompact ? 6 : 8, height: isCompact ? 6 : 8)
+                .padding(.top, isCompact ? 4 : 6)
             
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 6) {
                     Text(task.title)
-                        .font(.subheadline)
+                        .font(isCompact ? .caption : .subheadline)
                         .fontWeight(.medium)
                         .foregroundColor(colorScheme == .dark ? .white : .primary)
                         .lineLimit(1)
                     
-                    // Category badge for widget
-                    if let category = taskCategory {
+                    Spacer()
+                    
+                    // Category badge for widget (only if not compact)
+                    if !isCompact, let category = taskCategory {
                         HStack(spacing: 2) {
                             Circle()
                                 .fill(category.color.color)
-                                .frame(width: 4, height: 4)
+                                .frame(width: 3, height: 3)
                             Text(category.name)
                                 .font(.caption2)
                                 .fontWeight(.medium)
                                 .foregroundColor(category.color.color)
                         }
-                        .padding(.horizontal, 4)
+                        .padding(.horizontal, 3)
                         .padding(.vertical, 1)
                         .background(
                             Capsule()
                                 .fill(category.color.lightColor)
                         )
                     }
-                    
-                    Spacer()
                 }
                 
                 if let dueDate = task.dueDate {
                     Text(formatDueDate(dueDate))
-                        .font(.caption)
+                        .font(.caption2)
                         .foregroundColor(dueDate < Date() ? .red : .secondary)
-                } else {
+                } else if !isCompact {
                     Text("No due date")
-                        .font(.caption)
+                        .font(.caption2)
                         .foregroundColor(.secondary)
                 }
             }
             
             Spacer()
         }
-        .padding(.vertical, 2)
+        .padding(.vertical, isCompact ? 1 : 2)
     }
     
     private var categoryIndicatorColor: Color {
@@ -224,24 +538,25 @@ struct TaskRowWidget: View {
             return Color.blue
         }
     }
+}
+
+// MARK: - Date Formatting Helper
+private func formatDueDate(_ date: Date) -> String {
+    let calendar = Calendar.current
+    let now = Date()
     
-    private func formatDueDate(_ date: Date) -> String {
-        let calendar = Calendar.current
-        let now = Date()
-        
-        if calendar.isDateInToday(date) {
-            return "Today"
-        } else if calendar.isDateInTomorrow(date) {
-            return "Tomorrow"
-        } else if calendar.isDate(date, equalTo: now, toGranularity: .weekOfYear) {
-            let formatter = DateFormatter()
-            formatter.dateFormat = "EEEE"
-            return formatter.string(from: date)
-        } else {
-            let formatter = DateFormatter()
-            formatter.dateStyle = .short
-            return formatter.string(from: date)
-        }
+    if calendar.isDateInToday(date) {
+        return "Today"
+    } else if calendar.isDateInTomorrow(date) {
+        return "Tomorrow"
+    } else if calendar.isDate(date, equalTo: now, toGranularity: .weekOfYear) {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "EEEE"
+        return formatter.string(from: date)
+    } else {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .short
+        return formatter.string(from: date)
     }
 }
 
@@ -253,9 +568,29 @@ struct SimplrWidget: Widget {
             SimplrWidgetEntryView(entry: entry)
         }
         .configurationDisplayName("Simplr Tasks")
-        .description("View your top 3 upcoming tasks at a glance.")
-        .supportedFamilies([.systemMedium])
+        .description("View your tasks at a glance.")
+        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
     }
+}
+
+#Preview(as: .systemSmall) {
+    SimplrWidget()
+} timeline: {
+    let workCategory = TaskCategory(name: "Work", color: .blue)
+    let personalCategory = TaskCategory(name: "Personal", color: .green)
+    
+    TaskEntry(
+        date: .now,
+        nextTask: Task(title: "Review project proposal", description: "Check the new client requirements", dueDate: Calendar.current.date(byAdding: .day, value: 1, to: Date()), categoryId: workCategory.id),
+        todayTasks: [
+            Task(title: "Buy groceries", description: "Milk, bread, eggs", dueDate: Date(), categoryId: personalCategory.id)
+        ],
+        weekTasks: [
+            Task(title: "Review project proposal", description: "Check the new client requirements", dueDate: Calendar.current.date(byAdding: .day, value: 1, to: Date()), categoryId: workCategory.id),
+            Task(title: "Team meeting", description: "Weekly sync with the development team", dueDate: Calendar.current.date(byAdding: .day, value: 2, to: Date()), categoryId: workCategory.id)
+        ],
+        categories: [workCategory, personalCategory]
+    )
 }
 
 #Preview(as: .systemMedium) {
@@ -264,9 +599,40 @@ struct SimplrWidget: Widget {
     let workCategory = TaskCategory(name: "Work", color: .blue)
     let personalCategory = TaskCategory(name: "Personal", color: .green)
     
-    TaskEntry(date: .now, tasks: [
-        Task(title: "Review project proposal", description: "Check the new client requirements", dueDate: Calendar.current.date(byAdding: .day, value: 1, to: Date()), categoryId: workCategory.id),
-        Task(title: "Team meeting", description: "Weekly sync with the development team", dueDate: Calendar.current.date(byAdding: .day, value: 2, to: Date()), categoryId: workCategory.id),
-        Task(title: "Update documentation", description: "Add new API endpoints to docs", categoryId: personalCategory.id)
-    ], categories: [workCategory, personalCategory])
+    TaskEntry(
+        date: .now,
+        nextTask: Task(title: "Review project proposal", description: "Check the new client requirements", dueDate: Calendar.current.date(byAdding: .day, value: 1, to: Date()), categoryId: workCategory.id),
+        todayTasks: [
+            Task(title: "Buy groceries", description: "Milk, bread, eggs", dueDate: Date(), categoryId: personalCategory.id),
+            Task(title: "Call dentist", description: "Schedule cleaning", dueDate: Date(), categoryId: personalCategory.id)
+        ],
+        weekTasks: [
+            Task(title: "Review project proposal", description: "Check the new client requirements", dueDate: Calendar.current.date(byAdding: .day, value: 1, to: Date()), categoryId: workCategory.id),
+            Task(title: "Team meeting", description: "Weekly sync with the development team", dueDate: Calendar.current.date(byAdding: .day, value: 2, to: Date()), categoryId: workCategory.id)
+        ],
+        categories: [workCategory, personalCategory]
+    )
+}
+
+#Preview(as: .systemLarge) {
+    SimplrWidget()
+} timeline: {
+    let workCategory = TaskCategory(name: "Work", color: .blue)
+    let personalCategory = TaskCategory(name: "Personal", color: .green)
+    
+    TaskEntry(
+        date: .now,
+        nextTask: Task(title: "Review project proposal", description: "Check the new client requirements", dueDate: Calendar.current.date(byAdding: .day, value: 1, to: Date()), categoryId: workCategory.id),
+        todayTasks: [
+            Task(title: "Buy groceries", description: "Milk, bread, eggs", dueDate: Date(), categoryId: personalCategory.id)
+        ],
+        weekTasks: [
+            Task(title: "Review project proposal", description: "Check the new client requirements", dueDate: Calendar.current.date(byAdding: .day, value: 1, to: Date()), categoryId: workCategory.id),
+            Task(title: "Team meeting", description: "Weekly sync with the development team", dueDate: Calendar.current.date(byAdding: .day, value: 2, to: Date()), categoryId: workCategory.id),
+            Task(title: "Update documentation", description: "Add new API endpoints to docs", dueDate: Calendar.current.date(byAdding: .day, value: 3, to: Date()), categoryId: personalCategory.id),
+            Task(title: "Buy groceries", description: "Milk, bread, eggs", dueDate: Date(), categoryId: personalCategory.id),
+            Task(title: "Call dentist", description: "Schedule cleaning appointment", dueDate: Calendar.current.date(byAdding: .day, value: 4, to: Date()), categoryId: personalCategory.id)
+        ],
+        categories: [workCategory, personalCategory]
+    )
 }

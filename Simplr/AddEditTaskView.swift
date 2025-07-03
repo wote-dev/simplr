@@ -593,7 +593,7 @@ struct AddEditTaskView: View {
                     .applyNeumorphicShadow(theme.neumorphicButtonStyle)
             )
         }
-        .playfulActionButton()
+        .animatedButton(pressedScale: 0.95)
         .hapticFeedback(.light)
     }
     
@@ -613,7 +613,7 @@ struct AddEditTaskView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
                 .neumorphicButton(theme, cornerRadius: 16)
-                .secondaryActionButton()
+                .animatedButton(pressedScale: 0.97)
                 .hapticFeedback(.light)
                 
                 // Save button with loading state
@@ -653,7 +653,7 @@ struct AddEditTaskView: View {
         .disabled(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || savingTask)
         .scaleEffect(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 0.95 : 1.0)
         .animation(.bounceSpring, value: title.isEmpty)
-        .excitedActionButton()
+        .animatedButton(pressedScale: 0.97)
         .hapticFeedback(.medium)
     }
     
@@ -837,7 +837,7 @@ struct CustomToggleStyle: ToggleStyle {
                 }
                 HapticManager.shared.selectionChange()
             }
-            .personalityButton(style: .gentle)
+            .animatedButton(pressedScale: 0.98)
         }
     }
 }

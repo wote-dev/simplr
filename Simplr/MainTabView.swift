@@ -312,7 +312,7 @@ struct MainTabView: View {
                     .animation(.smoothSpring, value: selectedTab == tab)
             }
         }
-        .enhancedButton(pressedScale: 0.9, animation: .playfulBounce, enableRotation: false)
+        .animatedButton(pressedScale: 0.9)
     }
     
     private func selectTab(_ tab: Tab) {

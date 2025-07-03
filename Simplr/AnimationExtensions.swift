@@ -470,7 +470,7 @@ enum ButtonPersonality {
         case .hyperactive: return .sparkle
         case .zen: return .none
         case .bouncy: return .whoosh
-        }
+            }
     }
 }
 

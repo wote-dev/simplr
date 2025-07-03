@@ -120,46 +120,6 @@ struct SettingsView: View {
                             }
                         }
                         
-                        // Developer Section
-                        settingsSection(title: "Developer", icon: "hammer") {
-                            VStack(spacing: 16) {
-                                // Animation Demo Button
-                                NavigationLink(destination: ButtonPersonalityDemo()) {
-                                    HStack(spacing: 12) {
-                                        Image(systemName: "sparkles")
-                                            .font(.system(size: 16, weight: .medium))
-                                            .foregroundColor(theme.accent)
-                                        
-                                        VStack(alignment: .leading, spacing: 2) {
-                                            Text("Animation Demo")
-                                                .font(.subheadline)
-                                                .fontWeight(.medium)
-                                                .foregroundColor(theme.text)
-                                            
-                                            Text("Test enhanced button animations")
-                                                .font(.caption)
-                                                .foregroundColor(theme.textSecondary)
-                                        }
-                                        
-                                        Spacer()
-                                        
-                                        Image(systemName: "chevron.right")
-                                            .font(.system(size: 12, weight: .semibold))
-                                            .foregroundColor(theme.textTertiary)
-                                    }
-                                    .padding(.horizontal, 16)
-                                    .padding(.vertical, 12)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 12)
-                                            .fill(theme.surface)
-                                            .stroke(theme.accent.opacity(0.2), lineWidth: 1)
-                                    )
-                                }
-                                .buttonStyle(PlainButtonStyle())
-                                .playfulActionButton()
-                            }
-                        }
-                        
                         // App Info Section
                         settingsSection(title: "About", icon: "info.circle") {
                             VStack(spacing: 16) {

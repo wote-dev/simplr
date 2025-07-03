@@ -106,7 +106,13 @@ struct CategoryPillView: View {
             .animation(.interpolatingSpring(stiffness: 600, damping: 30), value: isPressed)
         }
         .buttonStyle(PlainButtonStyle())
-        .personalityButton(style: .gentle)
+        .onLongPressGesture(minimumDuration: 0) { pressing in
+            withAnimation(.easeInOut(duration: 0.1)) {
+                isPressed = pressing
+            }
+        } perform: {
+            // Long press action could be used for category editing
+        }
     }
 }
 
