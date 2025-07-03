@@ -129,9 +129,9 @@ struct MainTabView: View {
         
         // Navigate to the appropriate tab if not already there
         if selectedTab != targetTab {
-            withAnimation(.interpolatingSpring(stiffness: 420, damping: 26)) {
-                selectedTab = targetTab
-            }
+                    withAnimation(.smoothTabTransition) {
+            selectedTab = targetTab
+        }
             HapticManager.shared.selectionChanged()
         }
     }
@@ -149,7 +149,7 @@ struct MainTabView: View {
         case .viewToday:
             // Navigate to today tab if not already there
             if selectedTab != .today {
-                withAnimation(.interpolatingSpring(stiffness: 420, damping: 26)) {
+                withAnimation(.smoothTabTransition) {
                     selectedTab = .today
                 }
                 HapticManager.shared.selectionChanged()
@@ -221,12 +221,9 @@ struct MainTabView: View {
                     .frame(width: geometry.size.width)
                     .clipped()
             }
-            .scaleEffect(isDragging ? 0.99 : 1.0)
             .offset(x: calculateContentOffset(screenWidth: geometry.size.width))
             .animation(
-                isDragging ? 
-                    .interactiveSpring(response: 0.25, dampingFraction: 0.9, blendDuration: 0.0) : 
-                    .interpolatingSpring(stiffness: 400, damping: 28),
+                .smoothTabTransition,
                 value: isDragging ? dragOffset : CGFloat(selectedTab.index)
             )
         }
@@ -237,7 +234,6 @@ struct MainTabView: View {
         let baseOffset = -CGFloat(selectedTab.index) * screenWidth
         
         if isDragging {
-            // Apply smoother rubber band effect at boundaries
             let normalizedDrag = dragOffset / screenWidth
             let currentIndex = selectedTab.index
             
@@ -245,34 +241,34 @@ struct MainTabView: View {
             let wouldGoToIndex = currentIndex - Int(normalizedDrag.rounded())
             
             if wouldGoToIndex < 0 {
-                // At first tab, trying to go left - apply refined rubber band
+                // At first tab, trying to go left - apply smoother rubber band
                 let resistance = max(0, -normalizedDrag - CGFloat(currentIndex))
                 let rubberBandOffset = resistance > 0 ? 
-                    screenWidth * (resistance / (1 + resistance * 1.5)) : dragOffset
+                    screenWidth * resistance / (1 + resistance * 2.0) : dragOffset
                 
                 // Provide haptic feedback when hitting boundary
-                if resistance > 0.08 && !hasReachedBoundary {
+                if resistance > 0.1 && !hasReachedBoundary {
                     provideBoundaryFeedback()
                 }
                 
                 return baseOffset + rubberBandOffset
             } else if wouldGoToIndex >= Tab.allCases.count {
-                // At last tab, trying to go right - apply refined rubber band
+                // At last tab, trying to go right - apply smoother rubber band
                 let maxIndex = Tab.allCases.count - 1
                 let resistance = max(0, -normalizedDrag + CGFloat(maxIndex - currentIndex))
                 let rubberBandOffset = resistance > 0 ? 
-                    -screenWidth * (resistance / (1 + resistance * 1.5)) : dragOffset
+                    -screenWidth * resistance / (1 + resistance * 2.0) : dragOffset
                 
                 // Provide haptic feedback when hitting boundary
-                if resistance > 0.08 && !hasReachedBoundary {
+                if resistance > 0.1 && !hasReachedBoundary {
                     provideBoundaryFeedback()
                 }
                 
                 return baseOffset + rubberBandOffset
             } else {
-                // Normal dragging within bounds - reset boundary state and apply slight damping
+                // Normal dragging within bounds - reset boundary state
                 hasReachedBoundary = false
-                return baseOffset + dragOffset * 0.98
+                return baseOffset + dragOffset
             }
         }
         
@@ -393,7 +389,7 @@ struct MainTabView: View {
         
         HapticManager.shared.selectionChanged()
         
-        withAnimation(.interpolatingSpring(stiffness: 420, damping: 26)) {
+        withAnimation(.smoothTabTransition) {
             selectedTab = tab
         }
     }
@@ -454,7 +450,7 @@ struct MainTabView: View {
                 hasReachedBoundary = false
                 dragHistory.removeAll()
                 
-                withAnimation(.interpolatingSpring(stiffness: 420, damping: 26)) {
+                withAnimation(.smoothTabTransition) {
                     // Enhanced decision logic considering both distance and velocity
                     let velocityBias = min(abs(gestureVelocity) / 1000, 0.3) // Cap velocity influence
                     let effectiveThreshold = distanceThreshold - velocityBias

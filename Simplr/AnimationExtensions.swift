@@ -31,6 +31,9 @@ extension Animation {
     static let interactiveGesture = Animation.interactiveSpring(response: 0.25, dampingFraction: 0.9, blendDuration: 0.0)
     static let smoothSnap = Animation.interpolatingSpring(stiffness: 350, damping: 30)
     
+    // New unified smooth tab animation - eliminates jitter from mixed animation types
+    static let smoothTabTransition = Animation.interactiveSpring(response: 0.4, dampingFraction: 0.8, blendDuration: 0.1)
+    
     static let smoothEase = Animation.easeInOut(duration: 0.3)
     static let quickEase = Animation.easeInOut(duration: 0.2)
     static let gentleEase = Animation.easeInOut(duration: 0.4)
