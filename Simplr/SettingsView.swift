@@ -16,6 +16,7 @@ struct SettingsView: View {
     @State private var soundEnabled = true
     @State private var badgeCountEnabled = true
     @State private var reminderTimeOffset = 15 // minutes before due time
+    @State private var showingCreateCategory = false
     
     var body: some View {
         NavigationView {
@@ -90,7 +91,7 @@ struct SettingsView: View {
                                 
                                 // Add category button
                                 Button(action: {
-                                    // This would open the CreateCategoryView
+                                    showingCreateCategory = true
                                     HapticManager.shared.buttonTap()
                                 }) {
                                     HStack(spacing: 8) {
@@ -175,6 +176,10 @@ struct SettingsView: View {
             }
         }
         .navigationViewStyle(StackNavigationViewStyle())
+        .sheet(isPresented: $showingCreateCategory) {
+            CreateCategoryView()
+                .environmentObject(categoryManager)
+        }
     }
     
     private func settingsSection<Content: View>(
@@ -493,4 +498,4 @@ struct SettingsView: View {
     SettingsView()
         .environmentObject(ThemeManager())
         .environmentObject(CategoryManager())
-} 
+}

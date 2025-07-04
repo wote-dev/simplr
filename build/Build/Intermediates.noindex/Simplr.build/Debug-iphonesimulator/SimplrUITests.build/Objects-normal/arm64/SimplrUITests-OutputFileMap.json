@@ -1,0 +1,28 @@
+{
+  "" : {
+    "diagnostics" : "/Users/danielzverev/Documents/Simplr/build/Build/Intermediates.noindex/Simplr.build/Debug-iphonesimulator/SimplrUITests.build/Objects-normal/arm64/SimplrUITests-master.dia",
+    "emit-module-dependencies" : "/Users/danielzverev/Documents/Simplr/build/Build/Intermediates.noindex/Simplr.build/Debug-iphonesimulator/SimplrUITests.build/Objects-normal/arm64/SimplrUITests-master-emit-module.d",
+    "emit-module-diagnostics" : "/Users/danielzverev/Documents/Simplr/build/Build/Intermediates.noindex/Simplr.build/Debug-iphonesimulator/SimplrUITests.build/Objects-normal/arm64/SimplrUITests-master-emit-module.dia",
+    "swift-dependencies" : "/Users/danielzverev/Documents/Simplr/build/Build/Intermediates.noindex/Simplr.build/Debug-iphonesimulator/SimplrUITests.build/Objects-normal/arm64/SimplrUITests-master.swiftdeps"
+  },
+  "/Users/danielzverev/Documents/Simplr/SimplrUITests/SimplrUITests.swift" : {
+    "const-values" : "/Users/danielzverev/Documents/Simplr/build/Build/Intermediates.noindex/Simplr.build/Debug-iphonesimulator/SimplrUITests.build/Objects-normal/arm64/SimplrUITests.swiftconstvalues",
+    "dependencies" : "/Users/danielzverev/Documents/Simplr/build/Build/Intermediates.noindex/Simplr.build/Debug-iphonesimulator/SimplrUITests.build/Objects-normal/arm64/SimplrUITests.d",
+    "diagnostics" : "/Users/danielzverev/Documents/Simplr/build/Build/Intermediates.noindex/Simplr.build/Debug-iphonesimulator/SimplrUITests.build/Objects-normal/arm64/SimplrUITests.dia",
+    "index-unit-output-path" : "/Simplr.build/Debug-iphonesimulator/SimplrUITests.build/Objects-normal/arm64/SimplrUITests.o",
+    "llvm-bc" : "/Users/danielzverev/Documents/Simplr/build/Build/Intermediates.noindex/Simplr.build/Debug-iphonesimulator/SimplrUITests.build/Objects-normal/arm64/SimplrUITests.bc",
+    "object" : "/Users/danielzverev/Documents/Simplr/build/Build/Intermediates.noindex/Simplr.build/Debug-iphonesimulator/SimplrUITests.build/Objects-normal/arm64/SimplrUITests.o",
+    "swift-dependencies" : "/Users/danielzverev/Documents/Simplr/build/Build/Intermediates.noindex/Simplr.build/Debug-iphonesimulator/SimplrUITests.build/Objects-normal/arm64/SimplrUITests.swiftdeps",
+    "swiftmodule" : "/Users/danielzverev/Documents/Simplr/build/Build/Intermediates.noindex/Simplr.build/Debug-iphonesimulator/SimplrUITests.build/Objects-normal/arm64/SimplrUITests~partial.swiftmodule"
+  },
+  "/Users/danielzverev/Documents/Simplr/SimplrUITests/SimplrUITestsLaunchTests.swift" : {
+    "const-values" : "/Users/danielzverev/Documents/Simplr/build/Build/Intermediates.noindex/Simplr.build/Debug-iphonesimulator/SimplrUITests.build/Objects-normal/arm64/SimplrUITestsLaunchTests.swiftconstvalues",
+    "dependencies" : "/Users/danielzverev/Documents/Simplr/build/Build/Intermediates.noindex/Simplr.build/Debug-iphonesimulator/SimplrUITests.build/Objects-normal/arm64/SimplrUITestsLaunchTests.d",
+    "diagnostics" : "/Users/danielzverev/Documents/Simplr/build/Build/Intermediates.noindex/Simplr.build/Debug-iphonesimulator/SimplrUITests.build/Objects-normal/arm64/SimplrUITestsLaunchTests.dia",
+    "index-unit-output-path" : "/Simplr.build/Debug-iphonesimulator/SimplrUITests.build/Objects-normal/arm64/SimplrUITestsLaunchTests.o",
+    "llvm-bc" : "/Users/danielzverev/Documents/Simplr/build/Build/Intermediates.noindex/Simplr.build/Debug-iphonesimulator/SimplrUITests.build/Objects-normal/arm64/SimplrUITestsLaunchTests.bc",
+    "object" : "/Users/danielzverev/Documents/Simplr/build/Build/Intermediates.noindex/Simplr.build/Debug-iphonesimulator/SimplrUITests.build/Objects-normal/arm64/SimplrUITestsLaunchTests.o",
+    "swift-dependencies" : "/Users/danielzverev/Documents/Simplr/build/Build/Intermediates.noindex/Simplr.build/Debug-iphonesimulator/SimplrUITests.build/Objects-normal/arm64/SimplrUITestsLaunchTests.swiftdeps",
+    "swiftmodule" : "/Users/danielzverev/Documents/Simplr/build/Build/Intermediates.noindex/Simplr.build/Debug-iphonesimulator/SimplrUITests.build/Objects-normal/arm64/SimplrUITestsLaunchTests~partial.swiftmodule"
+  }
+}

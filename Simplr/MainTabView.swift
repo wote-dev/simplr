@@ -92,8 +92,7 @@ struct MainTabView: View {
                 customTabBar
             }
             
-            // Celebration overlay
-            CelebrationOverlayView(celebrationManager: CelebrationManager.shared)
+            // Celebration overlay removed
         }
         .onAppear {
             startBackgroundAnimation()
@@ -129,9 +128,9 @@ struct MainTabView: View {
         
         // Navigate to the appropriate tab if not already there
         if selectedTab != targetTab {
-                    withAnimation(.smoothTabTransition) {
-            selectedTab = targetTab
-        }
+            withAnimation(Animation.adaptiveSmooth) {
+                selectedTab = targetTab
+            }
             HapticManager.shared.selectionChanged()
         }
     }
@@ -149,7 +148,7 @@ struct MainTabView: View {
         case .viewToday:
             // Navigate to today tab if not already there
             if selectedTab != .today {
-                withAnimation(.smoothTabTransition) {
+                withAnimation(Animation.adaptiveSmooth) {
                     selectedTab = .today
                 }
                 HapticManager.shared.selectionChanged()
@@ -223,7 +222,7 @@ struct MainTabView: View {
             }
             .offset(x: calculateContentOffset(screenWidth: geometry.size.width))
             .animation(
-                .smoothTabTransition,
+                Animation.adaptiveSmooth,
                 value: isDragging ? dragOffset : CGFloat(selectedTab.index)
             )
         }
@@ -389,7 +388,7 @@ struct MainTabView: View {
         
         HapticManager.shared.selectionChanged()
         
-        withAnimation(.smoothTabTransition) {
+        withAnimation(Animation.adaptiveSmooth) {
             selectedTab = tab
         }
     }
@@ -450,7 +449,7 @@ struct MainTabView: View {
                 hasReachedBoundary = false
                 dragHistory.removeAll()
                 
-                withAnimation(.smoothTabTransition) {
+                withAnimation(Animation.adaptiveSmooth) {
                     // Enhanced decision logic considering both distance and velocity
                     let velocityBias = min(abs(gestureVelocity) / 1000, 0.3) // Cap velocity influence
                     let effectiveThreshold = distanceThreshold - velocityBias
@@ -506,4 +505,4 @@ struct MainTabView_Previews: PreviewProvider {
             .environmentObject(ThemeManager())
             .environmentObject(TaskManager())
     }
-} 
+}

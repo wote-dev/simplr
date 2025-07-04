@@ -1,0 +1,18 @@
+"/Users/danielzverev/Documents/Simplr/Simplr/CompletedView.swift":
+  diagnostics: "/Users/danielzverev/Documents/Simplr/build/Build/Intermediates.noindex/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/CompletedView.dia"
+  const-values: "/Users/danielzverev/Documents/Simplr/build/Build/Intermediates.noindex/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/CompletedView.swiftconstvalues"
+  dependencies: "/Users/danielzverev/Documents/Simplr/build/Build/Intermediates.noindex/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/CompletedView.d"
+  object: "/Users/danielzverev/Documents/Simplr/build/Build/Intermediates.noindex/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/CompletedView.o"
+  swift-dependencies: "/Users/danielzverev/Documents/Simplr/build/Build/Intermediates.noindex/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/CompletedView.swiftdeps"
+"/Users/danielzverev/Documents/Simplr/Simplr/CategoryManager.swift":
+  object: "/Users/danielzverev/Documents/Simplr/build/Build/Intermediates.noindex/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/CategoryManager.o"
+  const-values: "/Users/danielzverev/Documents/Simplr/build/Build/Intermediates.noindex/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/CategoryManager.swiftconstvalues"
+  swift-dependencies: "/Users/danielzverev/Documents/Simplr/build/Build/Intermediates.noindex/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/CategoryManager.swiftdeps"
+  diagnostics: "/Users/danielzverev/Documents/Simplr/build/Build/Intermediates.noindex/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/CategoryManager.dia"
+  dependencies: "/Users/danielzverev/Documents/Simplr/build/Build/Intermediates.noindex/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/CategoryManager.d"
+"/Users/danielzverev/Documents/Simplr/Simplr/MainTabView.swift":
+  dependencies: "/Users/danielzverev/Documents/Simplr/build/Build/Intermediates.noindex/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/MainTabView.d"
+  object: "/Users/danielzverev/Documents/Simplr/build/Build/Intermediates.noindex/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/MainTabView.o"
+  swift-dependencies: "/Users/danielzverev/Documents/Simplr/build/Build/Intermediates.noindex/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/MainTabView.swiftdeps"
+  const-values: "/Users/danielzverev/Documents/Simplr/build/Build/Intermediates.noindex/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/MainTabView.swiftconstvalues"
+  diagnostics: "/Users/danielzverev/Documents/Simplr/build/Build/Intermediates.noindex/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/MainTabView.dia"

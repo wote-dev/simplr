@@ -134,47 +134,64 @@ struct Task: Identifiable, Codable {
     }
     
     // MARK: - Task Status Computed Properties
+    // Optimized with cached date calculations to reduce repeated Calendar operations
+    
+    private static let calendar = Calendar.current
+    private static var todayCache: (date: Date, startOfDay: Date) = {
+        let now = Date()
+        return (now, calendar.startOfDay(for: now))
+    }()
+    
+    private static func updateTodayCache() {
+        let now = Date()
+        let startOfDay = calendar.startOfDay(for: now)
+        if !calendar.isDate(todayCache.date, inSameDayAs: now) {
+            todayCache = (now, startOfDay)
+        }
+    }
     
     /// Returns true if the task is overdue (past due date and not completed)
     var isOverdue: Bool {
         guard let dueDate = dueDate, !isCompleted else { return false }
-        return dueDate < Date()
+        Task.updateTodayCache()
+        return dueDate < Task.todayCache.date
     }
     
     /// Returns true if the task is pending (has a future due date and not completed)
     var isPending: Bool {
         guard let dueDate = dueDate, !isCompleted else { return false }
-        return dueDate >= Date()
+        Task.updateTodayCache()
+        return dueDate >= Task.todayCache.date
     }
     
     /// Returns true if the task is due today
     var isDueToday: Bool {
         guard let dueDate = dueDate else { return false }
-        return Calendar.current.isDateInToday(dueDate)
+        Task.updateTodayCache()
+        return Task.calendar.isDate(dueDate, inSameDayAs: Task.todayCache.date)
     }
     
     /// Returns true if the task is due in the future (tomorrow or later)
     var isDueFuture: Bool {
         guard let dueDate = dueDate else { return false }
-        let today = Date()
-        let calendar = Calendar.current
-        return dueDate > calendar.startOfDay(for: calendar.date(byAdding: .day, value: 1, to: today)!)
+        Task.updateTodayCache()
+        let tomorrow = Task.calendar.date(byAdding: .day, value: 1, to: Task.todayCache.startOfDay)!
+        return dueDate >= tomorrow
     }
     
     /// Returns the number of days until due date (negative if overdue)
     var daysUntilDue: Int? {
         guard let dueDate = dueDate else { return nil }
-        let calendar = Calendar.current
-        let today = calendar.startOfDay(for: Date())
-        let due = calendar.startOfDay(for: dueDate)
-        return calendar.dateComponents([.day], from: today, to: due).day
+        Task.updateTodayCache()
+        let due = Task.calendar.startOfDay(for: dueDate)
+        return Task.calendar.dateComponents([.day], from: Task.todayCache.startOfDay, to: due).day
     }
     
     /// Returns true if the completed task is older than 7 days
     var shouldBeAutoDeleted: Bool {
         guard isCompleted, let completedAt = completedAt else { return false }
-        let calendar = Calendar.current
-        let sevenDaysAgo = calendar.date(byAdding: .day, value: -7, to: Date()) ?? Date()
+        Task.updateTodayCache()
+        let sevenDaysAgo = Task.calendar.date(byAdding: .day, value: -7, to: Task.todayCache.date) ?? Task.todayCache.date
         return completedAt < sevenDaysAgo
     }
 }

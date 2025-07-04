@@ -176,8 +176,10 @@ struct CategorySelectorView: View {
                 }
                 .buttonStyle(PlainButtonStyle())
             }
-            .padding(.horizontal, 16)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 4)
         }
+        .clipped()
         .sheet(isPresented: $showingCreateCategory) {
             CreateCategoryView()
         }
@@ -281,8 +283,8 @@ struct CreateCategoryView: View {
             }
             .padding(.horizontal, 20)
             .themedBackground(theme)
-            .navigationTitle("")
-            .navigationBarHidden(true)
+            .navigationTitle("New Category")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") {
@@ -321,4 +323,4 @@ struct CreateCategoryView: View {
     CategorySelectorView()
         .environmentObject(CategoryManager())
         .environmentObject(TaskManager())
-} 
+}

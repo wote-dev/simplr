@@ -26,8 +26,9 @@ struct AddEditTaskView: View {
     @FocusState private var isTitleFocused: Bool
     @FocusState private var isDescriptionFocused: Bool
     @State private var showSuccessAnimation = false
-    @State private var formScale: CGFloat = 0.95
-    @State private var formOpacity: Double = 0
+    @State private var formScale: CGFloat = 1.0
+    @State private var selectedReminderOption: String? = nil
+    @State private var formOpacity: Double = 1.0
     @State private var savingTask = false
     @Namespace private var formNamespace
     
@@ -50,14 +51,23 @@ struct AddEditTaskView: View {
     var body: some View {
         mainView
             .onAppear {
-                withAnimation(.smoothSpring.delay(0.1)) {
-                    formScale = 1.0
-                    formOpacity = 1.0
+                if let task = taskToEdit {
+                    title = task.title
+                    description = task.description
+                    dueDate = task.dueDate ?? Date()
+                    hasDueDate = task.dueDate != nil
+                    hasReminder = task.hasReminder
+                    reminderDate = task.reminderDate ?? Date()
+                    selectedCategory = categoryManager.categories.first { $0.id == task.categoryId }
+                    
+                    // Set initial selected reminder option for existing tasks
+                    if task.hasReminder {
+                        selectedReminderOption = determineReminderOption(reminderDate: task.reminderDate ?? Date(), dueDate: task.dueDate)
+                    }
                 }
                 
-                // Initialize category selection
-                if let task = taskToEdit, let categoryId = task.categoryId {
-                    selectedCategory = categoryManager.category(for: categoryId)
+                withAnimation(.smoothSpring.delay(0.1)) {
+                    formOpacity = 1.0
                 }
                 
                 // Auto-focus title field for new tasks
@@ -198,12 +208,12 @@ struct AddEditTaskView: View {
                             RoundedRectangle(cornerRadius: 12)
                                 .fill(theme.surface)
                         )
-                        .scaleEffect(isTitleFocused ? 1.02 : 1.0)
-                        .animation(.bounceSpring, value: isTitleFocused)
+                        .scaleEffect(isTitleFocused ? 1.01 : 1.0)
+                        .animation(.easeInOut(duration: 0.15), value: isTitleFocused)
                         .overlay(
                             RoundedRectangle(cornerRadius: 12)
                                 .stroke(isTitleFocused ? theme.accentGradient : LinearGradient(colors: [.clear], startPoint: .leading, endPoint: .trailing), lineWidth: 2)
-                                .animation(.smoothEase, value: isTitleFocused)
+                                .animation(.easeInOut(duration: 0.2), value: isTitleFocused)
                         )
                 }
                 .transition(.slideInFromTrailing)
@@ -225,12 +235,12 @@ struct AddEditTaskView: View {
                             RoundedRectangle(cornerRadius: 12)
                                 .fill(theme.surface)
                         )
-                        .scaleEffect(isDescriptionFocused ? 1.02 : 1.0)
-                        .animation(.bounceSpring, value: isDescriptionFocused)
+                        .scaleEffect(isDescriptionFocused ? 1.01 : 1.0)
+                        .animation(.easeInOut(duration: 0.15), value: isDescriptionFocused)
                         .overlay(
                             RoundedRectangle(cornerRadius: 12)
                                 .stroke(isDescriptionFocused ? theme.accentGradient : LinearGradient(colors: [.clear], startPoint: .leading, endPoint: .trailing), lineWidth: 2)
-                                .animation(.smoothEase, value: isDescriptionFocused)
+                                .animation(.easeInOut(duration: 0.2), value: isDescriptionFocused)
                         )
                 }
                 .transition(.slideInFromTrailing)
@@ -263,7 +273,7 @@ struct AddEditTaskView: View {
                         Spacer()
                         
                         Button(action: {
-                            withAnimation(.smoothSpring) {
+                            withAnimation(.easeInOut(duration: 0.2)) {
                                 selectedCategory = suggestedCategory
                                 HapticManager.shared.selectionChange()
                             }
@@ -305,7 +315,7 @@ struct AddEditTaskView: View {
                     HStack(spacing: 12) {
                         // No category option
                         Button(action: {
-                            withAnimation(.smoothSpring) {
+                            withAnimation(.easeInOut(duration: 0.2)) {
                                 selectedCategory = nil
                                 HapticManager.shared.selectionChange()
                             }
@@ -338,7 +348,7 @@ struct AddEditTaskView: View {
                         // Category options
                         ForEach(categoryManager.categories) { category in
                             Button(action: {
-                                withAnimation(.smoothSpring) {
+                                withAnimation(.easeInOut(duration: 0.2)) {
                                     selectedCategory = selectedCategory?.id == category.id ? nil : category
                                     HapticManager.shared.selectionChange()
                                 }
@@ -353,7 +363,7 @@ struct AddEditTaskView: View {
                                                 .opacity(0.3)
                                         )
                                         .scaleEffect(selectedCategory?.id == category.id ? 1.1 : 1.0)
-                                        .animation(.smoothSpring, value: selectedCategory?.id == category.id)
+                                        .animation(.easeInOut(duration: 0.15), value: selectedCategory?.id == category.id)
                                     
                                     Text(category.name)
                                         .font(.system(size: 14, weight: selectedCategory?.id == category.id ? .semibold : .medium))
@@ -373,14 +383,16 @@ struct AddEditTaskView: View {
                                         )
                                 )
                                 .scaleEffect(selectedCategory?.id == category.id ? 1.05 : 1.0)
-                                .animation(.smoothSpring, value: selectedCategory?.id == category.id)
+                                .animation(.easeInOut(duration: 0.15), value: selectedCategory?.id == category.id)
                             }
                             .buttonStyle(PlainButtonStyle())
                         }
                     }
-                    .padding(.horizontal, 20)
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 4)
                 }
                 .scrollContentBackground(.hidden)
+                .clipped()
             }
             .padding(20)
             .neumorphicCard(theme, cornerRadius: 16)
@@ -411,7 +423,7 @@ struct AddEditTaskView: View {
                     Toggle("", isOn: $hasDueDate)
                         .toggleStyle(CustomToggleStyle())
                         .scaleEffect(hasDueDate ? 1.05 : 1.0)
-                        .animation(.bounceSpring, value: hasDueDate)
+                        .animation(.easeInOut(duration: 0.15), value: hasDueDate)
                 }
                 
                 if hasDueDate {
@@ -467,7 +479,7 @@ struct AddEditTaskView: View {
                     Toggle("", isOn: $hasReminder)
                         .toggleStyle(CustomToggleStyle())
                         .scaleEffect(hasReminder ? 1.05 : 1.0)
-                        .animation(.bounceSpring, value: hasReminder)
+                        .animation(.easeInOut(duration: 0.15), value: hasReminder)
                 }
                 
                 // Quick reminder options - shown inline when reminder is enabled
@@ -479,19 +491,19 @@ struct AddEditTaskView: View {
                                 GridItem(.flexible()),
                                 GridItem(.flexible())
                             ], spacing: 8) {
-                                quickReminderOption("15 min before", icon: "clock.fill") {
+                                quickReminderOption("15 min before", icon: "clock.fill", isSelected: selectedReminderOption == "15 min before") {
                                     reminderDate = Calendar.current.date(byAdding: .minute, value: -15, to: dueDate) ?? dueDate
                                 }
                                 
-                                quickReminderOption("1 hour before", icon: "clock.arrow.circlepath") {
+                                quickReminderOption("1 hour before", icon: "clock.arrow.circlepath", isSelected: selectedReminderOption == "1 hour before") {
                                     reminderDate = Calendar.current.date(byAdding: .hour, value: -1, to: dueDate) ?? dueDate
                                 }
                                 
-                                quickReminderOption("1 day before", icon: "calendar.day.timeline.leading") {
+                                quickReminderOption("1 day before", icon: "calendar.day.timeline.leading", isSelected: selectedReminderOption == "1 day before") {
                                     reminderDate = Calendar.current.date(byAdding: .day, value: -1, to: dueDate) ?? dueDate
                                 }
                                 
-                                quickReminderOption("Custom time", icon: "gear") {
+                                quickReminderOption("Custom time", icon: "gear", isSelected: selectedReminderOption == "Custom time") {
                                     showReminderScheduler = true
                                 }
                             }
@@ -501,25 +513,25 @@ struct AddEditTaskView: View {
                                 GridItem(.flexible()),
                                 GridItem(.flexible())
                             ], spacing: 8) {
-                                quickReminderOption("In 1 hour", icon: "clock.fill") {
+                                quickReminderOption("In 1 hour", icon: "clock.fill", isSelected: selectedReminderOption == "In 1 hour") {
                                     reminderDate = Calendar.current.date(byAdding: .hour, value: 1, to: Date()) ?? Date()
                                 }
                                 
-                                quickReminderOption("Tomorrow 9 AM", icon: "sun.max.fill") {
+                                quickReminderOption("Tomorrow 9 AM", icon: "sun.max.fill", isSelected: selectedReminderOption == "Tomorrow 9 AM") {
                                     var components = Calendar.current.dateComponents([.year, .month, .day], from: Date().addingTimeInterval(86400))
                                     components.hour = 9
                                     components.minute = 0
                                     reminderDate = Calendar.current.date(from: components) ?? Date()
                                 }
                                 
-                                quickReminderOption("This evening", icon: "moon.fill") {
+                                quickReminderOption("This evening", icon: "moon.fill", isSelected: selectedReminderOption == "This evening") {
                                     var components = Calendar.current.dateComponents([.year, .month, .day], from: Date())
                                     components.hour = 18
                                     components.minute = 0
                                     reminderDate = Calendar.current.date(from: components) ?? Date()
                                 }
                                 
-                                quickReminderOption("Custom time", icon: "gear") {
+                                quickReminderOption("Custom time", icon: "gear", isSelected: selectedReminderOption == "Custom time") {
                                     showReminderScheduler = true
                                 }
                             }
@@ -559,29 +571,45 @@ struct AddEditTaskView: View {
         }
         .transition(.scaleAndSlide)
         .onChange(of: hasReminder) { _, newValue in
-            if newValue && reminderDate < Date() {
-                // Set a default reminder time if none is set or it's in the past
-                if hasDueDate {
-                    reminderDate = Calendar.current.date(byAdding: .minute, value: -15, to: dueDate) ?? dueDate
-                } else {
-                    reminderDate = Calendar.current.date(byAdding: .hour, value: 1, to: Date()) ?? Date()
+            if newValue {
+                if reminderDate < Date() {
+                    // Set a default reminder time if none is set or it's in the past
+                    if hasDueDate {
+                        reminderDate = Calendar.current.date(byAdding: .minute, value: -15, to: dueDate) ?? dueDate
+                        selectedReminderOption = "15 min before"
+                    } else {
+                        reminderDate = Calendar.current.date(byAdding: .hour, value: 1, to: Date()) ?? Date()
+                        selectedReminderOption = "In 1 hour"
+                    }
                 }
+            } else {
+                selectedReminderOption = nil
+            }
+        }
+        .onChange(of: showReminderScheduler) { _, newValue in
+            if !newValue && hasReminder {
+                // User returned from custom scheduler
+                selectedReminderOption = "Custom time"
             }
         }
     }
     
     // Helper function for quick reminder options
-    private func quickReminderOption(_ title: String, icon: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
+    private func quickReminderOption(_ title: String, icon: String, isSelected: Bool = false, action: @escaping () -> Void) -> some View {
+        Button(action: {
+            selectedReminderOption = title
+            HapticManager.shared.selectionChanged()
+            action()
+        }) {
             VStack(spacing: 6) {
                 Image(systemName: icon)
                     .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(theme.primary)
+                    .foregroundColor(isSelected ? theme.background : theme.primary)
                 
                 Text(title)
                     .font(.caption2)
                     .fontWeight(.medium)
-                    .foregroundColor(theme.text)
+                    .foregroundColor(isSelected ? theme.background : theme.text)
                     .multilineTextAlignment(.center)
                     .lineLimit(2)
             }
@@ -589,12 +617,18 @@ struct AddEditTaskView: View {
             .frame(height: 56)
             .background(
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(theme.surfaceSecondary)
-                    .applyNeumorphicShadow(theme.neumorphicButtonStyle)
+                    .fill(isSelected ? theme.accentGradient : LinearGradient(colors: [theme.surfaceSecondary], startPoint: .leading, endPoint: .trailing))
+                    .applyNeumorphicShadow(isSelected ? theme.neumorphicPressedStyle : theme.neumorphicButtonStyle)
             )
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(isSelected ? theme.accent : Color.clear, lineWidth: isSelected ? 2 : 0)
+            )
+            .scaleEffect(isSelected ? 1.02 : 1.0)
         }
         .animatedButton(pressedScale: 0.95)
         .hapticFeedback(.light)
+        .animation(.easeInOut(duration: 0.2), value: isSelected)
     }
     
     private var floatingButtons: some View {
@@ -604,7 +638,7 @@ struct AddEditTaskView: View {
             HStack(spacing: 16) {
                 // Cancel button with enhanced animations
                 Button("Cancel") {
-                    withAnimation(.smoothSpring) {
+                    withAnimation(.easeInOut(duration: 0.2)) {
                         dismiss()
                     }
                 }
@@ -652,59 +686,56 @@ struct AddEditTaskView: View {
         )
         .disabled(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || savingTask)
         .scaleEffect(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 0.95 : 1.0)
-        .animation(.bounceSpring, value: title.isEmpty)
+        .animation(.easeInOut(duration: 0.15), value: title.isEmpty)
         .animatedButton(pressedScale: 0.97)
         .hapticFeedback(.medium)
     }
     
     private var successAnimationOverlay: some View {
-        ZStack {
+        VStack {
             if showSuccessAnimation {
-                Color.black.opacity(0.3)
-                    .ignoresSafeArea()
-                    .transition(.opacity)
-                
-                VStack(spacing: 20) {
+                // Modern iOS-style toast notification
+                HStack(spacing: 12) {
+                    // Success icon with modern styling
                     ZStack {
                         Circle()
-                            .fill(theme.success)
-                            .frame(width: 80, height: 80)
-                            .scaleEffect(showSuccessAnimation ? 1.0 : 0.1)
-                            .animation(.bounceSpring.delay(0.1), value: showSuccessAnimation)
+                            .fill(.green)
+                            .frame(width: 28, height: 28)
                         
                         Image(systemName: "checkmark")
-                            .font(.system(size: 40, weight: .bold))
-                            .foregroundColor(theme.background)
-                            .shadow(
-                                color: theme.background == .black ? Color.white.opacity(0.3) : Color.black.opacity(0.3),
-                                radius: 2,
-                                x: 0,
-                                y: 1
-                            )
-                            .scaleEffect(showSuccessAnimation ? 1.0 : 0.1)
-                            .animation(.bounceSpring.delay(0.2), value: showSuccessAnimation)
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(.white)
                     }
                     
-                    Text(taskToEdit == nil ? "Task Created!" : "Task Updated!")
-                        .font(.title2)
-                        .fontWeight(.bold)
-                        .foregroundColor(.white)
-                        .scaleEffect(showSuccessAnimation ? 1.0 : 0.1)
-                        .animation(.bounceSpring.delay(0.3), value: showSuccessAnimation)
+                    // Success text with proper typography
+                    Text(taskToEdit == nil ? "Task Created" : "Task Updated")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundColor(.primary)
                     
-                    // Particle celebration
-                    ParticleSystem(
-                        particleCount: 15,
-                        colors: [theme.success, .white, theme.primary],
-                        size: 8,
-                        animationDuration: 1.5
-                    )
-                    .opacity(showSuccessAnimation ? 1.0 : 0.0)
-                    .animation(.easeOut(duration: 0.3).delay(0.4), value: showSuccessAnimation)
+                    Spacer()
                 }
-                .transition(.scale.combined(with: .opacity))
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .background(
+                    // Modern material background with proper blur
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(.regularMaterial)
+                        .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
+                )
+                .padding(.horizontal, 20)
+                .transition(
+                    .asymmetric(
+                        insertion: .move(edge: .top).combined(with: .opacity),
+                        removal: .move(edge: .top).combined(with: .opacity)
+                    )
+                )
+                .animation(.spring(response: 0.4, dampingFraction: 0.9), value: showSuccessAnimation)
             }
+            
+            Spacer()
         }
+        .padding(.top, 60) // Position below navigation area
     }
     
     private func formatReminderDate(_ date: Date) -> String {
@@ -712,6 +743,52 @@ struct AddEditTaskView: View {
         formatter.dateStyle = .short
         formatter.timeStyle = .short
         return formatter.string(from: date)
+    }
+    
+    private func determineReminderOption(reminderDate: Date, dueDate: Date?) -> String {
+        if let dueDate = dueDate {
+            let timeDifference = dueDate.timeIntervalSince(reminderDate)
+            if abs(timeDifference - 15 * 60) < 60 { // 15 minutes with 1 minute tolerance
+                return "15 min before"
+            } else if abs(timeDifference - 60 * 60) < 60 { // 1 hour with 1 minute tolerance
+                return "1 hour before"
+            } else if abs(timeDifference - 24 * 60 * 60) < 60 { // 1 day with 1 minute tolerance
+                return "1 day before"
+            }
+        } else {
+            let now = Date()
+            let timeDifference = reminderDate.timeIntervalSince(now)
+            if abs(timeDifference - 60 * 60) < 60 { // 1 hour with 1 minute tolerance
+                return "In 1 hour"
+            }
+            
+            // Check if it's tomorrow at 9 AM
+            let calendar = Calendar.current
+            let reminderComponents = calendar.dateComponents([.hour, .minute], from: reminderDate)
+            let tomorrowComponents = calendar.dateComponents([.year, .month, .day], from: now.addingTimeInterval(86400))
+            if reminderComponents.hour == 9 && reminderComponents.minute == 0 {
+                var expectedTomorrow = tomorrowComponents
+                expectedTomorrow.hour = 9
+                expectedTomorrow.minute = 0
+                if let expectedDate = calendar.date(from: expectedTomorrow),
+                   abs(reminderDate.timeIntervalSince(expectedDate)) < 60 {
+                    return "Tomorrow 9 AM"
+                }
+            }
+            
+            // Check if it's this evening (6 PM)
+            let todayComponents = calendar.dateComponents([.year, .month, .day], from: now)
+            if reminderComponents.hour == 18 && reminderComponents.minute == 0 {
+                var expectedEvening = todayComponents
+                expectedEvening.hour = 18
+                expectedEvening.minute = 0
+                if let expectedDate = calendar.date(from: expectedEvening),
+                   abs(reminderDate.timeIntervalSince(expectedDate)) < 60 {
+                    return "This evening"
+                }
+            }
+        }
+        return "Custom time"
     }
     
     private func saveTask() {
@@ -723,7 +800,7 @@ struct AddEditTaskView: View {
         }
         
         // Start saving animation
-        withAnimation(.smoothSpring) {
+        withAnimation(.easeInOut(duration: 0.2)) {
             savingTask = true
         }
         
@@ -755,7 +832,7 @@ struct AddEditTaskView: View {
             }
             
             // Show success animation
-            withAnimation(.bounceSpring) {
+            withAnimation(.easeInOut(duration: 0.3)) {
                 savingTask = false
                 showSuccessAnimation = true
             }
@@ -763,9 +840,16 @@ struct AddEditTaskView: View {
             // Haptic feedback for successful save
             HapticManager.shared.taskAdded()
             
-            // Dismiss after success animation
+            // Quick success feedback with faster timing
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
-                withAnimation(.smoothSpring) {
+                withAnimation(.spring(response: 0.4, dampingFraction: 0.9)) {
+                    showSuccessAnimation = false
+                }
+            }
+            
+            // Dismiss view quickly after toast disappears
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                withAnimation(.easeInOut(duration: 0.2)) {
                     dismiss()
                 }
             }

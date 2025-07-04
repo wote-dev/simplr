@@ -1,0 +1,18 @@
+"/Users/danielzverev/Documents/Simplr/Simplr/PerformanceMonitor.swift":
+  object: "/Users/danielzverev/Documents/Simplr/build/Build/Intermediates.noindex/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/PerformanceMonitor.o"
+  const-values: "/Users/danielzverev/Documents/Simplr/build/Build/Intermediates.noindex/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/PerformanceMonitor.swiftconstvalues"
+  diagnostics: "/Users/danielzverev/Documents/Simplr/build/Build/Intermediates.noindex/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/PerformanceMonitor.dia"
+  dependencies: "/Users/danielzverev/Documents/Simplr/build/Build/Intermediates.noindex/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/PerformanceMonitor.d"
+  swift-dependencies: "/Users/danielzverev/Documents/Simplr/build/Build/Intermediates.noindex/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/PerformanceMonitor.swiftdeps"
+"/Users/danielzverev/Documents/Simplr/Simplr/ContentView.swift":
+  object: "/Users/danielzverev/Documents/Simplr/build/Build/Intermediates.noindex/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/ContentView.o"
+  dependencies: "/Users/danielzverev/Documents/Simplr/build/Build/Intermediates.noindex/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/ContentView.d"
+  const-values: "/Users/danielzverev/Documents/Simplr/build/Build/Intermediates.noindex/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/ContentView.swiftconstvalues"
+  diagnostics: "/Users/danielzverev/Documents/Simplr/build/Build/Intermediates.noindex/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/ContentView.dia"
+  swift-dependencies: "/Users/danielzverev/Documents/Simplr/build/Build/Intermediates.noindex/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/ContentView.swiftdeps"
+"/Users/danielzverev/Documents/Simplr/Simplr/CelebrationOverlayView.swift":
+  object: "/Users/danielzverev/Documents/Simplr/build/Build/Intermediates.noindex/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/CelebrationOverlayView.o"
+  const-values: "/Users/danielzverev/Documents/Simplr/build/Build/Intermediates.noindex/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/CelebrationOverlayView.swiftconstvalues"
+  swift-dependencies: "/Users/danielzverev/Documents/Simplr/build/Build/Intermediates.noindex/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/CelebrationOverlayView.swiftdeps"
+  dependencies: "/Users/danielzverev/Documents/Simplr/build/Build/Intermediates.noindex/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/CelebrationOverlayView.d"
+  diagnostics: "/Users/danielzverev/Documents/Simplr/build/Build/Intermediates.noindex/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/CelebrationOverlayView.dia"

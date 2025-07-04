@@ -1,0 +1,48 @@
+{
+  "source": "/Users/danielzverev/Documents/Simplr/Simplr/TaskRowView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Mark as Incomplete",
+        "location": {
+          "startingColumn": 40,
+          "startingLine": 397
+        }
+      },
+      {
+        "comment": "",
+        "key": "Mark as Complete",
+        "location": {
+          "startingColumn": 63,
+          "startingLine": 397
+        }
+      },
+      {
+        "comment": "",
+        "key": "Edit Task",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 407
+        }
+      },
+      {
+        "comment": "",
+        "key": "Duplicate Task",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 415
+        }
+      },
+      {
+        "comment": "",
+        "key": "Delete Task",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 425
+        }
+      }
+    ]
+  },
+  "version": 1
+}

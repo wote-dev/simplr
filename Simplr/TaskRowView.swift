@@ -19,22 +19,30 @@ struct TaskRowView: View {
     @State private var isPressed = false
     @State private var showCompletionParticles = false
     @State private var completionScale: CGFloat = 1.0
-    @State private var completionOpacity: Double = 1.0
     @State private var checkmarkScale: CGFloat = 0.1
     @State private var showCheckmark = false
     
-    // Gesture states
+    // Optimized gesture states - reduced state variables
     @State private var dragOffset: CGFloat = 0
     @State private var isDragging = false
     @State private var dragProgress: CGFloat = 0
     @State private var showCompletionIcon = false
     @State private var showDeleteIcon = false
     @State private var hasTriggeredHaptic = false
-    @State private var gestureCompleted = false
+    @State private var initialSwipeDirection: SwipeDirection? = nil
     
-    // Confirmation states
+    // Enum to track initial swipe direction
+    private enum SwipeDirection {
+        case left, right
+    }
+    
+    // Simplified confirmation states
     @State private var showCompletionConfirmation = false
     @State private var showDeleteConfirmation = false
+    
+    // Additional state variables
+    @State private var gestureCompleted = false
+    @State private var completionOpacity: CGFloat = 0.8
     @State private var confirmationProgress: CGFloat = 0
     
     // Constants for gesture thresholds
@@ -73,7 +81,7 @@ struct TaskRowView: View {
                                     .font(.system(size: 18, weight: .bold))
                                     .foregroundColor(getIconColor(for: theme.success))
                                     .scaleEffect(showCompletionIcon ? 1.0 : 0.5)
-                                    .animation(.interpolatingSpring(stiffness: 600, damping: 20), value: showCompletionIcon)
+                                .animation(Animation.adaptiveSnappy, value: showCompletionIcon)
                             }
                         }
                         .opacity(showCompletionConfirmation ? 1.0 : dragProgress)
@@ -115,7 +123,7 @@ struct TaskRowView: View {
                                     .font(.system(size: 18, weight: .bold))
                                     .foregroundColor(getIconColor(for: theme.error))
                                     .scaleEffect(showDeleteIcon ? 1.0 : 0.5)
-                                    .animation(.interpolatingSpring(stiffness: 600, damping: 20), value: showDeleteIcon)
+                                    .animation(Animation.adaptiveSnappy, value: showDeleteIcon)
                             }
                         }
                         .opacity(showDeleteConfirmation ? 1.0 : abs(dragProgress))
@@ -142,7 +150,7 @@ struct TaskRowView: View {
                             )
                             .applyNeumorphicShadow(task.isCompleted ? theme.neumorphicPressedStyle : theme.neumorphicButtonStyle)
                             .scaleEffect(completionScale)
-                            .animation(.interpolatingSpring(stiffness: 400, damping: 25), value: completionScale)
+                            .animation(Animation.adaptiveElastic, value: completionScale)
                         
                         // Checkmark with smooth animation
                         if task.isCompleted || showCheckmark {
@@ -168,7 +176,7 @@ struct TaskRowView: View {
                                     .scaleEffect(showCompletionParticles ? 0 : 1)
                                     .opacity(showCompletionParticles ? 0 : 1)
                                     .animation(
-                                        .easeOut(duration: 0.6).delay(Double(index) * 0.05),
+                                        Animation.adaptiveSmooth.delay(Double(index) * 0.05),
                                         value: showCompletionParticles
                                     )
                             }
@@ -189,7 +197,7 @@ struct TaskRowView: View {
                             .foregroundColor(task.isCompleted ? theme.textSecondary : theme.text)
                             .opacity(task.isCompleted ? 0.7 : 1.0)
                             .scaleEffect(task.isCompleted ? 0.98 : 1.0, anchor: .leading)
-                            .animation(.easeInOut(duration: 0.3), value: task.isCompleted)
+                            .animation(Animation.adaptiveSmooth, value: task.isCompleted)
                             .matchedGeometryEffect(id: "\(task.id)-title", in: namespace)
                         
                         Spacer()
@@ -457,6 +465,36 @@ struct TaskRowView: View {
             return
         }
         
+        // Determine initial swipe direction on first significant movement
+        if initialSwipeDirection == nil && abs(translation) > 10 {
+            initialSwipeDirection = translation > 0 ? .right : .left
+        }
+        
+        // Check if user is swiping in opposite direction from initial swipe
+        if let initialDirection = initialSwipeDirection {
+            let isSwipingOpposite = (initialDirection == .right && translation < 0) || 
+                                   (initialDirection == .left && translation > 0)
+            
+            // If swiping in opposite direction, only allow return to neutral
+            if isSwipingOpposite {
+                // Limit translation to only allow return to neutral (0)
+                let limitedTranslation = initialDirection == .right ? 
+                    max(0, translation) : min(0, translation)
+                
+                withAnimation(.interpolatingSpring(stiffness: 600, damping: 30)) {
+                    dragOffset = limitedTranslation
+                    isDragging = abs(limitedTranslation) > 10
+                }
+                
+                // Reset visual indicators when returning to neutral
+                dragProgress = 0
+                showCompletionIcon = false
+                showDeleteIcon = false
+                
+                return
+            }
+        }
+        
         // Trigger gesture start haptic on first movement
         if !isDragging && abs(translation) > 5 {
             HapticManager.shared.gestureStart()
@@ -636,6 +674,7 @@ struct TaskRowView: View {
         hasTriggeredHaptic = false
         gestureCompleted = false
         confirmationProgress = 0
+        initialSwipeDirection = nil
     }
     
     private func duplicateTask() {

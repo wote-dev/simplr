@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftUI
+import os.log
 
 class CategoryManager: ObservableObject {
     @Published var categories: [TaskCategory] = []
@@ -16,15 +17,36 @@ class CategoryManager: ObservableObject {
     private let categoriesKey = "SavedCategories"
     private let selectedFilterKey = "SelectedCategoryFilter"
     
+    // Performance optimization: Cache category lookups
+    private var categoryLookupCache: [UUID: TaskCategory] = [:]
+    private var lastCacheUpdate = Date.distantPast
+    private let cacheValidityDuration: TimeInterval = 5.0 // 5 second cache for categories
+    
     init() {
         loadCategories()
         loadSelectedFilter()
+        rebuildCache()
+    }
+    
+    // MARK: - Cache Management
+    
+    private func rebuildCache() {
+        categoryLookupCache.removeAll()
+        for category in categories {
+            categoryLookupCache[category.id] = category
+        }
+        lastCacheUpdate = Date()
+    }
+    
+    private func isCacheValid() -> Bool {
+        return Date().timeIntervalSince(lastCacheUpdate) < cacheValidityDuration
     }
     
     // MARK: - Category Management
     
     func addCategory(_ category: TaskCategory) {
         categories.append(category)
+        categoryLookupCache[category.id] = category
         saveCategories()
         HapticManager.shared.selectionChange()
     }
@@ -32,6 +54,7 @@ class CategoryManager: ObservableObject {
     func updateCategory(_ category: TaskCategory) {
         if let index = categories.firstIndex(where: { $0.id == category.id }) {
             categories[index] = category
+            categoryLookupCache[category.id] = category
             saveCategories()
         }
     }
@@ -40,6 +63,7 @@ class CategoryManager: ObservableObject {
         guard category.isCustom else { return } // Can't delete predefined categories
         
         categories.removeAll { $0.id == category.id }
+        categoryLookupCache.removeValue(forKey: category.id)
         saveCategories()
         
         // Clear filter if the deleted category was selected
@@ -71,16 +95,28 @@ class CategoryManager: ObservableObject {
         HapticManager.shared.selectionChange()
     }
     
-    // MARK: - Category Lookup
+    // MARK: - Category Lookup (Optimized with Caching)
     
     func category(for id: UUID?) -> TaskCategory? {
         guard let id = id else { return nil }
-        return categories.first { $0.id == id }
+        
+        return PerformanceMonitor.shared.measure(PerformanceMonitor.MeasurementPoint.categoryLookup) {
+            // Use cache if valid
+            if isCacheValid(), let cachedCategory = categoryLookupCache[id] {
+                return cachedCategory
+            }
+            
+            // Fallback to linear search and update cache
+            let category = categories.first { $0.id == id }
+            if let category = category {
+                categoryLookupCache[id] = category
+            }
+            return category
+        }
     }
     
     func category(for task: Task) -> TaskCategory? {
-        guard let categoryId = task.categoryId else { return nil }
-        return category(for: categoryId)
+        return category(for: task.categoryId)
     }
     
     // MARK: - Smart Category Suggestions
@@ -197,6 +233,9 @@ class CategoryManager: ObservableObject {
         
         // Always save the current state to persist UUIDs
         saveCategories()
+        
+        // Rebuild cache after loading categories
+        rebuildCache()
     }
     
     private func saveSelectedFilter() {

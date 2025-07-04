@@ -8,6 +8,14 @@
 import Foundation
 import UserNotifications
 import UIKit
+import os.log
+
+enum FilterOption: String, CaseIterable {
+    case all = "All"
+    case pending = "Pending"
+    case completed = "Completed"
+    case overdue = "Overdue"
+}
 
 class TaskManager: ObservableObject {
     @Published var tasks: [Task] = []
@@ -17,6 +25,20 @@ class TaskManager: ObservableObject {
     
     // Reference to CategoryManager for Spotlight integration
     private var categoryManager: CategoryManager?
+    
+    // Performance optimization: Cache filtered results
+    private var filteredTasksCache: [String: [Task]] = [:]
+    private var lastCacheUpdate = Date.distantPast
+    private let cacheValidityDuration: TimeInterval = 1.0 // 1 second cache
+    
+    // Lazy computed properties for better performance
+    private var _overdueTasks: [Task]?
+    private var _pendingTasks: [Task]?
+    private var _completedTasks: [Task]?
+    private var _todayTasks: [Task]?
+    private var _futureTasks: [Task]?
+    private var _noDueDateTasks: [Task]?
+    private var lastTasksUpdate = Date.distantPast
     
     init() {
         loadTasks()
@@ -44,10 +66,28 @@ class TaskManager: ObservableObject {
         return tasks.first { $0.id == id }
     }
     
+    // MARK: - Cache Management
+    
+    private func invalidateCache() {
+        filteredTasksCache.removeAll()
+        _overdueTasks = nil
+        _pendingTasks = nil
+        _completedTasks = nil
+        _todayTasks = nil
+        _futureTasks = nil
+        _noDueDateTasks = nil
+        lastTasksUpdate = Date()
+    }
+    
+    private func isCacheValid() -> Bool {
+        return Date().timeIntervalSince(lastCacheUpdate) < cacheValidityDuration
+    }
+    
     // MARK: - Task Management
     
     func addTask(_ task: Task) {
         tasks.append(task)
+        invalidateCache()
         saveTasks()
         
         // Index the new task in Spotlight
@@ -68,6 +108,7 @@ class TaskManager: ObservableObject {
             cancelNotification(for: tasks[index])
             
             tasks[index] = task
+            invalidateCache()
             saveTasks()
             
             // Update the task in Spotlight
@@ -88,6 +129,7 @@ class TaskManager: ObservableObject {
         SpotlightManager.shared.removeTask(task)
         
         tasks.removeAll { $0.id == task.id }
+        invalidateCache()
         saveTasks()
         
         // Haptic feedback for deleting a task
@@ -103,9 +145,6 @@ class TaskManager: ObservableObject {
                 tasks[index].completedAt = Date()
                 HapticManager.shared.taskCompleted()
                 cancelNotification(for: tasks[index])
-                
-                // Check for milestone celebrations after completing a task
-                CelebrationManager.shared.checkMilestones(taskManager: self)
             } else {
                 tasks[index].completedAt = nil
                 HapticManager.shared.taskUncompleted()
@@ -118,6 +157,7 @@ class TaskManager: ObservableObject {
             let categories = categoryManager?.categories ?? []
             SpotlightManager.shared.indexTask(tasks[index], categories: categories)
             
+            invalidateCache()
             saveTasks()
         }
     }
@@ -154,27 +194,31 @@ class TaskManager: ObservableObject {
     // MARK: - Persistence
     
     private func saveTasks() {
-        if let encoded = try? JSONEncoder().encode(tasks) {
-            userDefaults.set(encoded, forKey: tasksKey)
+        PerformanceMonitor.shared.measure(PerformanceMonitor.MeasurementPoint.taskSaving) {
+            if let encoded = try? JSONEncoder().encode(tasks) {
+                userDefaults.set(encoded, forKey: tasksKey)
+            }
         }
     }
     
     private func loadTasks() {
-        if let data = userDefaults.data(forKey: tasksKey),
-           let decodedTasks = try? JSONDecoder().decode([Task].self, from: data) {
-            
-            // Migrate existing completed tasks that don't have completedAt date
-            tasks = decodedTasks.map { task in
-                var migratedTask = task
-                if task.isCompleted && task.completedAt == nil {
-                    // For existing completed tasks, set completedAt to createdAt as a reasonable fallback
-                    migratedTask.completedAt = task.createdAt
+        PerformanceMonitor.shared.measure(PerformanceMonitor.MeasurementPoint.taskLoading) {
+            if let data = userDefaults.data(forKey: tasksKey),
+               let decodedTasks = try? JSONDecoder().decode([Task].self, from: data) {
+                
+                // Migrate existing completed tasks that don't have completedAt date
+                tasks = decodedTasks.map { task in
+                    var migratedTask = task
+                    if task.isCompleted && task.completedAt == nil {
+                        // For existing completed tasks, set completedAt to createdAt as a reasonable fallback
+                        migratedTask.completedAt = task.createdAt
+                    }
+                    return migratedTask
                 }
-                return migratedTask
+                
+                // Save the migrated data back
+                saveTasks()
             }
-            
-            // Save the migrated data back
-            saveTasks()
         }
     }
     
@@ -241,36 +285,66 @@ class TaskManager: ObservableObject {
         }
     }
     
-    // MARK: - Task Filtering Computed Properties
+    // MARK: - Task Filtering Computed Properties (Optimized with Caching)
     
     /// Returns all tasks that are overdue (past due date and not completed)
     var overdueTasks: [Task] {
-        return tasks.filter { $0.isOverdue }
+        if let cached = _overdueTasks, Date().timeIntervalSince(lastTasksUpdate) < cacheValidityDuration {
+            return cached
+        }
+        let result = tasks.filter { $0.isOverdue }
+        _overdueTasks = result
+        return result
     }
     
     /// Returns all tasks that are pending (future due date and not completed)
     var pendingTasks: [Task] {
-        return tasks.filter { $0.isPending }
+        if let cached = _pendingTasks, Date().timeIntervalSince(lastTasksUpdate) < cacheValidityDuration {
+            return cached
+        }
+        let result = tasks.filter { $0.isPending }
+        _pendingTasks = result
+        return result
     }
     
     /// Returns all tasks due today (including completed ones)
     var todayTasks: [Task] {
-        return tasks.filter { $0.isDueToday }
+        if let cached = _todayTasks, Date().timeIntervalSince(lastTasksUpdate) < cacheValidityDuration {
+            return cached
+        }
+        let result = tasks.filter { $0.isDueToday }
+        _todayTasks = result
+        return result
     }
     
     /// Returns all tasks due in the future (tomorrow or later, not completed)
     var futureTasks: [Task] {
-        return tasks.filter { $0.isDueFuture && !$0.isCompleted }
+        if let cached = _futureTasks, Date().timeIntervalSince(lastTasksUpdate) < cacheValidityDuration {
+            return cached
+        }
+        let result = tasks.filter { $0.isDueFuture && !$0.isCompleted }
+        _futureTasks = result
+        return result
     }
     
     /// Returns all completed tasks
     var completedTasks: [Task] {
-        return tasks.filter { $0.isCompleted }
+        if let cached = _completedTasks, Date().timeIntervalSince(lastTasksUpdate) < cacheValidityDuration {
+            return cached
+        }
+        let result = tasks.filter { $0.isCompleted }
+        _completedTasks = result
+        return result
     }
     
     /// Returns all tasks without a due date that are not completed
     var noDueDateTasks: [Task] {
-        return tasks.filter { $0.dueDate == nil && !$0.isCompleted }
+        if let cached = _noDueDateTasks, Date().timeIntervalSince(lastTasksUpdate) < cacheValidityDuration {
+            return cached
+        }
+        let result = tasks.filter { $0.dueDate == nil && !$0.isCompleted }
+        _noDueDateTasks = result
+        return result
     }
     
     // MARK: - Category Filtering
@@ -284,68 +358,129 @@ class TaskManager: ObservableObject {
         }
     }
     
-    /// Returns all tasks for a specific category (including subcategory filtering)
-    func filteredTasks(categoryId: UUID? = nil, searchText: String = "", filterOption: ContentView.FilterOption = .all) -> [Task] {
-        var filtered = tasks
+    /// Returns all tasks for a specific category (including subcategory filtering) - Optimized with caching
+    func filteredTasks(categoryId: UUID? = nil, searchText: String = "", filterOption: FilterOption = .all) -> [Task] {
+        return PerformanceMonitor.shared.measure(PerformanceMonitor.MeasurementPoint.taskFiltering) {
+            // Create cache key
+            let cacheKey = "\(categoryId?.uuidString ?? "nil")_\(searchText)_\(filterOption.rawValue)"
+            
+            // Check cache validity
+            if isCacheValid(), let cachedResult = filteredTasksCache[cacheKey] {
+                return cachedResult
+            }
+            
+            // Perform filtering
+            var filtered = tasks
         
-        // Category filter
+        // Category filter - optimize by using pre-filtered arrays when possible
         if let categoryId = categoryId {
             filtered = filtered.filter { $0.categoryId == categoryId }
         }
         
-        // Search filter
+        // Search filter - case-insensitive search optimization
         if !searchText.isEmpty {
+            let lowercaseSearchText = searchText.lowercased()
             filtered = filtered.filter { task in
-                task.title.localizedCaseInsensitiveContains(searchText) ||
-                task.description.localizedCaseInsensitiveContains(searchText)
+                task.title.lowercased().contains(lowercaseSearchText) ||
+                task.description.lowercased().contains(lowercaseSearchText)
             }
         }
         
-        // Status filter
+        // Status filter - use cached computed properties when possible
         switch filterOption {
         case .all:
             break // No additional filtering
         case .pending:
             filtered = filtered.filter { !$0.isCompleted && !$0.isOverdue }
         case .completed:
-            filtered = filtered.filter { $0.isCompleted }
+            if searchText.isEmpty && categoryId == nil {
+                // Use cached completed tasks if no other filters
+                filtered = completedTasks
+            } else {
+                filtered = filtered.filter { $0.isCompleted }
+            }
         case .overdue:
-            filtered = filtered.filter { $0.isOverdue }
+            if searchText.isEmpty && categoryId == nil {
+                // Use cached overdue tasks if no other filters
+                filtered = overdueTasks
+            } else {
+                filtered = filtered.filter { $0.isOverdue }
+            }
         }
         
-        // Sort by completion status, then by due date, then by creation date
-        return filtered.sorted { task1, task2 in
+        // Optimized sorting - reduce comparison operations
+        let result = filtered.sorted { task1, task2 in
+            // Primary sort: completion status
             if task1.isCompleted != task2.isCompleted {
                 return !task1.isCompleted && task2.isCompleted
             }
             
-            if let date1 = task1.dueDate, let date2 = task2.dueDate {
+            // Secondary sort: due date
+            switch (task1.dueDate, task2.dueDate) {
+            case let (date1?, date2?):
                 return date1 < date2
-            } else if task1.dueDate != nil {
+            case (_?, nil):
                 return true
-            } else if task2.dueDate != nil {
+            case (nil, _?):
                 return false
+            case (nil, nil):
+                // Tertiary sort: creation date (newer first)
+                return task1.createdAt > task2.createdAt
             }
+        }
+        
+        // Cache the result
+             filteredTasksCache[cacheKey] = result
+             lastCacheUpdate = Date()
+             
+             return result
+         }
+    }
+    
+    // MARK: - Bulk Category Operations (Optimized)
+    
+    /// Assign category to multiple tasks - optimized for bulk operations
+    func assignCategory(_ categoryId: UUID?, to taskIds: [UUID]) {
+        let taskIdSet = Set(taskIds) // Convert to Set for O(1) lookup
+        var hasChanges = false
+        
+        for index in tasks.indices {
+            if taskIdSet.contains(tasks[index].id) {
+                tasks[index].categoryId = categoryId
+                hasChanges = true
+            }
+        }
+        
+        if hasChanges {
+            invalidateCache()
+            saveTasks()
             
-            return task1.createdAt > task2.createdAt
+            // Update Spotlight index for affected tasks
+            updateSpotlightIndex()
+            
+            HapticManager.shared.selectionChange()
         }
     }
     
-    // MARK: - Bulk Category Operations
+    // MARK: - Performance Optimization Methods
     
-    /// Assign category to multiple tasks
-    func assignCategory(_ categoryId: UUID?, to taskIds: [UUID]) {
-        for taskId in taskIds {
-            if let index = tasks.firstIndex(where: { $0.id == taskId }) {
-                tasks[index].categoryId = categoryId
+    /// Batch update multiple tasks to reduce save operations
+    func batchUpdateTasks(_ updates: [(UUID, (inout Task) -> Void)]) {
+        var hasChanges = false
+        let updateDict = Dictionary(uniqueKeysWithValues: updates)
+        
+        for index in tasks.indices {
+            if let updateFunction = updateDict[tasks[index].id] {
+                updateFunction(&tasks[index])
+                hasChanges = true
             }
         }
-        saveTasks()
         
-        // Update Spotlight index for affected tasks
-        updateSpotlightIndex()
-        
-        HapticManager.shared.selectionChange()
+        if hasChanges {
+            invalidateCache()
+            saveTasks()
+            updateSpotlightIndex()
+        }
     }
     
     // MARK: - Automatic Cleanup

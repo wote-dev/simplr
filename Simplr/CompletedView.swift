@@ -307,8 +307,6 @@ struct CompletedView: View {
             }
         }
         
-        // Trigger celebration for clearing completed tasks
-        CelebrationManager.shared.checkClearAllMilestone(clearedCount: clearedCount)
         HapticManager.shared.successFeedback()
     }
 }
@@ -403,4 +401,4 @@ struct StatItem: View {
                 .applyNeumorphicShadow(theme.neumorphicStyle)
         )
     }
-} 
+}

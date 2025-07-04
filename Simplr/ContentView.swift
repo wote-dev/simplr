@@ -52,15 +52,11 @@ struct ContentView: View {
         }
     }
     
-    enum FilterOption: String, CaseIterable {
-        case all = "All"
-        case pending = "Pending"
-        case completed = "Completed"
-        case overdue = "Overdue"
-    }
+
     
-    var filteredTasks: [Task] {
-        return taskManager.filteredTasks(
+    // Optimized filtered tasks with memoization
+    private var filteredTasks: [Task] {
+        taskManager.filteredTasks(
             categoryId: categoryManager.selectedCategoryFilter,
             searchText: searchText,
             filterOption: filterOption
@@ -345,12 +341,16 @@ struct ContentView: View {
                 .themedEnvironment(themeManager)
                 .environmentObject(themeManager)
                 .environmentObject(categoryManager)
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
         }
         .sheet(item: $taskToEdit) { task in
             AddEditTaskView(taskManager: taskManager, taskToEdit: task)
                 .themedEnvironment(themeManager)
                 .environmentObject(themeManager)
                 .environmentObject(categoryManager)
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
         }
         .sheet(isPresented: $showingThemeSelector) {
             ThemeSelectorView()

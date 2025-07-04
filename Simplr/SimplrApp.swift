@@ -16,7 +16,7 @@ struct SimplrApp: App {
     @StateObject private var themeManager = ThemeManager()
     @StateObject private var taskManager = TaskManager()
     @StateObject private var categoryManager = CategoryManager()
-    @StateObject private var celebrationManager = CelebrationManager.shared
+    // Celebration manager removed
     @State private var showOnboarding = !UserDefaults.standard.bool(forKey: "HasCompletedOnboarding")
     @State private var selectedTaskId: UUID? = nil
     @State private var quickActionTriggered: QuickAction? = nil
@@ -89,7 +89,7 @@ struct SimplrApp: App {
             .environmentObject(themeManager)
             .environmentObject(taskManager)
             .environmentObject(categoryManager)
-            .environmentObject(celebrationManager)
+            // Celebration manager environment object removed
         }
     }
     

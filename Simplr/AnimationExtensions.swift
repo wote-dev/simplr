@@ -10,40 +10,115 @@ import AudioToolbox
 
 // MARK: - Animation Timing Extensions
 extension Animation {
-    static let smoothSpring = Animation.interpolatingSpring(stiffness: 300, damping: 30)
-    static let bounceSpring = Animation.interpolatingSpring(stiffness: 400, damping: 25)
-    static let gentleSpring = Animation.interpolatingSpring(stiffness: 200, damping: 35)
-    static let quickSpring = Animation.interpolatingSpring(stiffness: 600, damping: 20)
+    // iOS 17+ optimized animations using new spring API
+    @available(iOS 17.0, *)
+    static let smoothSpring = Animation.smooth(duration: 0.4)
     
-    // Enhanced spring animations with more personality
-    static let elasticBounce = Animation.interpolatingSpring(stiffness: 350, damping: 15)
+    @available(iOS 17.0, *)
+    static let snappySpring = Animation.snappy(duration: 0.3)
+    
+    @available(iOS 17.0, *)
+    static let bouncySpring = Animation.bouncy(duration: 0.5, extraBounce: 0.2)
+    
+    // Enhanced elastic bounce with iOS 17+ API
+    @available(iOS 17.0, *)
+    static let elasticBounce = Animation.spring(duration: 0.6, bounce: 0.4)
+    
+    // Hyper bounce for dramatic effects
+    @available(iOS 17.0, *)
+    static let hyperBounce = Animation.spring(duration: 0.7, bounce: 0.6)
+    
+    // Responsive spring for immediate feedback
+    @available(iOS 17.0, *)
+    static let responsiveSpring = Animation.snappy(duration: 0.25)
+    
+    // Gentle bounce for subtle interactions
+    @available(iOS 17.0, *)
+    static let gentleBounce = Animation.smooth(duration: 0.5)
+    
+    // Smooth tab transition with spring
+    @available(iOS 17.0, *)
+    static let smoothTabTransition = Animation.smooth(duration: 0.3)
+    
+    // Fallback animations for iOS 16 and earlier
+    static let smoothSpringLegacy = Animation.easeInOut(duration: 0.2)
+    static let bounceSpringLegacy = Animation.easeInOut(duration: 0.15)
+    static let gentleSpringLegacy = Animation.easeInOut(duration: 0.25)
+    static let quickSpringLegacy = Animation.interpolatingSpring(stiffness: 600, damping: 20)
+    
+    // Enhanced spring animations with more personality (legacy)
+    static let elasticBounceLegacy = Animation.interpolatingSpring(stiffness: 350, damping: 15)
+    static let playfulBounceLegacy = Animation.interpolatingSpring(stiffness: 500, damping: 18)
+    static let dramaticBounceLegacy = Animation.interpolatingSpring(stiffness: 800, damping: 12)
+    static let gentleBounceLegacy = Animation.interpolatingSpring(stiffness: 250, damping: 35)
+    
+    // Extreme personality animations (legacy)
+    static let hyperBounceLegacy = Animation.interpolatingSpring(stiffness: 1000, damping: 8)
+    static let rubberBandLegacy = Animation.interpolatingSpring(stiffness: 200, damping: 10)
+    static let snappyElasticLegacy = Animation.interpolatingSpring(stiffness: 650, damping: 15)
+    
+    // Optimized curves for tab scrolling (legacy)
+    static let responsiveSpringLegacy = Animation.interpolatingSpring(stiffness: 420, damping: 26)
+    static let interactiveGestureLegacy = Animation.interactiveSpring(response: 0.25, dampingFraction: 0.9, blendDuration: 0.0)
+    static let smoothSnapLegacy = Animation.interpolatingSpring(stiffness: 350, damping: 30)
+    
+    // Unified smooth tab animation (legacy)
+    static let smoothTabTransitionLegacy = Animation.interactiveSpring(response: 0.4, dampingFraction: 0.8, blendDuration: 0.1)
+    
+    // Helper methods to use appropriate animation based on iOS version
+    static var adaptiveSmooth: Animation {
+        if #available(iOS 17.0, *) {
+            return .smooth(duration: 0.4)
+        } else {
+            return smoothSpringLegacy
+        }
+    }
+    
+    static var adaptiveSnappy: Animation {
+        if #available(iOS 17.0, *) {
+            return .snappy(duration: 0.3)
+        } else {
+            return responsiveSpringLegacy
+        }
+    }
+    
+    static var adaptiveBouncy: Animation {
+        if #available(iOS 17.0, *) {
+            return .bouncy(duration: 0.5, extraBounce: 0.2)
+        } else {
+            return elasticBounceLegacy
+        }
+    }
+    
+    static var adaptiveElastic: Animation {
+        if #available(iOS 17.0, *) {
+            return .spring(duration: 0.6, bounce: 0.4)
+        } else {
+            return elasticBounceLegacy
+        }
+    }
+    
+    // Maintained legacy properties for backward compatibility
+    static let bounceSpring = Animation.easeInOut(duration: 0.15)
+    static let gentleSpring = Animation.easeInOut(duration: 0.25)
+    static let quickSpring = Animation.interpolatingSpring(stiffness: 600, damping: 20)
     static let playfulBounce = Animation.interpolatingSpring(stiffness: 500, damping: 18)
     static let dramaticBounce = Animation.interpolatingSpring(stiffness: 800, damping: 12)
-    static let gentleBounce = Animation.interpolatingSpring(stiffness: 250, damping: 35)
-    
-    // New extreme personality animations
-    static let hyperBounce = Animation.interpolatingSpring(stiffness: 1000, damping: 8)
     static let rubberBand = Animation.interpolatingSpring(stiffness: 200, damping: 10)
     static let snappyElastic = Animation.interpolatingSpring(stiffness: 650, damping: 15)
-    
-    // New optimized curves for tab scrolling
-    static let responsiveSpring = Animation.interpolatingSpring(stiffness: 420, damping: 26)
     static let interactiveGesture = Animation.interactiveSpring(response: 0.25, dampingFraction: 0.9, blendDuration: 0.0)
     static let smoothSnap = Animation.interpolatingSpring(stiffness: 350, damping: 30)
     
-    // New unified smooth tab animation - eliminates jitter from mixed animation types
-    static let smoothTabTransition = Animation.interactiveSpring(response: 0.4, dampingFraction: 0.8, blendDuration: 0.1)
-    
-    static let smoothEase = Animation.easeInOut(duration: 0.3)
-    static let quickEase = Animation.easeInOut(duration: 0.2)
-    static let gentleEase = Animation.easeInOut(duration: 0.4)
+    static let smoothEase = Animation.easeInOut(duration: 0.2)
+    static let quickEase = Animation.easeInOut(duration: 0.15)
+    static let gentleEase = Animation.easeInOut(duration: 0.25)
     
     // Personality-rich timing curves
     static let snappy = Animation.timingCurve(0.25, 0.1, 0.25, 1, duration: 0.4)
     static let elastic = Animation.timingCurve(0.68, -0.55, 0.265, 1.55, duration: 0.6)
     static let backOut = Animation.timingCurve(0.34, 1.56, 0.64, 1, duration: 0.5)
     
-    // New advanced timing curves
+    // Advanced timing curves
     static let anticipation = Animation.timingCurve(0.1, 0, 0.25, 1, duration: 0.8)
     static let overshoot = Animation.timingCurve(0.25, 0, 0.1, 1.5, duration: 0.6)
     static let bounceBack = Animation.timingCurve(0.68, -0.6, 0.32, 1.6, duration: 0.7)
@@ -172,8 +247,8 @@ struct PersonalityButtonStyle: ViewModifier {
                 }
             )
             .animation(animation, value: isPressed)
-            .animation(.easeInOut(duration: 0.1), value: shadowIntensity)
-            .animation(.easeOut(duration: 0.8), value: sparkleScale)
+            .animation(Animation.adaptiveSmooth, value: shadowIntensity)
+            .animation(Animation.adaptiveSmooth, value: sparkleScale)
             .onLongPressGesture(minimumDuration: 0, maximumDistance: .infinity) {
                 // Empty action
             } onPressingChanged: { pressing in
@@ -194,11 +269,11 @@ struct PersonalityButtonStyle: ViewModifier {
         if pressing {
             // Color shift for dramatic style
             if style == .dramatic {
-                withAnimation(.easeInOut(duration: 0.2)) {
+                withAnimation(Animation.adaptiveSnappy) {
                     colorShift = 30
                 }
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                    withAnimation(.easeInOut(duration: 0.3)) {
+                    withAnimation(Animation.adaptiveSmooth) {
                         colorShift = 0
                     }
                 }
@@ -206,7 +281,7 @@ struct PersonalityButtonStyle: ViewModifier {
             
             // Sparkle effect for magical style
             if style == .magical {
-                withAnimation(.easeOut(duration: 0.8)) {
+                withAnimation(Animation.adaptiveElastic) {
                     sparkleScale = 1.0
                 }
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
@@ -215,7 +290,7 @@ struct PersonalityButtonStyle: ViewModifier {
             }
             
             // Trigger ripple effect
-            withAnimation(.easeOut(duration: 0.6)) {
+            withAnimation(Animation.adaptiveSmooth) {
                 rippleScale = 3.0
                 rippleOpacity = 0.0
             }
@@ -228,7 +303,7 @@ struct PersonalityButtonStyle: ViewModifier {
             
             // Add jiggle for playful style
             if style == .playful || style == .excited {
-                withAnimation(.easeInOut(duration: 0.1).repeatCount(3, autoreverses: true)) {
+                withAnimation(Animation.adaptiveSnappy.repeatCount(3, autoreverses: true)) {
                     jiggleOffset = style == .excited ? 3 : 1.5
                 }
                 
@@ -267,7 +342,7 @@ struct InteractiveButtonStyle: ViewModifier {
     
     init(
         pressedScale: CGFloat = 0.95,
-        animation: Animation = .elasticBounce,
+        animation: Animation = .adaptiveElastic,
         enableBreathe: Bool = false,
         enableGlow: Bool = false,
         enableRotation: Bool = false
@@ -290,8 +365,8 @@ struct InteractiveButtonStyle: ViewModifier {
                 y: 0
             )
             .animation(animation, value: isPressed)
-            .animation(.easeInOut(duration: 2.0).repeatForever(autoreverses: true), value: breatheScale)
-            .animation(.easeInOut(duration: 0.3), value: glowIntensity)
+            .animation(Animation.adaptiveSmooth.repeatForever(autoreverses: true), value: breatheScale)
+            .animation(Animation.adaptiveSmooth, value: glowIntensity)
             .onLongPressGesture(minimumDuration: 0, maximumDistance: .infinity) {
                 // Empty action
             } onPressingChanged: { pressing in
@@ -300,17 +375,17 @@ struct InteractiveButtonStyle: ViewModifier {
                 }
                 
                 if enableGlow {
-                    withAnimation(.easeInOut(duration: 0.3)) {
+                    withAnimation(Animation.adaptiveSmooth) {
                         glowIntensity = pressing ? 1.0 : 0.0
                     }
                 }
                 
                 if enableRotation && pressing {
-                    withAnimation(.elasticBounce) {
+                    withAnimation(Animation.adaptiveElastic) {
                         rotationEffect = Double.random(in: -15...15)
                     }
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-                        withAnimation(.elasticBounce) {
+                        withAnimation(Animation.adaptiveElastic) {
                             rotationEffect = 0
                         }
                     }
@@ -337,7 +412,7 @@ struct AnimatedButtonStyle: ViewModifier {
     
     init(
         pressedScale: CGFloat = 0.95,
-        animation: Animation = .quickSpring,
+        animation: Animation = .adaptiveSnappy,
         enableRotation: Bool = false,
         enablePulse: Bool = false
     ) {
@@ -360,12 +435,12 @@ struct AnimatedButtonStyle: ViewModifier {
                 }
                 
                 if pressing && enableRotation {
-                    withAnimation(.easeInOut(duration: 0.2)) {
+                    withAnimation(Animation.adaptiveSmooth) {
                         rotationAngle = Double.random(in: -5...5)
                     }
                     
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                        withAnimation(.easeInOut(duration: 0.2)) {
+                        withAnimation(Animation.adaptiveSmooth) {
                             rotationAngle = 0
                         }
                     }
@@ -373,7 +448,7 @@ struct AnimatedButtonStyle: ViewModifier {
             }
             .onAppear {
                 if enablePulse {
-                    withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
+                    withAnimation(Animation.adaptiveSmooth.repeatForever(autoreverses: true)) {
                         pulseScale = 1.05
                     }
                 }
@@ -390,7 +465,7 @@ struct MagneticButtonStyle: ViewModifier {
     let pressedScale: CGFloat
     let animation: Animation
     
-    init(pressedScale: CGFloat = 0.92, animation: Animation = .elasticBounce) {
+    init(pressedScale: CGFloat = 0.92, animation: Animation = .adaptiveElastic) {
         self.pressedScale = pressedScale
         self.animation = animation
     }
@@ -406,7 +481,7 @@ struct MagneticButtonStyle: ViewModifier {
                     .allowsHitTesting(false)
             )
             .animation(animation, value: isPressed)
-            .animation(.easeOut(duration: 0.4), value: magneticField)
+            .animation(Animation.adaptiveSmooth, value: magneticField)
             .onLongPressGesture(minimumDuration: 0, maximumDistance: .infinity) {
                 // Empty action
             } onPressingChanged: { pressing in
@@ -414,7 +489,7 @@ struct MagneticButtonStyle: ViewModifier {
                     isPressed = pressing
                 }
                 
-                withAnimation(.easeOut(duration: 0.4)) {
+                withAnimation(Animation.adaptiveSmooth) {
                     magneticField = pressing ? 0.3 : 0
                     glowIntensity = pressing ? 1.0 : 0
                 }
@@ -462,6 +537,20 @@ enum ButtonPersonality {
         }
     }
     
+    var adaptiveAnimation: Animation {
+        switch self {
+        case .gentle: return .adaptiveSmooth
+        case .playful: return .adaptiveBouncy
+        case .dramatic: return .adaptiveElastic
+        case .excited: return .adaptiveBouncy
+        case .professional: return .adaptiveSmooth
+        case .magical: return .adaptiveElastic
+        case .hyperactive: return .adaptiveSnappy
+        case .zen: return .adaptiveSmooth
+        case .bouncy: return .adaptiveBouncy
+        }
+    }
+    
     var sound: AnimationSound {
         switch self {
         case .gentle: return .gentle
@@ -505,6 +594,7 @@ struct ShimmerEffect: ViewModifier {
                 .clipped()
             )
             .onAppear {
+                // Use smooth linear animation for shimmer effect
                 withAnimation(.linear(duration: duration).repeatForever(autoreverses: false)) {
                     phase = 400
                 }
@@ -525,7 +615,7 @@ struct RippleEffect: ViewModifier {
                             .stroke(.white.opacity(0.5), lineWidth: 2)
                             .scaleEffect(ripple.scale)
                             .opacity(ripple.opacity)
-                            .animation(.easeOut(duration: 0.6), value: ripple.scale)
+                            .animation(Animation.adaptiveSmooth, value: ripple.scale)
                     }
                 }
                 .allowsHitTesting(false)
@@ -539,7 +629,7 @@ struct RippleEffect: ViewModifier {
         let newRipple = RippleData()
         ripples.append(newRipple)
         
-        withAnimation(.easeOut(duration: 0.6)) {
+        withAnimation(Animation.adaptiveSmooth) {
             if let index = ripples.firstIndex(where: { $0.id == newRipple.id }) {
                 ripples[index].scale = 3.0
                 ripples[index].opacity = 0.0
@@ -573,6 +663,7 @@ struct BouncingDots: View {
         self.color = color
     }
     
+    
     var body: some View {
         HStack(spacing: spacing) {
             ForEach(0..<dotCount, id: \.self) { index in
@@ -581,7 +672,7 @@ struct BouncingDots: View {
                     .frame(width: dotSize, height: dotSize)
                     .scaleEffect(animating ? 1.2 : 0.8)
                     .animation(
-                        .easeInOut(duration: 0.6)
+                        Animation.adaptiveSmooth
                         .repeatForever(autoreverses: true)
                         .delay(Double(index) * 0.2),
                         value: animating
@@ -609,7 +700,7 @@ struct FloatingAnimation: ViewModifier {
         content
             .offset(y: isFloating ? -intensity : intensity)
             .animation(
-                .easeInOut(duration: duration)
+                Animation.adaptiveSmooth
                 .repeatForever(autoreverses: true),
                 value: isFloating
             )
@@ -636,7 +727,7 @@ struct PulseAnimation: ViewModifier {
         content
             .scaleEffect(isPulsing ? maxScale : minScale)
             .animation(
-                .easeInOut(duration: duration)
+                Animation.adaptiveSmooth
                 .repeatForever(autoreverses: true),
                 value: isPulsing
             )
@@ -656,7 +747,7 @@ struct WiggleAnimation: ViewModifier {
     }
     
     func triggerWiggle() {
-        withAnimation(.easeInOut(duration: 0.1).repeatCount(6, autoreverses: true)) {
+        withAnimation(Animation.adaptiveSnappy.repeatCount(6, autoreverses: true)) {
             offset = 5
         }
         
@@ -741,6 +832,18 @@ extension View {
         self.transition(transition)
     }
     
+    func smoothTransition<T: Equatable>(_ value: T, animation: Animation = .adaptiveSmooth) -> some View {
+        self.animation(animation, value: value)
+    }
+    
+    func snappyTransition<T: Equatable>(_ value: T) -> some View {
+        self.animation(.adaptiveSnappy, value: value)
+    }
+    
+    func bouncyTransition<T: Equatable>(_ value: T) -> some View {
+        self.animation(.adaptiveBouncy, value: value)
+    }
+    
     /// Adds a subtle haptic feedback on tap
     func hapticFeedback(_ style: UIImpactFeedbackGenerator.FeedbackStyle = .light) -> some View {
         onTapGesture {
@@ -752,47 +855,56 @@ extension View {
     func primaryActionButton() -> some View {
         self.personalityButton(style: .dramatic)
             .rippleEffect()
+            .snappyTransition(true)
     }
     
     func secondaryActionButton() -> some View {
         self.personalityButton(style: .gentle)
+            .smoothTransition(true)
     }
     
     func playfulActionButton() -> some View {
         self.personalityButton(style: .playful)
             .enhancedButton(enableRotation: true)
+            .bouncyTransition(true)
     }
     
     func magicalActionButton() -> some View {
         self.personalityButton(style: .magical)
             .magneticButton()
+            .smoothTransition(true)
     }
     
     func excitedActionButton() -> some View {
         self.personalityButton(style: .excited)
             .rippleEffect()
+            .bouncyTransition(true)
     }
     
     // New advanced context-aware styles
     func hyperActionButton() -> some View {
         self.personalityButton(style: .hyperactive)
             .interactiveButton(enableGlow: true, enableRotation: true)
+            .snappyTransition(true)
     }
     
     func zenActionButton() -> some View {
         self.personalityButton(style: .zen, enableSound: false)
             .interactiveButton(enableBreathe: true)
+            .smoothTransition(true)
     }
     
     func bouncyActionButton() -> some View {
         self.personalityButton(style: .bouncy)
             .enhancedButton(enableRotation: true)
+            .bouncyTransition(true)
     }
     
     func celebrationButton() -> some View {
         self.personalityButton(style: .magical)
             .interactiveButton(enableGlow: true)
             .rippleEffect()
+            .smoothTransition(true)
     }
 }
 
@@ -839,4 +951,4 @@ struct ParticleSystem: View {
             animate = true
         }
     }
-} 
+}
