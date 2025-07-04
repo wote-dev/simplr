@@ -728,7 +728,7 @@ struct AddEditTaskView: View {
         }
         
         // Simulate brief saving delay for better UX
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
             if let taskToEdit = taskToEdit {
                 // Edit existing task
                 var updatedTask = taskToEdit
@@ -764,7 +764,7 @@ struct AddEditTaskView: View {
             HapticManager.shared.taskAdded()
             
             // Dismiss after success animation
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
                 withAnimation(.smoothSpring) {
                     dismiss()
                 }

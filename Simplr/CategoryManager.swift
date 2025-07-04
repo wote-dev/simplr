@@ -153,20 +153,50 @@ class CategoryManager: ObservableObject {
     }
     
     private func loadCategories() {
-        // Always start with predefined categories
-        var loadedCategories = TaskCategory.predefined
-        
-        // Load custom categories if they exist
+        // First try to load all categories from saved data
         if let data = userDefaults.data(forKey: categoriesKey),
            let savedCategories = try? JSONDecoder().decode([TaskCategory].self, from: data) {
             
-            // Add only custom categories (predefined ones are already included)
-            let customCategories = savedCategories.filter { $0.isCustom }
-            loadedCategories.append(contentsOf: customCategories)
+            // Separate saved categories into predefined and custom
+            var customCategories: [TaskCategory] = []
+            var existingPredefinedCategories: [TaskCategory] = []
+            
+            for savedCategory in savedCategories {
+                if savedCategory.isCustom {
+                    customCategories.append(savedCategory)
+                } else {
+                    // Check if this is a predefined category with the correct UUID
+                    if TaskCategory.predefined.contains(where: { $0.id == savedCategory.id }) {
+                        existingPredefinedCategories.append(savedCategory)
+                    }
+                    // If it's a predefined category with wrong UUID, we'll replace it
+                }
+            }
+            
+            // Start with the correct predefined categories (with fixed UUIDs)
+            categories = TaskCategory.predefined
+            
+            // Add custom categories
+            categories.append(contentsOf: customCategories)
+            
+            // If we had predefined categories with wrong UUIDs, we need to migrate tasks
+            let savedPredefinedWithWrongUUIDs = savedCategories.filter { savedCategory in
+                !savedCategory.isCustom && 
+                !TaskCategory.predefined.contains(where: { $0.id == savedCategory.id }) &&
+                TaskCategory.predefined.contains(where: { $0.name == savedCategory.name })
+            }
+            
+            // If there are categories to migrate, we need to update task references
+            if !savedPredefinedWithWrongUUIDs.isEmpty {
+                migratePredefinedCategoryUUIDs(savedPredefinedWithWrongUUIDs)
+            }
+        } else {
+            // No saved data - use default predefined categories for first launch
+            categories = TaskCategory.predefined
         }
         
-        categories = loadedCategories
-        saveCategories() // Save the merged list
+        // Always save the current state to persist UUIDs
+        saveCategories()
     }
     
     private func saveSelectedFilter() {
@@ -183,4 +213,48 @@ class CategoryManager: ObservableObject {
             selectedCategoryFilter = filterId
         }
     }
-} 
+    
+    // MARK: - Migration
+    
+    /// Migrates tasks from old predefined category UUIDs to new fixed UUIDs
+    private func migratePredefinedCategoryUUIDs(_ oldCategories: [TaskCategory]) {
+        // Create mapping from old UUID to new UUID
+        var uuidMapping: [UUID: UUID] = [:]
+        
+        for oldCategory in oldCategories {
+            if let newCategory = TaskCategory.predefined.first(where: { $0.name == oldCategory.name }) {
+                uuidMapping[oldCategory.id] = newCategory.id
+            }
+        }
+        
+        // Update tasks in UserDefaults directly since we don't have access to TaskManager here
+        if let tasksData = userDefaults.data(forKey: "SavedTasks"),
+           var tasks = try? JSONDecoder().decode([Task].self, from: tasksData) {
+            
+            var tasksUpdated = false
+            
+            for i in 0..<tasks.count {
+                if let oldCategoryId = tasks[i].categoryId,
+                   let newCategoryId = uuidMapping[oldCategoryId] {
+                    tasks[i].categoryId = newCategoryId
+                    tasksUpdated = true
+                }
+            }
+            
+            // Save updated tasks if any changes were made
+            if tasksUpdated {
+                if let encodedTasks = try? JSONEncoder().encode(tasks) {
+                    userDefaults.set(encodedTasks, forKey: "SavedTasks")
+                    print("Migrated \(uuidMapping.count) predefined category UUIDs")
+                }
+            }
+        }
+        
+        // Update selected filter if it references an old UUID
+        if let selectedFilter = selectedCategoryFilter,
+           let newFilterId = uuidMapping[selectedFilter] {
+            selectedCategoryFilter = newFilterId
+            saveSelectedFilter()
+        }
+    }
+}

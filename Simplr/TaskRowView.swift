@@ -180,7 +180,7 @@ struct TaskRowView: View {
                 .animation(.interpolatingSpring(stiffness: 600, damping: 30), value: isPressed)
                 
                 VStack(alignment: .leading, spacing: 8) {
-                    // Task title with category indicator
+                    // Task title 
                     HStack(spacing: 8) {
                         Text(task.title)
                             .font(.headline)
@@ -192,8 +192,12 @@ struct TaskRowView: View {
                             .animation(.easeInOut(duration: 0.3), value: task.isCompleted)
                             .matchedGeometryEffect(id: "\(task.id)-title", in: namespace)
                         
-                        // Category indicator
-                        if let category = categoryManager.category(for: task) {
+                        Spacer()
+                    }
+                    
+                    // Category indicator - now on its own row for better spacing
+                    if let category = categoryManager.category(for: task) {
+                        HStack {
                             HStack(spacing: 4) {
                                 Circle()
                                     .fill(category.color.gradient)
@@ -222,9 +226,9 @@ struct TaskRowView: View {
                             .scaleEffect(task.isCompleted ? 0.95 : 1.0)
                             .opacity(task.isCompleted ? 0.6 : 1.0)
                             .animation(.easeInOut(duration: 0.3).delay(0.05), value: task.isCompleted)
+                            
+                            Spacer()
                         }
-                        
-                        Spacer()
                     }
                     
                     // Task description with fade animation
@@ -239,84 +243,34 @@ struct TaskRowView: View {
                             .matchedGeometryEffect(id: "\(task.id)-description", in: namespace)
                     }
                     
-                    // Due date and reminder info with slide animation
+                    // Due date and reminder info with improved spacing - vertical layout when both present
                     if task.dueDate != nil || (task.hasReminder && !task.isCompleted) {
-                        HStack(spacing: 8) {
-                            if let dueDate = task.dueDate {
-                                HStack(spacing: 3) {
-                                    Image(systemName: task.isOverdue ? "exclamationmark.triangle.fill" : 
-                                          task.isPending ? "clock" : "calendar")
-                                        .font(.caption2)
-                                        .shadow(
-                                            color: theme.background == .black ? Color.white.opacity(0.05) : Color.clear,
-                                            radius: 0.5,
-                                            x: 0,
-                                            y: 0.3
-                                        )
-                                    
-                                    Text(formatDueDate(dueDate))
-                                        .font(.caption2)
-                                        .fontWeight(.medium)
+                        let hasBothDateAndReminder = task.dueDate != nil && task.hasReminder && !task.isCompleted
+                        
+                        if hasBothDateAndReminder {
+                            // Vertical layout when both are present for better spacing
+                            VStack(alignment: .leading, spacing: 6) {
+                                if let dueDate = task.dueDate {
+                                    dueDatePill(dueDate)
                                 }
-                                .foregroundColor(
-                                    task.isOverdue ? theme.error : 
-                                    task.isPending ? theme.warning : 
-                                    theme.textSecondary
-                                )
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 3)
-                                .background(
-                                    Capsule()
-                                        .fill(
-                                            task.isOverdue ? theme.error.opacity(0.15) :
-                                            task.isPending ? theme.warning.opacity(0.1) :
-                                            theme.surfaceSecondary
-                                        )
-                                )
-                                .overlay(
-                                    Capsule()
-                                        .stroke(
-                                            task.isOverdue ? theme.error.opacity(0.3) :
-                                            task.isPending ? theme.warning.opacity(0.2) :
-                                            Color.clear,
-                                            lineWidth: 1
-                                        )
-                                )
-                                .scaleEffect(task.isCompleted ? 0.95 : 1.0)
-                                .opacity(task.isCompleted ? 0.6 : 1.0)
-                                .animation(.easeInOut(duration: 0.3).delay(0.15), value: task.isCompleted)
-                            }
-                            
-                            if task.hasReminder && !task.isCompleted {
-                                HStack(spacing: 3) {
-                                    Image(systemName: "bell.fill")
-                                        .font(.caption2)
-                                        .shadow(
-                                            color: theme.background == .black ? Color.white.opacity(0.05) : Color.clear,
-                                            radius: 0.5,
-                                            x: 0,
-                                            y: 0.3
-                                        )
-                                    
-                                    if let reminderDate = task.reminderDate {
-                                        Text(formatReminderTime(reminderDate))
-                                            .font(.caption2)
-                                            .fontWeight(.medium)
-                                    }
+                                
+                                if task.hasReminder && !task.isCompleted {
+                                    reminderPill()
                                 }
-                                .foregroundColor(theme.warning)
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 3)
-                                .background(
-                                    Capsule()
-                                        .fill(theme.warning.opacity(0.1))
-                                )
-                                .scaleEffect(task.isCompleted ? 0.95 : 1.0)
-                                .opacity(task.isCompleted ? 0.6 : 1.0)
-                                .animation(.easeInOut(duration: 0.3).delay(0.2), value: task.isCompleted)
                             }
-                            
-                            Spacer()
+                        } else {
+                            // Horizontal layout when only one is present
+                            HStack(spacing: 8) {
+                                if let dueDate = task.dueDate {
+                                    dueDatePill(dueDate)
+                                }
+                                
+                                if task.hasReminder && !task.isCompleted {
+                                    reminderPill()
+                                }
+                                
+                                Spacer()
+                            }
                         }
                     }
                 }
@@ -686,6 +640,80 @@ struct TaskRowView: View {
     
     private func duplicateTask() {
         taskManager.duplicateTask(task)
+    }
+    
+    private func dueDatePill(_ date: Date) -> some View {
+        HStack(spacing: 3) {
+            Image(systemName: task.isOverdue ? "exclamationmark.triangle.fill" : 
+                  task.isPending ? "clock" : "calendar")
+                .font(.caption2)
+                .shadow(
+                    color: theme.background == .black ? Color.white.opacity(0.05) : Color.clear,
+                    radius: 0.5,
+                    x: 0,
+                    y: 0.3
+                )
+            
+            Text(formatDueDate(date))
+                .font(.caption2)
+                .fontWeight(.medium)
+        }
+        .foregroundColor(
+            task.isOverdue ? theme.error : 
+            task.isPending ? theme.warning : 
+            theme.textSecondary
+        )
+        .padding(.horizontal, 6)
+        .padding(.vertical, 3)
+        .background(
+            Capsule()
+                .fill(
+                    task.isOverdue ? theme.error.opacity(0.15) :
+                    task.isPending ? theme.warning.opacity(0.1) :
+                    theme.surfaceSecondary
+                )
+        )
+        .overlay(
+            Capsule()
+                .stroke(
+                    task.isOverdue ? theme.error.opacity(0.3) :
+                    task.isPending ? theme.warning.opacity(0.2) :
+                    Color.clear,
+                    lineWidth: 1
+                )
+        )
+        .scaleEffect(task.isCompleted ? 0.95 : 1.0)
+        .opacity(task.isCompleted ? 0.6 : 1.0)
+        .animation(.easeInOut(duration: 0.3).delay(0.15), value: task.isCompleted)
+    }
+    
+    private func reminderPill() -> some View {
+        HStack(spacing: 3) {
+            Image(systemName: "bell.fill")
+                .font(.caption2)
+                .shadow(
+                    color: theme.background == .black ? Color.white.opacity(0.05) : Color.clear,
+                    radius: 0.5,
+                    x: 0,
+                    y: 0.3
+                )
+            
+            if let reminderDate = task.reminderDate {
+                Text(formatReminderTime(reminderDate))
+                    .font(.caption2)
+                    .fontWeight(.medium)
+            }
+        }
+        .foregroundColor(theme.warning)
+        .padding(.horizontal, 6)
+        .padding(.vertical, 3)
+        .background(
+            Capsule()
+                .fill(theme.warning.opacity(0.1))
+        )
+        .scaleEffect(task.isCompleted ? 0.95 : 1.0)
+        .opacity(task.isCompleted ? 0.6 : 1.0)
+        .animation(.easeInOut(duration: 0.3).delay(0.2), value: task.isCompleted)
     }
     
     private func formatDueDate(_ date: Date) -> String {

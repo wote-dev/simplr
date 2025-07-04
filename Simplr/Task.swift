@@ -10,25 +10,34 @@ import SwiftUI
 
 // MARK: - Task Category
 struct TaskCategory: Identifiable, Codable, Hashable {
-    let id = UUID()
+    let id: UUID
     var name: String
     var color: CategoryColor
     var isCustom: Bool
     
     init(name: String, color: CategoryColor, isCustom: Bool = false) {
+        self.id = UUID()
         self.name = name
         self.color = color
         self.isCustom = isCustom
     }
     
-    // Predefined categories
-    static let work = TaskCategory(name: "Work", color: .blue)
-    static let personal = TaskCategory(name: "Personal", color: .green)
-    static let shopping = TaskCategory(name: "Shopping", color: .orange)
-    static let health = TaskCategory(name: "Health", color: .red)
-    static let learning = TaskCategory(name: "Learning", color: .purple)
-    static let travel = TaskCategory(name: "Travel", color: .indigo)
-    static let uncategorized = TaskCategory(name: "Uncategorized", color: .gray)
+    // Custom init for creating categories with specific IDs (for predefined categories)
+    init(id: UUID, name: String, color: CategoryColor, isCustom: Bool = false) {
+        self.id = id
+        self.name = name
+        self.color = color
+        self.isCustom = isCustom
+    }
+    
+    // Predefined categories with fixed UUIDs to maintain consistency across app launches
+    static let work = TaskCategory(id: UUID(uuidString: "550e8400-e29b-41d4-a716-446655440001")!, name: "Work", color: .blue)
+    static let personal = TaskCategory(id: UUID(uuidString: "550e8400-e29b-41d4-a716-446655440002")!, name: "Personal", color: .green)
+    static let shopping = TaskCategory(id: UUID(uuidString: "550e8400-e29b-41d4-a716-446655440003")!, name: "Shopping", color: .orange)
+    static let health = TaskCategory(id: UUID(uuidString: "550e8400-e29b-41d4-a716-446655440004")!, name: "Health", color: .red)
+    static let learning = TaskCategory(id: UUID(uuidString: "550e8400-e29b-41d4-a716-446655440005")!, name: "Learning", color: .purple)
+    static let travel = TaskCategory(id: UUID(uuidString: "550e8400-e29b-41d4-a716-446655440006")!, name: "Travel", color: .indigo)
+    static let uncategorized = TaskCategory(id: UUID(uuidString: "550e8400-e29b-41d4-a716-446655440007")!, name: "Uncategorized", color: .gray)
     
     static let predefined: [TaskCategory] = [
         .work, .personal, .shopping, .health, .learning, .travel
@@ -100,7 +109,7 @@ enum CategoryColor: String, CaseIterable, Codable {
 }
 
 struct Task: Identifiable, Codable {
-    let id = UUID()
+    let id: UUID
     var title: String
     var description: String
     var isCompleted: Bool
@@ -112,6 +121,7 @@ struct Task: Identifiable, Codable {
     var categoryId: UUID?
     
     init(title: String, description: String = "", dueDate: Date? = nil, hasReminder: Bool = false, reminderDate: Date? = nil, categoryId: UUID? = nil) {
+        self.id = UUID()
         self.title = title
         self.description = description
         self.isCompleted = false
