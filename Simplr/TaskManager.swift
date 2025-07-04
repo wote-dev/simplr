@@ -471,8 +471,20 @@ class TaskManager: ObservableObject {
         
         for index in tasks.indices {
             if let updateFunction = updateDict[tasks[index].id] {
+                let originalTask = tasks[index]
+                
+                // Cancel existing notification before updating
+                cancelNotification(for: originalTask)
+                
                 updateFunction(&tasks[index])
                 hasChanges = true
+                
+                // Schedule new notification if task has reminder and is not completed
+                if tasks[index].hasReminder, 
+                   let reminderDate = tasks[index].reminderDate,
+                   !tasks[index].isCompleted {
+                    scheduleNotification(for: tasks[index], at: reminderDate)
+                }
             }
         }
         
