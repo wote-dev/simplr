@@ -2,7 +2,7 @@
 //  SimplrWidgetBundle.swift
 //  SimplrWidget
 //
-//  Created by Daniel Zverev on 2/7/2025.
+//  Created by Daniel Zverev on 6/7/2025.
 //
 
 import WidgetKit

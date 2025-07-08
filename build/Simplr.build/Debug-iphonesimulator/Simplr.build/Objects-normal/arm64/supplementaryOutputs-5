@@ -1,0 +1,18 @@
+"/Users/danielzverev/Documents/Simplr/Simplr/SpotlightManager.swift":
+  object: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/SpotlightManager.o"
+  diagnostics: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/SpotlightManager.dia"
+  const-values: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/SpotlightManager.swiftconstvalues"
+  dependencies: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/SpotlightManager.d"
+  swift-dependencies: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/SpotlightManager.swiftdeps"
+"/Users/danielzverev/Documents/Simplr/Simplr/OnboardingView.swift":
+  diagnostics: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/OnboardingView.dia"
+  swift-dependencies: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/OnboardingView.swiftdeps"
+  dependencies: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/OnboardingView.d"
+  object: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/OnboardingView.o"
+  const-values: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/OnboardingView.swiftconstvalues"
+"/Users/danielzverev/Documents/Simplr/Simplr/UpcomingView.swift":
+  dependencies: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/UpcomingView.d"
+  const-values: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/UpcomingView.swiftconstvalues"
+  object: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/UpcomingView.o"
+  diagnostics: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/UpcomingView.dia"
+  swift-dependencies: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/UpcomingView.swiftdeps"

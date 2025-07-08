@@ -299,7 +299,6 @@ struct CompletedView: View {
     
     private func clearAllCompleted() {
         let completedTasksToDelete = completedTasks
-        let clearedCount = completedTasksToDelete.count
         
         withAnimation(.smoothSpring) {
             for task in completedTasksToDelete {

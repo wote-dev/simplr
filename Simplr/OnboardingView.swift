@@ -159,7 +159,7 @@ struct OnboardingView: View {
                                         .font(.system(size: 14, weight: .medium))
                                 }
                             }
-                            .foregroundColor(.white)
+                            .foregroundColor(theme.background)
                             .frame(height: 50)
                             .frame(maxWidth: .infinity)
                             .background(
@@ -220,4 +220,4 @@ struct OnboardingStep {
 #Preview {
     OnboardingView(showOnboarding: .constant(true))
         .themedEnvironment(ThemeManager())
-} 
+}

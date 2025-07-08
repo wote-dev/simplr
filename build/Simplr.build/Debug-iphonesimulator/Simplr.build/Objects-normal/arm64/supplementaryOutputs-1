@@ -1,0 +1,18 @@
+"/Users/danielzverev/Documents/Simplr/Simplr/TaskDetailPreviewView.swift":
+  diagnostics: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/TaskDetailPreviewView.dia"
+  swift-dependencies: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/TaskDetailPreviewView.swiftdeps"
+  const-values: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/TaskDetailPreviewView.swiftconstvalues"
+  object: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/TaskDetailPreviewView.o"
+  dependencies: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/TaskDetailPreviewView.d"
+"/Users/danielzverev/Documents/Simplr/Simplr/HapticManager.swift":
+  const-values: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/HapticManager.swiftconstvalues"
+  dependencies: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/HapticManager.d"
+  object: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/HapticManager.o"
+  diagnostics: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/HapticManager.dia"
+  swift-dependencies: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/HapticManager.swiftdeps"
+"/Users/danielzverev/Documents/Simplr/Simplr/TodayView.swift":
+  diagnostics: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/TodayView.dia"
+  const-values: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/TodayView.swiftconstvalues"
+  swift-dependencies: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/TodayView.swiftdeps"
+  object: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/TodayView.o"
+  dependencies: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/TodayView.d"

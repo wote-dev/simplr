@@ -21,6 +21,7 @@ struct TaskRowView: View {
     @State private var completionScale: CGFloat = 1.0
     @State private var checkmarkScale: CGFloat = 0.1
     @State private var showCheckmark = false
+    @State private var showingQuickListDetail = false
     
     // Optimized gesture states - reduced state variables
     @State private var dragOffset: CGFloat = 0
@@ -251,6 +252,68 @@ struct TaskRowView: View {
                             .matchedGeometryEffect(id: "\(task.id)-description", in: namespace)
                     }
                     
+                    // Quick List indicator
+                    if task.hasQuickList {
+                        HStack(spacing: 8) {
+                            HStack(spacing: 4) {
+                                Image(systemName: "list.bullet")
+                                    .font(.caption2)
+                                    .fontWeight(.medium)
+                                    .foregroundColor(theme.primary)
+                                
+                                Text("\(task.completedQuickListItemsCount)/\(task.totalQuickListItemsCount)")
+                                    .font(.caption2)
+                                    .fontWeight(.medium)
+                                    .foregroundColor(theme.textSecondary)
+                            }
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(
+                                Capsule()
+                                    .fill(theme.surface)
+                                    .overlay(
+                                        Capsule()
+                                            .stroke(theme.primary.opacity(0.2), lineWidth: 0.5)
+                                    )
+                            )
+                            
+                            // Progress bar
+                            GeometryReader { geometry in
+                                ZStack(alignment: .leading) {
+                                    // Background track with border
+                                    Capsule()
+                                        .fill(theme.surface)
+                                        .overlay(
+                                            Capsule()
+                                                .stroke(theme.textTertiary.opacity(0.3), lineWidth: 0.5)
+                                        )
+                                        .frame(height: 5)
+                                    
+                                    // Progress fill with clear end indicator
+                                    if task.quickListCompletionPercentage > 0 {
+                                        Capsule()
+                                            .fill(task.allQuickListItemsCompleted ? Color.green.gradient : theme.primary.gradient)
+                                            .frame(width: max(5, geometry.size.width * task.quickListCompletionPercentage), height: 5)
+                                            .overlay(
+                                                // End cap indicator
+                                                Capsule()
+                                                    .stroke(task.allQuickListItemsCompleted ? Color.green : theme.primary, lineWidth: 1)
+                                                    .frame(width: max(5, geometry.size.width * task.quickListCompletionPercentage), height: 5)
+                                            )
+                                            .animation(.easeInOut(duration: 0.3), value: task.quickListCompletionPercentage)
+                                    }
+                                }
+                            }
+                            .frame(height: 5)
+                            .frame(maxWidth: 60)
+                            
+                            Spacer()
+                        }
+                        .opacity(task.isCompleted ? 0.6 : 1.0)
+                        .scaleEffect(task.isCompleted ? 0.98 : 1.0, anchor: .leading)
+                        .animation(.easeInOut(duration: 0.3).delay(0.15), value: task.isCompleted)
+                    }
+                    
                     // Due date and reminder info with improved spacing - vertical layout when both present
                     if task.dueDate != nil || (task.hasReminder && !task.isCompleted) {
                         let hasBothDateAndReminder = task.dueDate != nil && task.hasReminder && !task.isCompleted
@@ -340,8 +403,12 @@ struct TaskRowView: View {
             // Dismiss confirmations if tapped elsewhere
             if showCompletionConfirmation || showDeleteConfirmation {
                 dismissConfirmations()
+            } else if task.hasQuickList {
+                // Open quick list detail view for tasks with quick lists
+                HapticManager.shared.buttonTap()
+                showingQuickListDetail = true
             } else {
-                // Subtle tap feedback
+                // Subtle tap feedback for tasks without quick lists
                 withAnimation(.easeInOut(duration: 0.1)) {
                     isPressed = true
                 }
@@ -367,6 +434,12 @@ struct TaskRowView: View {
             withAnimation(.interpolatingSpring(stiffness: 300, damping: 30).delay(0.1)) {
                 completionOpacity = 1.0
             }
+        }
+        .sheet(isPresented: $showingQuickListDetail) {
+            QuickListDetailView(taskId: task.id)
+                .environmentObject(taskManager)
+                .environmentObject(categoryManager)
+                .environment(\.theme, theme)
         }
     }
     

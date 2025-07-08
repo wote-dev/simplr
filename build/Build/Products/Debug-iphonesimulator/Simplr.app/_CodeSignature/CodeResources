@@ -14,7 +14,7 @@
 		</data>
 		<key>Assets.car</key>
 		<data>
-		8RPAjltNNfgchvctuthFX+HXv6E=
+		kzSrXHCps74fnKrwniPoWvSlpco=
 		</data>
 		<key>Frameworks/Testing.framework/Info.plist</key>
 		<data>
@@ -138,7 +138,7 @@
 		</data>
 		<key>Info.plist</key>
 		<data>
-		bSL4bpPhNooenKaVlbxHCea4/n0=
+		h9VFNojy2+9xA0qBixJbfy7wwT4=
 		</data>
 		<key>PkgInfo</key>
 		<data>
@@ -156,9 +156,37 @@
 		<data>
 		NqDvVklfAzBg8VAC5eWDpWVWHxY=
 		</data>
+		<key>PlugIns/SimplrWidgetExtension.appex/Info.plist</key>
+		<data>
+		WHghIo4HpKSTMUytv0kBTlrtgwQ=
+		</data>
+		<key>PlugIns/SimplrWidgetExtension.appex/Metadata.appintents/extract.actionsdata</key>
+		<data>
+		EztCoBhVVPH2bpdQDlOqUUVnnsk=
+		</data>
+		<key>PlugIns/SimplrWidgetExtension.appex/Metadata.appintents/version.json</key>
+		<data>
+		+UZz/z5iOYpisP9mi6xHzCIu2qM=
+		</data>
+		<key>PlugIns/SimplrWidgetExtension.appex/SimplrWidgetExtension</key>
+		<data>
+		xFAjL/fXXy40vRuTmec7avNaR18=
+		</data>
+		<key>PlugIns/SimplrWidgetExtension.appex/SimplrWidgetExtension.debug.dylib</key>
+		<data>
+		8Rh2BUtbAfBHqPUTSSVIo+J7aM8=
+		</data>
+		<key>PlugIns/SimplrWidgetExtension.appex/_CodeSignature/CodeResources</key>
+		<data>
+		GClGDgpO7nTeSt/MFGYAHaVB54M=
+		</data>
+		<key>PlugIns/SimplrWidgetExtension.appex/__preview.dylib</key>
+		<data>
+		RpZH4J6WEc5oAwv6uncT7IviHrE=
+		</data>
 		<key>Simplr.debug.dylib</key>
 		<data>
-		2C6MEVxMDv1ur0Pzzep0ZE/gBFg=
+		5qxP1o1Z3JRjUKJQZp+1Z8yUp+E=
 		</data>
 		<key>__preview.dylib</key>
 		<data>
@@ -185,7 +213,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			+4nyI3stlluUt51LA6AUVtEphNcQqqdppB1v7oZ9cm8=
+			hUxbBfv9+tno8Nn8Tt3DFiFGmaScomYeK4n4mBrv6TQ=
 			</data>
 		</dict>
 		<key>Frameworks/Testing.framework/Info.plist</key>
@@ -419,11 +447,60 @@
 			2BzF7nNUK7DHRlefrtd17LRX/FMQ4KFfTMIwYJoQo24=
 			</data>
 		</dict>
+		<key>PlugIns/SimplrWidgetExtension.appex/Info.plist</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			i7ZbjnIA4iCdg+EGISVwR2HFrfGJHGQX+i5pjGnbPD0=
+			</data>
+		</dict>
+		<key>PlugIns/SimplrWidgetExtension.appex/Metadata.appintents/extract.actionsdata</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			SDWeFiaTn641avI9GAhUTZudzdajMSaF3FAvC4MxkSk=
+			</data>
+		</dict>
+		<key>PlugIns/SimplrWidgetExtension.appex/Metadata.appintents/version.json</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			F5xTX3ZY6f6x6ruFf3wRtDVFQb25gm08B6fI8izWcHk=
+			</data>
+		</dict>
+		<key>PlugIns/SimplrWidgetExtension.appex/SimplrWidgetExtension</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			EVljUlX9aiuQKDHfy7fqroKpVH48JITRaAgMbtQ2eds=
+			</data>
+		</dict>
+		<key>PlugIns/SimplrWidgetExtension.appex/SimplrWidgetExtension.debug.dylib</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			AywdJkqB7rYAWogO5/VJ3w93xwcbTHB4nAO868XE3sU=
+			</data>
+		</dict>
+		<key>PlugIns/SimplrWidgetExtension.appex/_CodeSignature/CodeResources</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			a/athAfNWVnlUb874Bn6NRkGH0mRJRE7W4mwpDTNJF0=
+			</data>
+		</dict>
+		<key>PlugIns/SimplrWidgetExtension.appex/__preview.dylib</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			rf+stUIJBgoFb2RGSb7mBv0UqgiX2Sqw7Z7C5dD/LY8=
+			</data>
+		</dict>
 		<key>Simplr.debug.dylib</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			zghMomc16o4o0wPomkWAniynFdjMuBZ6hBGYwtC8YLs=
+			ExFfYBa0C4sqsyFAOTccpX009kLqdHXdSKwUI8rBR7Q=
 			</data>
 		</dict>
 		<key>__preview.dylib</key>

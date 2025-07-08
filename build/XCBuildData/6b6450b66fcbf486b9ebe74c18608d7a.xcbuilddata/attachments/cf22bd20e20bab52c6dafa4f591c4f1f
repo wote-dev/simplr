@@ -1,0 +1,58 @@
+{
+  "" : {
+    "diagnostics" : "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/SimplrWidgetExtension.build/Objects-normal/arm64/SimplrWidgetExtension-master.dia",
+    "emit-module-dependencies" : "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/SimplrWidgetExtension.build/Objects-normal/arm64/SimplrWidgetExtension-master-emit-module.d",
+    "emit-module-diagnostics" : "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/SimplrWidgetExtension.build/Objects-normal/arm64/SimplrWidgetExtension-master-emit-module.dia",
+    "swift-dependencies" : "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/SimplrWidgetExtension.build/Objects-normal/arm64/SimplrWidgetExtension-master.swiftdeps"
+  },
+  "/Users/danielzverev/Documents/Simplr/SimplrWidget/SharedModels.swift" : {
+    "const-values" : "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/SimplrWidgetExtension.build/Objects-normal/arm64/SharedModels.swiftconstvalues",
+    "dependencies" : "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/SimplrWidgetExtension.build/Objects-normal/arm64/SharedModels.d",
+    "diagnostics" : "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/SimplrWidgetExtension.build/Objects-normal/arm64/SharedModels.dia",
+    "index-unit-output-path" : "/Simplr.build/Debug-iphoneos/SimplrWidgetExtension.build/Objects-normal/arm64/SharedModels.o",
+    "llvm-bc" : "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/SimplrWidgetExtension.build/Objects-normal/arm64/SharedModels.bc",
+    "object" : "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/SimplrWidgetExtension.build/Objects-normal/arm64/SharedModels.o",
+    "swift-dependencies" : "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/SimplrWidgetExtension.build/Objects-normal/arm64/SharedModels.swiftdeps",
+    "swiftmodule" : "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/SimplrWidgetExtension.build/Objects-normal/arm64/SharedModels~partial.swiftmodule"
+  },
+  "/Users/danielzverev/Documents/Simplr/SimplrWidget/SimplrWidget.swift" : {
+    "const-values" : "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/SimplrWidgetExtension.build/Objects-normal/arm64/SimplrWidget.swiftconstvalues",
+    "dependencies" : "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/SimplrWidgetExtension.build/Objects-normal/arm64/SimplrWidget.d",
+    "diagnostics" : "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/SimplrWidgetExtension.build/Objects-normal/arm64/SimplrWidget.dia",
+    "index-unit-output-path" : "/Simplr.build/Debug-iphoneos/SimplrWidgetExtension.build/Objects-normal/arm64/SimplrWidget.o",
+    "llvm-bc" : "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/SimplrWidgetExtension.build/Objects-normal/arm64/SimplrWidget.bc",
+    "object" : "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/SimplrWidgetExtension.build/Objects-normal/arm64/SimplrWidget.o",
+    "swift-dependencies" : "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/SimplrWidgetExtension.build/Objects-normal/arm64/SimplrWidget.swiftdeps",
+    "swiftmodule" : "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/SimplrWidgetExtension.build/Objects-normal/arm64/SimplrWidget~partial.swiftmodule"
+  },
+  "/Users/danielzverev/Documents/Simplr/SimplrWidget/SimplrWidgetBundle.swift" : {
+    "const-values" : "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/SimplrWidgetExtension.build/Objects-normal/arm64/SimplrWidgetBundle.swiftconstvalues",
+    "dependencies" : "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/SimplrWidgetExtension.build/Objects-normal/arm64/SimplrWidgetBundle.d",
+    "diagnostics" : "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/SimplrWidgetExtension.build/Objects-normal/arm64/SimplrWidgetBundle.dia",
+    "index-unit-output-path" : "/Simplr.build/Debug-iphoneos/SimplrWidgetExtension.build/Objects-normal/arm64/SimplrWidgetBundle.o",
+    "llvm-bc" : "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/SimplrWidgetExtension.build/Objects-normal/arm64/SimplrWidgetBundle.bc",
+    "object" : "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/SimplrWidgetExtension.build/Objects-normal/arm64/SimplrWidgetBundle.o",
+    "swift-dependencies" : "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/SimplrWidgetExtension.build/Objects-normal/arm64/SimplrWidgetBundle.swiftdeps",
+    "swiftmodule" : "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/SimplrWidgetExtension.build/Objects-normal/arm64/SimplrWidgetBundle~partial.swiftmodule"
+  },
+  "/Users/danielzverev/Documents/Simplr/SimplrWidget/WidgetIntents.swift" : {
+    "const-values" : "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/SimplrWidgetExtension.build/Objects-normal/arm64/WidgetIntents.swiftconstvalues",
+    "dependencies" : "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/SimplrWidgetExtension.build/Objects-normal/arm64/WidgetIntents.d",
+    "diagnostics" : "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/SimplrWidgetExtension.build/Objects-normal/arm64/WidgetIntents.dia",
+    "index-unit-output-path" : "/Simplr.build/Debug-iphoneos/SimplrWidgetExtension.build/Objects-normal/arm64/WidgetIntents.o",
+    "llvm-bc" : "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/SimplrWidgetExtension.build/Objects-normal/arm64/WidgetIntents.bc",
+    "object" : "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/SimplrWidgetExtension.build/Objects-normal/arm64/WidgetIntents.o",
+    "swift-dependencies" : "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/SimplrWidgetExtension.build/Objects-normal/arm64/WidgetIntents.swiftdeps",
+    "swiftmodule" : "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/SimplrWidgetExtension.build/Objects-normal/arm64/WidgetIntents~partial.swiftmodule"
+  },
+  "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/SimplrWidgetExtension.build/DerivedSources/GeneratedAssetSymbols.swift" : {
+    "const-values" : "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/SimplrWidgetExtension.build/Objects-normal/arm64/GeneratedAssetSymbols.swiftconstvalues",
+    "dependencies" : "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/SimplrWidgetExtension.build/Objects-normal/arm64/GeneratedAssetSymbols.d",
+    "diagnostics" : "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/SimplrWidgetExtension.build/Objects-normal/arm64/GeneratedAssetSymbols.dia",
+    "index-unit-output-path" : "/Simplr.build/Debug-iphoneos/SimplrWidgetExtension.build/Objects-normal/arm64/GeneratedAssetSymbols.o",
+    "llvm-bc" : "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/SimplrWidgetExtension.build/Objects-normal/arm64/GeneratedAssetSymbols.bc",
+    "object" : "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/SimplrWidgetExtension.build/Objects-normal/arm64/GeneratedAssetSymbols.o",
+    "swift-dependencies" : "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/SimplrWidgetExtension.build/Objects-normal/arm64/GeneratedAssetSymbols.swiftdeps",
+    "swiftmodule" : "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/SimplrWidgetExtension.build/Objects-normal/arm64/GeneratedAssetSymbols~partial.swiftmodule"
+  }
+}

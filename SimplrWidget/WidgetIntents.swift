@@ -8,6 +8,23 @@
 import AppIntents
 import Foundation
 
+enum WidgetError: Error, LocalizedError {
+    case unableToAccessSharedData
+    case unableToLoadTasks
+    case taskNotFound
+    
+    var errorDescription: String? {
+        switch self {
+        case .unableToAccessSharedData:
+            return "Unable to access shared data"
+        case .unableToLoadTasks:
+            return "Unable to load tasks"
+        case .taskNotFound:
+            return "Task not found"
+        }
+    }
+}
+
 @available(iOS 16.0, macOS 13.0, watchOS 9.0, tvOS 16.0, *)
 struct ToggleTaskIntent: AppIntent {
     static var title: LocalizedStringResource = "Toggle Task Completion"
@@ -19,18 +36,18 @@ struct ToggleTaskIntent: AppIntent {
     func perform() async throws -> some IntentResult {
         // Access shared UserDefaults
         guard let userDefaults = UserDefaults(suiteName: "group.com.danielzverev.simplr") else {
-            throw IntentError.message("Unable to access shared data")
+            throw WidgetError.unableToAccessSharedData
         }
         
         // Load tasks
         guard let data = userDefaults.data(forKey: "SavedTasks"),
               var tasks = try? JSONDecoder().decode([Task].self, from: data) else {
-            throw IntentError.message("Unable to load tasks")
+            throw WidgetError.unableToLoadTasks
         }
         
         // Find and toggle the task
         guard let taskIndex = tasks.firstIndex(where: { $0.id.uuidString == taskId }) else {
-            throw IntentError.message("Task not found")
+            throw WidgetError.taskNotFound
         }
         
         tasks[taskIndex].isCompleted.toggle()
@@ -60,7 +77,7 @@ struct AddQuickTaskIntent: AppIntent {
     func perform() async throws -> some IntentResult {
         // Access shared UserDefaults
         guard let userDefaults = UserDefaults(suiteName: "group.com.danielzverev.simplr") else {
-            throw IntentError.message("Unable to access shared data")
+            throw WidgetError.unableToAccessSharedData
         }
         
         // Load existing tasks
@@ -85,7 +102,7 @@ struct AddQuickTaskIntent: AppIntent {
 
 // MARK: - Widget Configuration Intent
 @available(iOS 16.0, macOS 13.0, watchOS 9.0, tvOS 16.0, *)
-struct WidgetConfigurationIntent: WidgetConfigurationIntent {
+struct WidgetConfigurationIntent: AppIntents.WidgetConfigurationIntent {
     static var title: LocalizedStringResource = "Configure Widget"
     static var description = IntentDescription("Configure your Simplr widget")
     
@@ -94,6 +111,16 @@ struct WidgetConfigurationIntent: WidgetConfigurationIntent {
     
     @Parameter(title: "Widget Type", default: .today)
     var widgetType: WidgetTypeOption
+    
+    func perform() async throws -> some IntentResult {
+        return .result()
+    }
+    
+    static var parameterSummary: some ParameterSummary {
+        Summary("Show \(\.$widgetType) tasks") {
+            \.$categoryFilter
+        }
+    }
 }
 
 @available(iOS 16.0, macOS 13.0, watchOS 9.0, tvOS 16.0, *)

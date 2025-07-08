@@ -1,0 +1,18 @@
+"/Users/danielzverev/Documents/Simplr/Simplr/CategoryManager.swift":
+  dependencies: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/CategoryManager.d"
+  const-values: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/CategoryManager.swiftconstvalues"
+  object: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/CategoryManager.o"
+  diagnostics: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/CategoryManager.dia"
+  swift-dependencies: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/CategoryManager.swiftdeps"
+"/Users/danielzverev/Documents/Simplr/Simplr/AddEditTaskView.swift":
+  diagnostics: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/AddEditTaskView.dia"
+  const-values: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/AddEditTaskView.swiftconstvalues"
+  object: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/AddEditTaskView.o"
+  dependencies: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/AddEditTaskView.d"
+  swift-dependencies: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/AddEditTaskView.swiftdeps"
+"/Users/danielzverev/Documents/Simplr/Simplr/SettingsView.swift":
+  dependencies: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/SettingsView.d"
+  const-values: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/SettingsView.swiftconstvalues"
+  object: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/SettingsView.o"
+  swift-dependencies: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/SettingsView.swiftdeps"
+  diagnostics: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/SettingsView.dia"

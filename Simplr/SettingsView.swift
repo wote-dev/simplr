@@ -6,6 +6,11 @@
 //
 
 import SwiftUI
+import UserNotifications
+#if os(iOS)
+import UIKit
+import SafariServices
+#endif
 
 struct SettingsView: View {
     @EnvironmentObject var themeManager: ThemeManager
@@ -17,6 +22,8 @@ struct SettingsView: View {
     @State private var badgeCountEnabled = true
     @State private var reminderTimeOffset = 15 // minutes before due time
     @State private var showingCreateCategory = false
+    @State private var showingPrivacyPolicy = false
+    @State private var showingTermsOfService = false
     
     var body: some View {
         NavigationView {
@@ -126,23 +133,39 @@ struct SettingsView: View {
                             VStack(spacing: 16) {
                                 settingsRow(
                                     title: "Version",
-                                    value: "1.0.0",
+                                    value: "1.1.0",
                                     icon: "app.badge"
                                 )
                                 
-                                settingsRow(
-                                    title: "Privacy Policy",
-                                    value: "",
-                                    icon: "hand.raised",
-                                    showChevron: true
-                                )
+                                Button {
+                                    #if os(iOS)
+                                    showingPrivacyPolicy = true
+                                    #endif
+                                    HapticManager.shared.buttonTap()
+                                } label: {
+                                    settingsRow(
+                                        title: "Privacy Policy",
+                                        value: "",
+                                        icon: "hand.raised",
+                                        showChevron: true
+                                    )
+                                }
+                                .buttonStyle(PlainButtonStyle())
                                 
-                                settingsRow(
-                                    title: "Terms of Service",
-                                    value: "",
-                                    icon: "doc.text",
-                                    showChevron: true
-                                )
+                                Button {
+                                    #if os(iOS)
+                                    showingTermsOfService = true
+                                    #endif
+                                    HapticManager.shared.buttonTap()
+                                } label: {
+                                    settingsRow(
+                                        title: "Terms of Service",
+                                        value: "",
+                                        icon: "doc.text",
+                                        showChevron: true
+                                    )
+                                }
+                                .buttonStyle(PlainButtonStyle())
                             }
                         }
                         
@@ -179,6 +202,16 @@ struct SettingsView: View {
         .sheet(isPresented: $showingCreateCategory) {
             CreateCategoryView()
                 .environmentObject(categoryManager)
+        }
+        .sheet(isPresented: $showingPrivacyPolicy) {
+            #if os(iOS)
+            SafariView(url: URL(string: "https://www.blackcubesolutions.com/simplr-privacy")!)
+            #endif
+        }
+        .sheet(isPresented: $showingTermsOfService) {
+            #if os(iOS)
+            SafariView(url: URL(string: "https://www.blackcubesolutions.com/simplr")!)
+            #endif
         }
     }
     
@@ -493,6 +526,20 @@ struct SettingsView: View {
         )
     }
 }
+
+#if os(iOS)
+struct SafariView: UIViewControllerRepresentable {
+    let url: URL
+    
+    func makeUIViewController(context: Context) -> SFSafariViewController {
+        return SFSafariViewController(url: url)
+    }
+    
+    func updateUIViewController(_ uiViewController: SFSafariViewController, context: Context) {
+        // No updates needed
+    }
+}
+#endif
 
 #Preview {
     SettingsView()

@@ -1,0 +1,11 @@
+{
+  "source" : "ExtractedAppShortcutsMetadata",
+  "tables" : {
+    "Localizable" : [
+      {
+        "key" : "Show ${widgetType} tasks"
+      }
+    ]
+  },
+  "version" : 1
+}
