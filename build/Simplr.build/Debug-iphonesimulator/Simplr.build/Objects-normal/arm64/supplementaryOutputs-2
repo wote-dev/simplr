@@ -1,0 +1,18 @@
+"/Users/danielzverev/Documents/Simplr/Simplr/PerformanceMonitor.swift":
+  object: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/PerformanceMonitor.o"
+  swift-dependencies: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/PerformanceMonitor.swiftdeps"
+  dependencies: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/PerformanceMonitor.d"
+  const-values: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/PerformanceMonitor.swiftconstvalues"
+  diagnostics: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/PerformanceMonitor.dia"
+"/Users/danielzverev/Documents/Simplr/Simplr/CategoryPillView.swift":
+  diagnostics: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/CategoryPillView.dia"
+  dependencies: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/CategoryPillView.d"
+  swift-dependencies: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/CategoryPillView.swiftdeps"
+  const-values: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/CategoryPillView.swiftconstvalues"
+  object: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/CategoryPillView.o"
+"/Users/danielzverev/Documents/Simplr/Simplr/CelebrationManager.swift":
+  object: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/CelebrationManager.o"
+  const-values: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/CelebrationManager.swiftconstvalues"
+  dependencies: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/CelebrationManager.d"
+  diagnostics: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/CelebrationManager.dia"
+  swift-dependencies: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphonesimulator/Simplr.build/Objects-normal/arm64/CelebrationManager.swiftdeps"

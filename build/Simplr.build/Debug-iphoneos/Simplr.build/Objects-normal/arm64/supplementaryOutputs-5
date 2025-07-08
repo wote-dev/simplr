@@ -1,0 +1,18 @@
+"/Users/danielzverev/Documents/Simplr/Simplr/ContentView.swift":
+  diagnostics: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/Simplr.build/Objects-normal/arm64/ContentView.dia"
+  const-values: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/Simplr.build/Objects-normal/arm64/ContentView.swiftconstvalues"
+  swift-dependencies: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/Simplr.build/Objects-normal/arm64/ContentView.swiftdeps"
+  dependencies: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/Simplr.build/Objects-normal/arm64/ContentView.d"
+  object: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/Simplr.build/Objects-normal/arm64/ContentView.o"
+"/Users/danielzverev/Documents/Simplr/Simplr/CelebrationOverlayView.swift":
+  swift-dependencies: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/Simplr.build/Objects-normal/arm64/CelebrationOverlayView.swiftdeps"
+  dependencies: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/Simplr.build/Objects-normal/arm64/CelebrationOverlayView.d"
+  object: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/Simplr.build/Objects-normal/arm64/CelebrationOverlayView.o"
+  diagnostics: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/Simplr.build/Objects-normal/arm64/CelebrationOverlayView.dia"
+  const-values: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/Simplr.build/Objects-normal/arm64/CelebrationOverlayView.swiftconstvalues"
+"/Users/danielzverev/Documents/Simplr/Simplr/PerformanceMonitor.swift":
+  diagnostics: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/Simplr.build/Objects-normal/arm64/PerformanceMonitor.dia"
+  const-values: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/Simplr.build/Objects-normal/arm64/PerformanceMonitor.swiftconstvalues"
+  object: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/Simplr.build/Objects-normal/arm64/PerformanceMonitor.o"
+  dependencies: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/Simplr.build/Objects-normal/arm64/PerformanceMonitor.d"
+  swift-dependencies: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/Simplr.build/Objects-normal/arm64/PerformanceMonitor.swiftdeps"

@@ -4,10 +4,18 @@
     "Localizable": [
       {
         "comment": "",
+        "key": "%lld/%lld",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 264
+        }
+      },
+      {
+        "comment": "",
         "key": "Mark as Incomplete",
         "location": {
           "startingColumn": 40,
-          "startingLine": 397
+          "startingLine": 470
         }
       },
       {
@@ -15,7 +23,7 @@
         "key": "Mark as Complete",
         "location": {
           "startingColumn": 63,
-          "startingLine": 397
+          "startingLine": 470
         }
       },
       {
@@ -23,7 +31,7 @@
         "key": "Edit Task",
         "location": {
           "startingColumn": 23,
-          "startingLine": 407
+          "startingLine": 480
         }
       },
       {
@@ -31,7 +39,7 @@
         "key": "Duplicate Task",
         "location": {
           "startingColumn": 23,
-          "startingLine": 415
+          "startingLine": 488
         }
       },
       {
@@ -39,7 +47,7 @@
         "key": "Delete Task",
         "location": {
           "startingColumn": 23,
-          "startingLine": 425
+          "startingLine": 498
         }
       }
     ]

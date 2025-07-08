@@ -6,6 +6,12 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		37D69F6B2E1A072000509E4E /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 37D69F6A2E1A072000509E4E /* WidgetKit.framework */; };
+		37D69F6D2E1A072000509E4E /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 37D69F6C2E1A072000509E4E /* SwiftUI.framework */; };
+		37D69F7E2E1A072200509E4E /* SimplrWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 37D69F682E1A072000509E4E /* SimplrWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		37B517C62E14DD1500041BB3 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -21,13 +27,47 @@
 			remoteGlobalIDString = 37B517B72E14DD1400041BB3;
 			remoteInfo = Simplr;
 		};
+		37D69F7C2E1A072200509E4E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 37B517B02E14DD1400041BB3 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 37D69F672E1A072000509E4E;
+			remoteInfo = SimplrWidgetExtension;
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		37D69F7F2E1A072200509E4E /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				37D69F7E2E1A072200509E4E /* SimplrWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		37B517B82E14DD1400041BB3 /* Simplr.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Simplr.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		37B517C52E14DD1500041BB3 /* SimplrTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SimplrTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		37B517CF2E14DD1500041BB3 /* SimplrUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SimplrUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		37D69F682E1A072000509E4E /* SimplrWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SimplrWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		37D69F6A2E1A072000509E4E /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		37D69F6C2E1A072000509E4E /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		37D69F822E1A072200509E4E /* Exceptions for "SimplrWidget" folder in "SimplrWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 37D69F672E1A072000509E4E /* SimplrWidgetExtension */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		37B517BA2E14DD1400041BB3 /* Simplr */ = {
@@ -43,6 +83,14 @@
 		37B517D22E14DD1500041BB3 /* SimplrUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = SimplrUITests;
+			sourceTree = "<group>";
+		};
+		37D69F6E2E1A072000509E4E /* SimplrWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				37D69F822E1A072200509E4E /* Exceptions for "SimplrWidget" folder in "SimplrWidgetExtension" target */,
+			);
+			path = SimplrWidget;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -69,6 +117,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		37D69F652E1A072000509E4E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				37D69F6D2E1A072000509E4E /* SwiftUI.framework in Frameworks */,
+				37D69F6B2E1A072000509E4E /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -78,6 +135,8 @@
 				37B517BA2E14DD1400041BB3 /* Simplr */,
 				37B517C82E14DD1500041BB3 /* SimplrTests */,
 				37B517D22E14DD1500041BB3 /* SimplrUITests */,
+				37D69F6E2E1A072000509E4E /* SimplrWidget */,
+				37D69F692E1A072000509E4E /* Frameworks */,
 				37B517B92E14DD1400041BB3 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -88,8 +147,18 @@
 				37B517B82E14DD1400041BB3 /* Simplr.app */,
 				37B517C52E14DD1500041BB3 /* SimplrTests.xctest */,
 				37B517CF2E14DD1500041BB3 /* SimplrUITests.xctest */,
+				37D69F682E1A072000509E4E /* SimplrWidgetExtension.appex */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		37D69F692E1A072000509E4E /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				37D69F6A2E1A072000509E4E /* WidgetKit.framework */,
+				37D69F6C2E1A072000509E4E /* SwiftUI.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -102,10 +171,12 @@
 				37B517B42E14DD1400041BB3 /* Sources */,
 				37B517B52E14DD1400041BB3 /* Frameworks */,
 				37B517B62E14DD1400041BB3 /* Resources */,
+				37D69F7F2E1A072200509E4E /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				37D69F7D2E1A072200509E4E /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				37B517BA2E14DD1400041BB3 /* Simplr */,
@@ -163,6 +234,28 @@
 			productReference = 37B517CF2E14DD1500041BB3 /* SimplrUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
+		37D69F672E1A072000509E4E /* SimplrWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 37D69F832E1A072200509E4E /* Build configuration list for PBXNativeTarget "SimplrWidgetExtension" */;
+			buildPhases = (
+				37D69F642E1A072000509E4E /* Sources */,
+				37D69F652E1A072000509E4E /* Frameworks */,
+				37D69F662E1A072000509E4E /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				37D69F6E2E1A072000509E4E /* SimplrWidget */,
+			);
+			name = SimplrWidgetExtension;
+			packageProductDependencies = (
+			);
+			productName = SimplrWidgetExtension;
+			productReference = 37D69F682E1A072000509E4E /* SimplrWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -184,6 +277,9 @@
 						CreatedOnToolsVersion = 16.4;
 						TestTargetID = 37B517B72E14DD1400041BB3;
 					};
+					37D69F672E1A072000509E4E = {
+						CreatedOnToolsVersion = 16.4;
+					};
 				};
 			};
 			buildConfigurationList = 37B517B32E14DD1400041BB3 /* Build configuration list for PBXProject "Simplr" */;
@@ -203,6 +299,7 @@
 				37B517B72E14DD1400041BB3 /* Simplr */,
 				37B517C42E14DD1500041BB3 /* SimplrTests */,
 				37B517CE2E14DD1500041BB3 /* SimplrUITests */,
+				37D69F672E1A072000509E4E /* SimplrWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -223,6 +320,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		37B517CD2E14DD1500041BB3 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		37D69F662E1A072000509E4E /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -253,6 +357,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		37D69F642E1A072000509E4E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -265,6 +376,11 @@
 			isa = PBXTargetDependency;
 			target = 37B517B72E14DD1400041BB3 /* Simplr */;
 			targetProxy = 37B517D02E14DD1500041BB3 /* PBXContainerItemProxy */;
+		};
+		37D69F7D2E1A072200509E4E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 37D69F672E1A072000509E4E /* SimplrWidgetExtension */;
+			targetProxy = 37D69F7C2E1A072200509E4E /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -395,6 +511,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Simplr/Simplr.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 9FSH55SGR2;
@@ -411,7 +528,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.2;
 				PRODUCT_BUNDLE_IDENTIFIER = blackcubesolutions.Simplr;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -425,6 +542,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Simplr/Simplr.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 9FSH55SGR2;
@@ -441,7 +559,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.2;
 				PRODUCT_BUNDLE_IDENTIFIER = blackcubesolutions.Simplr;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -522,6 +640,62 @@
 			};
 			name = Release;
 		};
+		37D69F802E1A072200509E4E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = SimplrWidget/SimplrWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 9FSH55SGR2;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SimplrWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = SimplrWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = blackcubesolutions.Simplr.SimplrWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		37D69F812E1A072200509E4E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = SimplrWidget/SimplrWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 9FSH55SGR2;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SimplrWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = SimplrWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = blackcubesolutions.Simplr.SimplrWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -557,6 +731,15 @@
 			buildConfigurations = (
 				37B517E02E14DD1500041BB3 /* Debug */,
 				37B517E12E14DD1500041BB3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		37D69F832E1A072200509E4E /* Build configuration list for PBXNativeTarget "SimplrWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				37D69F802E1A072200509E4E /* Debug */,
+				37D69F812E1A072200509E4E /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

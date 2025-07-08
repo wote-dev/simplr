@@ -1,0 +1,4 @@
+Target dependency graph (2 targets)
+Target 'Simplr' in project 'Simplr'
+➜ Explicit dependency on target 'SimplrWidgetExtension' in project 'Simplr'
+Target 'SimplrWidgetExtension' in project 'Simplr' (no dependencies)

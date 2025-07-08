@@ -1,0 +1,18 @@
+"/Users/danielzverev/Documents/Simplr/Simplr/TodayView.swift":
+  const-values: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/Simplr.build/Objects-normal/arm64/TodayView.swiftconstvalues"
+  object: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/Simplr.build/Objects-normal/arm64/TodayView.o"
+  swift-dependencies: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/Simplr.build/Objects-normal/arm64/TodayView.swiftdeps"
+  diagnostics: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/Simplr.build/Objects-normal/arm64/TodayView.dia"
+  dependencies: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/Simplr.build/Objects-normal/arm64/TodayView.d"
+"/Users/danielzverev/Documents/Simplr/Simplr/SimplrApp.swift":
+  swift-dependencies: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/Simplr.build/Objects-normal/arm64/SimplrApp.swiftdeps"
+  const-values: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/Simplr.build/Objects-normal/arm64/SimplrApp.swiftconstvalues"
+  diagnostics: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/Simplr.build/Objects-normal/arm64/SimplrApp.dia"
+  dependencies: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/Simplr.build/Objects-normal/arm64/SimplrApp.d"
+  object: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/Simplr.build/Objects-normal/arm64/SimplrApp.o"
+"/Users/danielzverev/Documents/Simplr/Simplr/TaskRowView.swift":
+  dependencies: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/Simplr.build/Objects-normal/arm64/TaskRowView.d"
+  const-values: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/Simplr.build/Objects-normal/arm64/TaskRowView.swiftconstvalues"
+  diagnostics: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/Simplr.build/Objects-normal/arm64/TaskRowView.dia"
+  swift-dependencies: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/Simplr.build/Objects-normal/arm64/TaskRowView.swiftdeps"
+  object: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/Simplr.build/Objects-normal/arm64/TaskRowView.o"

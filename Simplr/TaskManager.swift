@@ -9,6 +9,7 @@ import Foundation
 import UserNotifications
 import UIKit
 import os.log
+import WidgetKit
 
 enum FilterOption: String, CaseIterable {
     case all = "All"
@@ -197,6 +198,9 @@ class TaskManager: ObservableObject {
         PerformanceMonitor.shared.measure(PerformanceMonitor.MeasurementPoint.taskSaving) {
             if let encoded = try? JSONEncoder().encode(tasks) {
                 userDefaults.set(encoded, forKey: tasksKey)
+                
+                // Trigger immediate widget update
+                WidgetCenter.shared.reloadAllTimelines()
             }
         }
     }
@@ -493,6 +497,77 @@ class TaskManager: ObservableObject {
             saveTasks()
             updateSpotlightIndex()
         }
+    }
+    
+    // MARK: - Quick List Management
+    
+    /// Add a new quick list item to a task
+    func addQuickListItem(to taskId: UUID, text: String) {
+        guard let index = tasks.firstIndex(where: { $0.id == taskId }) else { return }
+        
+        let newItem = QuickListItem(text: text)
+        tasks[index].quickListItems.append(newItem)
+        
+        invalidateCache()
+        saveTasks()
+        updateSpotlightIndex()
+        
+        HapticManager.shared.selectionChange()
+    }
+    
+    /// Toggle completion status of a quick list item
+    func toggleQuickListItem(taskId: UUID, itemId: UUID) {
+        guard let taskIndex = tasks.firstIndex(where: { $0.id == taskId }),
+              let itemIndex = tasks[taskIndex].quickListItems.firstIndex(where: { $0.id == itemId }) else { return }
+        
+        tasks[taskIndex].quickListItems[itemIndex].isCompleted.toggle()
+        tasks[taskIndex].quickListItems[itemIndex].completedAt = tasks[taskIndex].quickListItems[itemIndex].isCompleted ? Date() : nil
+        
+        invalidateCache()
+        saveTasks()
+        updateSpotlightIndex()
+        
+        HapticManager.shared.selectionChange()
+    }
+    
+    /// Update the text of a quick list item
+    func updateQuickListItem(taskId: UUID, itemId: UUID, newText: String) {
+        guard let taskIndex = tasks.firstIndex(where: { $0.id == taskId }),
+              let itemIndex = tasks[taskIndex].quickListItems.firstIndex(where: { $0.id == itemId }) else { return }
+        
+        tasks[taskIndex].quickListItems[itemIndex].text = newText
+        
+        invalidateCache()
+        saveTasks()
+        updateSpotlightIndex()
+        
+        HapticManager.shared.selectionChange()
+    }
+    
+    /// Delete a quick list item from a task
+    func deleteQuickListItem(taskId: UUID, itemId: UUID) {
+        guard let taskIndex = tasks.firstIndex(where: { $0.id == taskId }) else { return }
+        
+        tasks[taskIndex].quickListItems.removeAll { $0.id == itemId }
+        
+        invalidateCache()
+        saveTasks()
+        updateSpotlightIndex()
+        
+        HapticManager.shared.selectionChange()
+    }
+    
+    /// Reorder quick list items within a task
+    func reorderQuickListItems(taskId: UUID, from source: IndexSet, to destination: Int) {
+        guard let taskIndex = tasks.firstIndex(where: { $0.id == taskId }) else { return }
+        
+        tasks[taskIndex].quickListItems.move(fromOffsets: source, toOffset: destination)
+        
+        invalidateCache()
+        saveTasks()
+        updateSpotlightIndex()
+        
+        HapticManager.shared.selectionChange()
     }
     
     // MARK: - Automatic Cleanup

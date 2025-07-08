@@ -1,0 +1,120 @@
+{
+  "source": "/Users/danielzverev/Documents/Simplr/SimplrWidget/WidgetIntents.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Toggle Task Completion",
+        "location": {
+          "startingColumn": 49,
+          "startingLine": 30
+        }
+      },
+      {
+        "comment": "",
+        "key": "Mark a task as completed or incomplete",
+        "location": {
+          "startingColumn": 48,
+          "startingLine": 31
+        }
+      },
+      {
+        "comment": "",
+        "key": "Task ID",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 33
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add Quick Task",
+        "location": {
+          "startingColumn": 49,
+          "startingLine": 71
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add a new task quickly",
+        "location": {
+          "startingColumn": 48,
+          "startingLine": 72
+        }
+      },
+      {
+        "comment": "",
+        "key": "Task Title",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 74
+        }
+      },
+      {
+        "comment": "",
+        "key": "Configure Widget",
+        "location": {
+          "startingColumn": 49,
+          "startingLine": 106
+        }
+      },
+      {
+        "comment": "",
+        "key": "Configure your Simplr widget",
+        "location": {
+          "startingColumn": 48,
+          "startingLine": 107
+        }
+      },
+      {
+        "comment": "",
+        "key": "Show Category",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 109
+        }
+      },
+      {
+        "comment": "",
+        "key": "Widget Type",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 112
+        }
+      },
+      {
+        "comment": "",
+        "key": "Widget Type",
+        "location": {
+          "startingColumn": 76,
+          "startingLine": 132
+        }
+      },
+      {
+        "comment": "",
+        "key": "Today's Tasks",
+        "location": {
+          "startingColumn": 17,
+          "startingLine": 134
+        }
+      },
+      {
+        "comment": "",
+        "key": "Upcoming Tasks",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 135
+        }
+      },
+      {
+        "comment": "",
+        "key": "Next Task",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 136
+        }
+      }
+    ]
+  },
+  "version": 1
+}

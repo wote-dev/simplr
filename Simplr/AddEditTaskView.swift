@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Combine
 
 struct AddEditTaskView: View {
     @Environment(\.dismiss) private var dismiss
@@ -30,6 +31,7 @@ struct AddEditTaskView: View {
     @State private var selectedReminderOption: String? = nil
     @State private var formOpacity: Double = 1.0
     @State private var savingTask = false
+    @State private var quickListItems: [QuickListItem] = []
     @Namespace private var formNamespace
     
     let taskToEdit: Task?
@@ -59,6 +61,7 @@ struct AddEditTaskView: View {
                     hasReminder = task.hasReminder
                     reminderDate = task.reminderDate ?? Date()
                     selectedCategory = categoryManager.categories.first { $0.id == task.categoryId }
+                    quickListItems = task.quickListItems
                     
                     // Set initial selected reminder option for existing tasks
                     if task.hasReminder {
@@ -83,6 +86,13 @@ struct AddEditTaskView: View {
                     suggestedCategory = categoryManager.suggestCategory(for: newTitle)
                 } else if newTitle.isEmpty {
                     suggestedCategory = nil
+                }
+            }
+            .onReceive(taskManager.$tasks) { _ in
+                // Sync local quickListItems with updated task from TaskManager
+                if let taskId = taskToEdit?.id,
+                   let updatedTask = taskManager.tasks.first(where: { $0.id == taskId }) {
+                    quickListItems = updatedTask.quickListItems
                 }
             }
     }
@@ -176,10 +186,23 @@ struct AddEditTaskView: View {
         .transition(.scaleAndSlide)
     }
     
+    private var quickListSection: some View {
+        VStack(spacing: 16) {
+            SectionHeader(title: "Quick List", icon: "list.bullet")
+                .matchedGeometryEffect(id: "quicklist-header", in: formNamespace)
+            
+            QuickListView(quickListItems: $quickListItems, taskId: taskToEdit?.id)
+                .padding(20)
+                .neumorphicCard(theme, cornerRadius: 16)
+        }
+        .transition(.scaleAndSlide)
+    }
+    
     private var formSections: some View {
         VStack(spacing: 20) {
             taskDetailsSection
             categorySection
+            quickListSection
             dueDateSection
             reminderSection
         }
@@ -815,6 +838,7 @@ struct AddEditTaskView: View {
                 updatedTask.hasReminder = hasReminder
                 updatedTask.reminderDate = hasReminder ? reminderDate : nil
                 updatedTask.categoryId = selectedCategory?.id
+                updatedTask.quickListItems = quickListItems
                 
                 taskManager.updateTask(updatedTask)
             } else {
@@ -825,7 +849,8 @@ struct AddEditTaskView: View {
                     dueDate: hasDueDate ? dueDate : nil,
                     hasReminder: hasReminder,
                     reminderDate: hasReminder ? reminderDate : nil,
-                    categoryId: selectedCategory?.id
+                    categoryId: selectedCategory?.id,
+                    quickListItems: quickListItems
                 )
                 
                 taskManager.addTask(newTask)

@@ -4,42 +4,98 @@
     "Localizable": [
       {
         "comment": "",
-        "key": "Custom Reminder",
+        "key": "Set Reminder",
         "location": {
-          "startingColumn": 26,
-          "startingLine": 127
+          "startingColumn": 34,
+          "startingLine": 76
         }
       },
       {
         "comment": "",
-        "key": "Set a specific date and time",
+        "key": "Choose when to be reminded",
         "location": {
-          "startingColumn": 26,
-          "startingLine": 132
+          "startingColumn": 34,
+          "startingLine": 81
         }
       },
       {
         "comment": "",
-        "key": "Reminder Date & Time",
+        "key": "Picker Mode",
         "location": {
-          "startingColumn": 24,
-          "startingLine": 175
+          "startingColumn": 39,
+          "startingLine": 93
         }
       },
       {
         "comment": "",
-        "key": "Select Date & Time",
+        "key": "Reminder %@",
         "location": {
-          "startingColumn": 22,
-          "startingLine": 166
+          "startingColumn": 34,
+          "startingLine": 149
+        }
+      },
+      {
+        "comment": "",
+        "key": "Select %@",
+        "location": {
+          "startingColumn": 39,
+          "startingLine": 140
         }
       },
       {
         "comment": "",
         "key": "Set Reminder",
         "location": {
-          "startingColumn": 26,
-          "startingLine": 198
+          "startingColumn": 65,
+          "startingLine": 186
+        }
+      },
+      {
+        "comment": "",
+        "key": "Set Reminder (Past Time)",
+        "location": {
+          "startingColumn": 82,
+          "startingLine": 186
+        }
+      },
+      {
+        "comment": "",
+        "key": "Remove Reminder",
+        "location": {
+          "startingColumn": 47,
+          "startingLine": 207
+        }
+      },
+      {
+        "comment": "",
+        "key": "Quick Times",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 248
+        }
+      },
+      {
+        "comment": "",
+        "key": "Reminder Preview",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 314
+        }
+      },
+      {
+        "comment": "",
+        "key": "Fix",
+        "location": {
+          "startingColumn": 29,
+          "startingLine": 343
+        }
+      },
+      {
+        "comment": "",
+        "key": "This time is in the past",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 330
         }
       }
     ]

@@ -1,0 +1,18 @@
+"/Users/danielzverev/Documents/Simplr/Simplr/SpotlightManager.swift":
+  object: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/Simplr.build/Objects-normal/arm64/SpotlightManager.o"
+  const-values: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/Simplr.build/Objects-normal/arm64/SpotlightManager.swiftconstvalues"
+  dependencies: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/Simplr.build/Objects-normal/arm64/SpotlightManager.d"
+  swift-dependencies: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/Simplr.build/Objects-normal/arm64/SpotlightManager.swiftdeps"
+  diagnostics: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/Simplr.build/Objects-normal/arm64/SpotlightManager.dia"
+"/Users/danielzverev/Documents/Simplr/Simplr/TaskManager.swift":
+  diagnostics: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/Simplr.build/Objects-normal/arm64/TaskManager.dia"
+  object: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/Simplr.build/Objects-normal/arm64/TaskManager.o"
+  dependencies: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/Simplr.build/Objects-normal/arm64/TaskManager.d"
+  swift-dependencies: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/Simplr.build/Objects-normal/arm64/TaskManager.swiftdeps"
+  const-values: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/Simplr.build/Objects-normal/arm64/TaskManager.swiftconstvalues"
+"/Users/danielzverev/Documents/Simplr/Simplr/ThemeSelectorView.swift":
+  diagnostics: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/Simplr.build/Objects-normal/arm64/ThemeSelectorView.dia"
+  const-values: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/Simplr.build/Objects-normal/arm64/ThemeSelectorView.swiftconstvalues"
+  dependencies: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/Simplr.build/Objects-normal/arm64/ThemeSelectorView.d"
+  object: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/Simplr.build/Objects-normal/arm64/ThemeSelectorView.o"
+  swift-dependencies: "/Users/danielzverev/Documents/Simplr/build/Simplr.build/Debug-iphoneos/Simplr.build/Objects-normal/arm64/ThemeSelectorView.swiftdeps"

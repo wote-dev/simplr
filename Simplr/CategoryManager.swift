@@ -8,6 +8,7 @@
 import Foundation
 import SwiftUI
 import os.log
+import WidgetKit
 
 class CategoryManager: ObservableObject {
     @Published var categories: [TaskCategory] = []
@@ -185,6 +186,9 @@ class CategoryManager: ObservableObject {
     private func saveCategories() {
         if let encoded = try? JSONEncoder().encode(categories) {
             userDefaults.set(encoded, forKey: categoriesKey)
+            
+            // Trigger immediate widget update since categories affect widget filtering
+            WidgetCenter.shared.reloadAllTimelines()
         }
     }
     
