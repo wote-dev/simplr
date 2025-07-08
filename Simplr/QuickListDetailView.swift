@@ -20,6 +20,7 @@ struct QuickListDetailView: View {
     }
     @State private var newItemText = ""
     @State private var isTaskCompleted: Bool = false
+    @FocusState private var isTextFieldFocused: Bool
     
     // Visual feedback states
     @State private var taskCompletionScale: CGFloat = 1.0
@@ -206,12 +207,38 @@ struct QuickListDetailView: View {
                             TextField(quickListItems.isEmpty ? "Add your first item" : "Add new item", text: $newItemText)
                                 .textFieldStyle(PlainTextFieldStyle())
                                 .font(.body)
+                                .focused($isTextFieldFocused)
+                                .submitLabel(.return)
                                 .onSubmit {
-                                    addNewItem()
+                                    // Handle submission without losing focus
+                                    if !newItemText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                                        handleTextSubmission()
+                                    }
+                                    // Immediately restore focus to prevent keyboard dismissal
+                                    isTextFieldFocused = true
                                 }
+                                .onChange(of: isTextFieldFocused) { _, newValue in
+                                    // Prevent any focus loss
+                                    if !newValue {
+                                        DispatchQueue.main.async {
+                                            isTextFieldFocused = true
+                                        }
+                                    }
+                                }
+                                .autocorrectionDisabled(false)
+                                .textInputAutocapitalization(.sentences)
                             
                             if !newItemText.isEmpty {
-                                Button(action: addNewItem) {
+                                Button(action: {
+                                    // Ensure focus is maintained when using button
+                                    let wasFocused = isTextFieldFocused
+                                    addNewItem()
+                                    if wasFocused {
+                                        DispatchQueue.main.async {
+                                            isTextFieldFocused = true
+                                        }
+                                    }
+                                }) {
                                     Image(systemName: "plus.circle.fill")
                                         .font(.system(size: 20, weight: .medium))
                                         .foregroundColor(theme.primary)
@@ -233,6 +260,9 @@ struct QuickListDetailView: View {
                         Color.clear.frame(height: 100)
                     }
                     .padding(.horizontal, 16)
+                }
+                .onTapGesture {
+                    // Prevent scroll view from dismissing keyboard
                 }
             }
             .background(theme.backgroundGradient)
@@ -274,18 +304,24 @@ struct QuickListDetailView: View {
         HapticManager.shared.selectionChange()
     }
     
-    private func addNewItem() {
+    private func handleTextSubmission() {
         let trimmedText = newItemText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedText.isEmpty else { return }
         
-        // Clear the text field immediately
-        newItemText = ""
-        
-        // Add the item to TaskManager - UI will update automatically
+        // Add the item to TaskManager
         taskManager.addQuickListItem(to: taskId, text: trimmedText)
+        
+        // Clear the text field
+        newItemText = ""
         
         // Haptic feedback
         HapticManager.shared.selectionChange()
+        
+        // Focus management is now handled in the onSubmit closure
+    }
+    
+    private func addNewItem() {
+        handleTextSubmission()
     }
 }
 

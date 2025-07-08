@@ -43,6 +43,7 @@ struct QuickListView: View {
                             .textFieldStyle(PlainTextFieldStyle())
                             .font(.subheadline)
                             .focused($isEditingFocused)
+                            .submitLabel(.next)
                             .onSubmit {
                                 saveEdit()
                             }
@@ -88,12 +89,34 @@ struct QuickListView: View {
                         .textFieldStyle(PlainTextFieldStyle())
                         .font(.subheadline)
                         .focused($isAddingFocused)
+                        .submitLabel(.done)
                         .onSubmit {
                             addNewItem()
+                            // Keep keyboard open by maintaining focus after adding item
+                            DispatchQueue.main.async {
+                                isAddingFocused = true
+                            }
+                        }
+                        .onChange(of: isAddingFocused) { _, newValue in
+                            // Prevent unwanted focus loss
+                            if !newValue && !newItemText.isEmpty {
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
+                                    isAddingFocused = true
+                                }
+                            }
                         }
                     
                     if !newItemText.isEmpty {
-                        Button(action: addNewItem) {
+                        Button(action: {
+                            // Ensure focus is maintained when using button
+                            let wasFocused = isAddingFocused
+                            addNewItem()
+                            if wasFocused {
+                                DispatchQueue.main.async {
+                                    isAddingFocused = true
+                                }
+                            }
+                        }) {
                             Image(systemName: "plus.circle.fill")
                                 .font(.system(size: 16, weight: .medium))
                                 .foregroundColor(theme.primary)
@@ -195,7 +218,15 @@ struct QuickListView: View {
             }
         }
         
-        cancelEdit()
+        // Clear editing state but maintain keyboard focus by transitioning to add field
+        self.editingItem = nil
+        self.editText = ""
+        
+        // Transition focus to the add new item field to keep keyboard visible
+        DispatchQueue.main.async {
+            self.isEditingFocused = false
+            self.isAddingFocused = true
+        }
     }
     
     private func cancelEdit() {
@@ -226,6 +257,9 @@ struct QuickListView: View {
         let trimmedText = newItemText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedText.isEmpty else { return }
         
+        // Store focus state before any changes
+        let wasFocused = isAddingFocused
+        
         if let taskId = taskId {
             // Create new item for immediate visual feedback
             let newItem = QuickListItem(text: trimmedText)
@@ -249,8 +283,33 @@ struct QuickListView: View {
             newItemText = ""
         }
         
-        // Keep keyboard focused for next input
-        isAddingFocused = true
+        // Maintain focus to prevent keyboard dismissal if it was focused
+        if wasFocused {
+            // Immediately re-assert focus to prevent any loss
+            isAddingFocused = true
+            
+            // Use multiple async dispatches with increasing delays for robustness
+            DispatchQueue.main.async {
+                self.isAddingFocused = true
+            }
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
+                self.isAddingFocused = true
+            }
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                self.isAddingFocused = true
+            }
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                self.isAddingFocused = true
+            }
+            
+            // Final assertion after view updates complete
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                self.isAddingFocused = true
+            }
+        }
     }
 }
 

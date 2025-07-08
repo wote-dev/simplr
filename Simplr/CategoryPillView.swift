@@ -229,6 +229,12 @@ struct CreateCategoryView: View {
                         .font(.body)
                         .foregroundColor(theme.text)
                         .textFieldStyle(PlainTextFieldStyle())
+                        .submitLabel(.done)
+                        .onSubmit {
+                            if isValidName {
+                                createCategory()
+                            }
+                        }
                         .padding(16)
                         .background(
                             RoundedRectangle(cornerRadius: 12)

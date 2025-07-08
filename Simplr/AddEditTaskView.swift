@@ -165,6 +165,18 @@ struct AddEditTaskView: View {
                 .scaleEffect(formScale)
                 .opacity(formOpacity)
             }
+            .simultaneousGesture(
+                DragGesture()
+                    .onChanged { _ in
+                        // Dismiss keyboard when user starts scrolling
+                        if isTitleFocused || isDescriptionFocused {
+                            withAnimation(.easeOut(duration: 0.2)) {
+                                isTitleFocused = false
+                                isDescriptionFocused = false
+                            }
+                        }
+                    }
+            )
         }
     }
     
@@ -226,6 +238,11 @@ struct AddEditTaskView: View {
                         .font(.body)
                         .foregroundColor(theme.text)
                         .textFieldStyle(PlainTextFieldStyle())
+                        .submitLabel(.next)
+                        .onSubmit {
+                            // Move focus to description field instead of dismissing keyboard
+                            isDescriptionFocused = true
+                        }
                         .padding(16)
                         .background(
                             RoundedRectangle(cornerRadius: 12)
@@ -252,6 +269,12 @@ struct AddEditTaskView: View {
                         .font(.body)
                         .foregroundColor(theme.text)
                         .textFieldStyle(PlainTextFieldStyle())
+                        .submitLabel(.done)
+                        .onSubmit {
+                            // Keep keyboard open by maintaining focus or dismiss if user wants to finish
+                            // For multi-line text, return should add new line, so we'll keep focus
+                            isDescriptionFocused = true
+                        }
                         .lineLimit(3...6)
                         .padding(16)
                         .background(
