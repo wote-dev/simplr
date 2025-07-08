@@ -592,6 +592,8 @@ class TaskManager: ObservableObject {
     
     /// Call this method when the app becomes active to clean up old tasks
     func performMaintenanceTasks() {
+        // Reload tasks from UserDefaults to sync with widget changes
+        loadTasks()
         cleanupOldCompletedTasks()
         checkForOverdueTasks()
         // Refresh Spotlight index to ensure it's up to date

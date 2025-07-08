@@ -7,6 +7,7 @@
 
 import AppIntents
 import Foundation
+import WidgetKit
 
 enum WidgetError: Error, LocalizedError {
     case unableToAccessSharedData
@@ -33,35 +34,79 @@ struct ToggleTaskIntent: AppIntent {
     @Parameter(title: "Task ID")
     var taskId: String
     
+    init(taskId: String) {
+        self.taskId = taskId
+    }
+    
+    init() {
+        self.taskId = ""
+    }
+    
     func perform() async throws -> some IntentResult {
+        print("[Widget] ToggleTaskIntent called for task ID: \(taskId)")
+        
         // Access shared UserDefaults
         guard let userDefaults = UserDefaults(suiteName: "group.com.danielzverev.simplr") else {
+            print("[Widget] Error: Unable to access shared UserDefaults")
             throw WidgetError.unableToAccessSharedData
         }
         
         // Load tasks
         guard let data = userDefaults.data(forKey: "SavedTasks"),
               var tasks = try? JSONDecoder().decode([Task].self, from: data) else {
+            print("[Widget] Error: Unable to load tasks from UserDefaults")
             throw WidgetError.unableToLoadTasks
         }
         
+        print("[Widget] Loaded \(tasks.count) tasks from UserDefaults")
+        
         // Find and toggle the task
         guard let taskIndex = tasks.firstIndex(where: { $0.id.uuidString == taskId }) else {
+            print("[Widget] Error: Task not found with ID: \(taskId)")
             throw WidgetError.taskNotFound
         }
         
+        let wasCompleted = tasks[taskIndex].isCompleted
+        let taskTitle = tasks[taskIndex].title
+        
+        print("[Widget] Found task: '\(taskTitle)', currently completed: \(wasCompleted)")
+        
         tasks[taskIndex].isCompleted.toggle()
+        
         if tasks[taskIndex].isCompleted {
             tasks[taskIndex].completedAt = Date()
         } else {
             tasks[taskIndex].completedAt = nil
         }
         
+        print("[Widget] Task toggled to completed: \(tasks[taskIndex].isCompleted)")
+        
         // Save updated tasks
-        if let encodedData = try? JSONEncoder().encode(tasks) {
-            userDefaults.set(encodedData, forKey: "SavedTasks")
+        guard let encodedData = try? JSONEncoder().encode(tasks) else {
+            print("[Widget] Error: Unable to encode tasks")
+            throw WidgetError.unableToLoadTasks
         }
         
+        userDefaults.set(encodedData, forKey: "SavedTasks")
+        userDefaults.synchronize() // Force immediate sync
+        print("[Widget] Tasks saved to UserDefaults")
+        
+        // Force immediate widget refresh
+        WidgetCenter.shared.reloadAllTimelines()
+        print("[Widget] Widget timelines reloaded immediately")
+        
+        // Also schedule a delayed refresh to ensure the update is visible
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+            WidgetCenter.shared.reloadAllTimelines()
+            print("[Widget] Secondary widget refresh completed")
+        }
+        
+        // Provide user feedback with better messaging
+        let message = tasks[taskIndex].isCompleted ? 
+            "✓ Task completed!" : 
+            "↻ Task reopened"
+        
+        print("[Widget] Task toggle completed successfully")
         return .result()
     }
 }

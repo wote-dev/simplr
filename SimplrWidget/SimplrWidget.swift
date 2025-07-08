@@ -50,8 +50,8 @@ struct TaskProvider: AppIntentTimelineProvider {
             configuration: configuration
         )
         
-        // Update every 15 minutes for more responsive updates
-        let nextUpdate = Calendar.current.date(byAdding: .minute, value: 15, to: currentDate)!
+        // Update every 5 minutes for more responsive updates, especially after task completion
+        let nextUpdate = Calendar.current.date(byAdding: .minute, value: 5, to: currentDate)!
         return Timeline(entries: [entry], policy: .after(nextUpdate))
     }
     
@@ -62,8 +62,8 @@ struct TaskProvider: AppIntentTimelineProvider {
             return []
         }
         
-        // Filter incomplete tasks
-        var filteredTasks = allTasks.filter { !$0.isCompleted }
+        // Start with all tasks, we'll handle completed tasks in the UI
+        var filteredTasks = allTasks
         
         // Apply category filter if specified
         if let categoryFilter = configuration.categoryFilter, !categoryFilter.isEmpty {
@@ -76,21 +76,35 @@ struct TaskProvider: AppIntentTimelineProvider {
             }
         }
         
-        // Sort tasks: due date tasks first, then by creation date
+        // Sort tasks: incomplete first (by due date, then creation), then completed (by completion date)
         filteredTasks.sort { task1, task2 in
-            switch (task1.dueDate, task2.dueDate) {
-            case (let date1?, let date2?):
-                return date1 < date2
-            case (_?, nil):
-                return true
-            case (nil, _?):
-                return false
-            case (nil, nil):
-                return task1.createdAt > task2.createdAt
+            // Prioritize incomplete tasks
+            if task1.isCompleted != task2.isCompleted {
+                return !task1.isCompleted && task2.isCompleted
+            }
+            
+            // Both completed or both incomplete
+            if task1.isCompleted && task2.isCompleted {
+                // Sort completed tasks by completion date (most recent first)
+                let date1 = task1.completedAt ?? task1.createdAt
+                let date2 = task2.completedAt ?? task2.createdAt
+                return date1 > date2
+            } else {
+                // Sort incomplete tasks by due date, then by creation date
+                switch (task1.dueDate, task2.dueDate) {
+                case (let date1?, let date2?):
+                    return date1 < date2
+                case (_?, nil):
+                    return true
+                case (nil, _?):
+                    return false
+                case (nil, nil):
+                    return task1.createdAt > task2.createdAt
+                }
             }
         }
         
-        // Return top 3 tasks
+        // Return top 3 tasks (mix of incomplete and recently completed)
         return Array(filteredTasks.prefix(3))
     }
     
@@ -174,23 +188,43 @@ struct TaskRowWidget: View {
     }
     
     var body: some View {
-        HStack(alignment: .top, spacing: 10) {
-            // Task status indicator
-            Circle()
-                .fill(dotColor)
-                .frame(width: family == .systemSmall ? 7 : 8, height: family == .systemSmall ? 7 : 8)
-                .padding(.top, family == .systemSmall ? 4 : 5)
+        HStack(alignment: .center, spacing: 8) {
+            // Task completion button
+            Button(intent: ToggleTaskIntent(taskId: task.id.uuidString)) {
+                ZStack {
+                    Circle()
+                        .fill(Color.clear)
+                        .frame(width: family == .systemSmall ? 20 : 24, height: family == .systemSmall ? 20 : 24)
+                    
+                    Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
+                        .font(family == .systemSmall ? .system(size: 16, weight: .medium) : .system(size: 18, weight: .medium))
+                        .foregroundColor(task.isCompleted ? .green : dotColor)
+                        .contentTransition(.symbolEffect(.replace.offUp))
+                        .symbolEffect(.bounce, value: task.isCompleted)
+                }
+            }
+            .buttonStyle(.plain)
+            .scaleEffect(1.0)
+            .animation(.easeInOut(duration: 0.1), value: task.isCompleted)
+            .accessibilityLabel(task.isCompleted ? "Mark as incomplete" : "Mark as complete")
+            .accessibilityHint("Double tap to toggle task completion")
             
             VStack(alignment: .leading, spacing: 3) {
                 Text(task.title)
                     .font(family == .systemSmall ? .caption : .footnote)
                     .fontWeight(.medium)
-                    .foregroundColor(.primary)
+                    .foregroundColor(task.isCompleted ? .secondary : .primary)
                     .lineLimit(family == .systemSmall ? 2 : 3)
                     .multilineTextAlignment(.leading)
                     .fixedSize(horizontal: false, vertical: true)
+                    .strikethrough(task.isCompleted, color: .secondary)
                 
-                if let dueDate = task.dueDate {
+                if task.isCompleted {
+                    Text("Completed")
+                        .font(.caption2)
+                        .fontWeight(.medium)
+                        .foregroundColor(.green)
+                } else if let dueDate = task.dueDate {
                     Text(dueDateText(for: dueDate))
                         .font(.caption2)
                         .fontWeight(.medium)
@@ -242,7 +276,24 @@ struct SimplrWidget_Previews: PreviewProvider {
             SimplrWidgetEntryView(entry: TaskEntry(
                 date: Date(),
                 tasks: [
-                    Task(title: "Review project proposal and check the latest updates from the team", description: "Check the latest updates", dueDate: Date()),
+                    Task(title: "Review project proposal", description: "Check the latest updates", dueDate: Date()),
+                    Task(title: "Call dentist", description: "Schedule appointment", dueDate: Calendar.current.date(byAdding: .day, value: 1, to: Date())),
+                    Task(title: "Buy groceries", description: "Milk, bread, eggs")
+                ],
+                categories: [
+                    TaskCategory(name: "Work", color: .blue),
+                    TaskCategory(name: "Personal", color: .green),
+                    TaskCategory(name: "Shopping", color: .orange)
+                ],
+                configuration: WidgetConfigurationIntent()
+            ))
+            .previewContext(WidgetPreviewContext(family: .systemSmall))
+            .previewDisplayName("Small Widget - Interactive")
+            
+            SimplrWidgetEntryView(entry: TaskEntry(
+                date: Date(),
+                tasks: [
+                    Task(title: "Review project proposal and check updates", description: "Check the latest updates", dueDate: Date()),
                     Task(title: "Call dentist for appointment", description: "Schedule appointment", dueDate: Calendar.current.date(byAdding: .day, value: 1, to: Date())),
                     Task(title: "Buy groceries for the week", description: "Milk, bread, eggs")
                 ],
@@ -253,25 +304,8 @@ struct SimplrWidget_Previews: PreviewProvider {
                 ],
                 configuration: WidgetConfigurationIntent()
             ))
-            .previewContext(WidgetPreviewContext(family: .systemSmall))
-            .previewDisplayName("Small Widget")
-            
-            SimplrWidgetEntryView(entry: TaskEntry(
-                date: Date(),
-                tasks: [
-                    Task(title: "Review project proposal and check the latest updates from the team", description: "Check the latest updates", dueDate: Date()),
-                    Task(title: "Call dentist for appointment scheduling", description: "Schedule appointment", dueDate: Calendar.current.date(byAdding: .day, value: 1, to: Date())),
-                    Task(title: "Buy groceries for the week including fresh produce", description: "Milk, bread, eggs")
-                ],
-                categories: [
-                    TaskCategory(name: "Work", color: .blue),
-                    TaskCategory(name: "Personal", color: .green),
-                    TaskCategory(name: "Shopping", color: .orange)
-                ],
-                configuration: WidgetConfigurationIntent()
-            ))
             .previewContext(WidgetPreviewContext(family: .systemMedium))
-            .previewDisplayName("Medium Widget")
+            .previewDisplayName("Medium Widget - Interactive")
         }
     }
 }
