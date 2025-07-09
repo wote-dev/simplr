@@ -30,47 +30,63 @@ struct QuickListView: View {
             // List items
             ForEach(quickListItems) { item in
                 if editingItem?.id == item.id {
-                    // Edit mode
-                    HStack(spacing: 12) {
-                        Button(action: { toggleItem(item) }) {
-                            Image(systemName: item.isCompleted ? "checkmark.circle.fill" : "circle")
-                                .font(.system(size: 16, weight: .medium))
-                                .foregroundColor(item.isCompleted ? .green : theme.textSecondary)
-                        }
-                        .buttonStyle(PlainButtonStyle())
+                    // Edit mode with modern design
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Edit Item")
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .foregroundColor(theme.primary)
                         
-                        TextField("Item text", text: $editText)
-                            .textFieldStyle(PlainTextFieldStyle())
-                            .font(.subheadline)
-                            .focused($isEditingFocused)
-                            .submitLabel(.next)
-                            .onSubmit {
-                                saveEdit()
+                        HStack(spacing: 12) {
+                            Button(action: { toggleItem(item) }) {
+                                Image(systemName: item.isCompleted ? "checkmark.circle.fill" : "circle")
+                                    .font(.system(size: 18, weight: .medium))
+                                    .foregroundColor(item.isCompleted ? theme.success : theme.textSecondary)
                             }
-                        
-                        Button(action: saveEdit) {
-                            Image(systemName: "checkmark")
-                                .font(.system(size: 14, weight: .medium))
-                                .foregroundColor(.green)
+                            .buttonStyle(PlainButtonStyle())
+                            
+                            TextField("Edit item text", text: $editText)
+                                .textFieldStyle(PlainTextFieldStyle())
+                                .font(.body)
+                                .foregroundColor(theme.text)
+                                .focused($isEditingFocused)
+                                .submitLabel(.done)
+                                .onSubmit {
+                                    saveEdit()
+                                }
+                            
+                            HStack(spacing: 8) {
+                                Button(action: saveEdit) {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .font(.system(size: 18, weight: .medium))
+                                        .foregroundColor(theme.success)
+                                }
+                                .buttonStyle(PlainButtonStyle())
+                                
+                                Button(action: cancelEdit) {
+                                    Image(systemName: "xmark.circle.fill")
+                                        .font(.system(size: 18, weight: .medium))
+                                        .foregroundColor(theme.error)
+                                }
+                                .buttonStyle(PlainButtonStyle())
+                            }
                         }
-                        .buttonStyle(PlainButtonStyle())
-                        
-                        Button(action: cancelEdit) {
-                            Image(systemName: "xmark")
-                                .font(.system(size: 14, weight: .medium))
-                                .foregroundColor(.red)
-                        }
-                        .buttonStyle(PlainButtonStyle())
                     }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
                     .background(
-                        RoundedRectangle(cornerRadius: 8)
+                        RoundedRectangle(cornerRadius: 12)
                             .fill(theme.surface)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .stroke(theme.primary, lineWidth: 1)
-                            )
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(theme.accentGradient, lineWidth: 2)
+                    )
+                    .shadow(
+                        color: theme.primary.opacity(0.15),
+                        radius: 8,
+                        x: 0,
+                        y: 2
                     )
                 } else {
                     QuickListItemRow(
@@ -82,12 +98,28 @@ struct QuickListView: View {
                 }
             }
             
-            // Add new item field
-            if isAddingFocused || newItemText.isEmpty {
+            // Add new item field with modern design
+            VStack(alignment: .leading, spacing: 8) {
+                if isAddingFocused || !newItemText.isEmpty {
+                    Text("New Item")
+                        .font(.caption)
+                        .fontWeight(.medium)
+                        .foregroundColor(isAddingFocused ? theme.primary : theme.textSecondary)
+                        .transition(.opacity.combined(with: .scale(scale: 0.8)))
+                }
+                
                 HStack(spacing: 12) {
-                    TextField(quickListItems.isEmpty ? "Add quick list item" : "Add item", text: $newItemText)
+                    // Plus icon indicator
+                    Image(systemName: isAddingFocused ? "plus.circle.fill" : "plus.circle")
+                        .font(.system(size: 18, weight: .medium))
+                        .foregroundColor(isAddingFocused ? theme.primary : theme.textSecondary)
+                        .scaleEffect(isAddingFocused ? 1.1 : 1.0)
+                        .animation(.easeInOut(duration: 0.2), value: isAddingFocused)
+                    
+                    TextField(quickListItems.isEmpty ? "Add your first quick list item" : "Add another item", text: $newItemText)
                         .textFieldStyle(PlainTextFieldStyle())
-                        .font(.subheadline)
+                        .font(.body)
+                        .foregroundColor(theme.text)
                         .focused($isAddingFocused)
                         .submitLabel(.done)
                         .onSubmit {
@@ -117,38 +149,37 @@ struct QuickListView: View {
                                 }
                             }
                         }) {
-                            Image(systemName: "plus.circle.fill")
-                                .font(.system(size: 16, weight: .medium))
+                            Image(systemName: "arrow.right.circle.fill")
+                                .font(.system(size: 18, weight: .medium))
                                 .foregroundColor(theme.primary)
                         }
                         .buttonStyle(PlainButtonStyle())
+                        .transition(.scale.combined(with: .opacity))
                     }
                 }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
                 .background(
-                    RoundedRectangle(cornerRadius: 8)
+                    RoundedRectangle(cornerRadius: 12)
                         .fill(theme.surface)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(isAddingFocused ? theme.primary : theme.textTertiary, lineWidth: 1)
-                        )
                 )
-            } else {
-                // Add button when not focused
-                Button(action: { isAddingFocused = true }) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "plus.circle.fill")
-                            .font(.system(size: 16, weight: .medium))
-                            .foregroundColor(theme.primary)
-                        
-                        Text(quickListItems.isEmpty ? "Add quick list item" : "Add item")
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                            .foregroundColor(theme.primary)
-                    }
-                }
-                .buttonStyle(PlainButtonStyle())
+                .scaleEffect(isAddingFocused ? 1.02 : 1.0)
+                .animation(.easeInOut(duration: 0.15), value: isAddingFocused)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(
+                            isAddingFocused ? theme.accentGradient : LinearGradient(colors: [theme.textTertiary.opacity(0.3)], startPoint: .leading, endPoint: .trailing),
+                            lineWidth: isAddingFocused ? 2 : 1
+                        )
+                        .animation(.easeInOut(duration: 0.2), value: isAddingFocused)
+                )
+                .shadow(
+                    color: isAddingFocused ? theme.primary.opacity(0.1) : Color.clear,
+                    radius: isAddingFocused ? 8 : 0,
+                    x: 0,
+                    y: isAddingFocused ? 2 : 0
+                )
+                .animation(.easeInOut(duration: 0.2), value: isAddingFocused)
             }
         }
         .animation(.easeInOut(duration: 0.3), value: quickListItems.count)
@@ -322,53 +353,74 @@ struct QuickListItemRow: View {
     let onDelete: () -> Void
     
     @Environment(\.theme) private var theme
+    @State private var isHovered = false
     
     var body: some View {
         HStack(spacing: 12) {
-            // Completion toggle
+            // Completion toggle with enhanced visual feedback
             Button(action: onToggle) {
                 Image(systemName: item.isCompleted ? "checkmark.circle.fill" : "circle")
-                    .font(.system(size: 16, weight: .medium))
-                    .foregroundColor(item.isCompleted ? .green : theme.textSecondary)
+                    .font(.system(size: 18, weight: .medium))
+                    .foregroundColor(item.isCompleted ? theme.success : theme.textSecondary)
+                    .scaleEffect(item.isCompleted ? 1.1 : 1.0)
+                    .animation(.easeInOut(duration: 0.2), value: item.isCompleted)
             }
             .buttonStyle(PlainButtonStyle())
             
-            // Item text
+            // Item text with improved typography
             Text(item.text)
-                .font(.subheadline)
+                .font(.body)
                 .foregroundColor(item.isCompleted ? theme.textSecondary : theme.text)
                 .strikethrough(item.isCompleted)
                 .opacity(item.isCompleted ? 0.6 : 1.0)
+                .animation(.easeInOut(duration: 0.2), value: item.isCompleted)
             
             Spacer()
             
-            // Action buttons
-            HStack(spacing: 8) {
+            // Action buttons with better spacing and visual hierarchy
+            HStack(spacing: 12) {
                 Button(action: onEdit) {
                     Image(systemName: "pencil")
-                        .font(.system(size: 12, weight: .medium))
+                        .font(.system(size: 14, weight: .medium))
                         .foregroundColor(theme.textSecondary)
+                        .padding(6)
+                        .background(
+                            Circle()
+                                .fill(theme.surfaceSecondary)
+                                .opacity(isHovered ? 1.0 : 0.0)
+                        )
                 }
                 .buttonStyle(PlainButtonStyle())
                 
                 Button(action: onDelete) {
                     Image(systemName: "trash")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(.red)
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(theme.error)
+                        .padding(6)
+                        .background(
+                            Circle()
+                                .fill(theme.error.opacity(0.1))
+                                .opacity(isHovered ? 1.0 : 0.0)
+                        )
                 }
                 .buttonStyle(PlainButtonStyle())
             }
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
         .background(
-            RoundedRectangle(cornerRadius: 8)
+            RoundedRectangle(cornerRadius: 12)
                 .fill(theme.surface)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                                    .stroke(theme.textTertiary, lineWidth: 0.5)
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(theme.textTertiary.opacity(0.2), lineWidth: 1)
                 )
         )
+        .scaleEffect(isHovered ? 1.01 : 1.0)
+        .animation(.easeInOut(duration: 0.15), value: isHovered)
+        .onHover { hovering in
+            isHovered = hovering
+        }
     }
 }
 
