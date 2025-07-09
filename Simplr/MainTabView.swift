@@ -117,7 +117,7 @@ struct MainTabView: View {
         
         // Navigate to the appropriate tab if not already there
         if selectedTab != targetTab {
-            withAnimation(.adaptiveSmooth) {
+            withAnimation(.adaptiveSnappy) {
                 selectedTab = targetTab
             }
             HapticManager.shared.selectionChanged()
@@ -137,7 +137,7 @@ struct MainTabView: View {
         case .viewToday:
             // Navigate to today tab if not already there
             if selectedTab != .today {
-                withAnimation(.adaptiveSmooth) {
+                withAnimation(.adaptiveSnappy) {
                     selectedTab = .today
                 }
                 HapticManager.shared.selectionChanged()
@@ -168,7 +168,7 @@ struct MainTabView: View {
                 .tag(Tab.completed)
         }
         .tabViewStyle(.page(indexDisplayMode: .never))
-        .animation(.adaptiveSmooth, value: selectedTab)
+        .animation(.adaptiveSnappy, value: selectedTab)
     }
     
 
@@ -219,7 +219,7 @@ struct MainTabView: View {
                         .font(.system(size: 20, weight: selectedTab == tab ? .semibold : .medium, design: .rounded))
                         .foregroundColor(selectedTab == tab ? .white : theme.textSecondary)
                         .scaleEffect(selectedTab == tab ? 1.0 : 0.9)
-                        .animation(.adaptiveSmooth, value: selectedTab == tab)
+                        .animation(.adaptiveSnappy, value: selectedTab == tab)
                 }
                 .frame(width: 56, height: 40)
                 
@@ -228,7 +228,7 @@ struct MainTabView: View {
                     .foregroundColor(selectedTab == tab ? theme.text : theme.textSecondary)
                     .opacity(selectedTab == tab ? 1.0 : 0.8)
                     .scaleEffect(selectedTab == tab ? 1.0 : 0.95)
-                    .animation(.adaptiveSmooth, value: selectedTab == tab)
+                    .animation(.adaptiveSnappy, value: selectedTab == tab)
             }
             .padding(.vertical, 8)
         }
@@ -240,7 +240,7 @@ struct MainTabView: View {
         
         HapticManager.shared.selectionChanged()
         
-        withAnimation(.adaptiveSmooth) {
+        withAnimation(.adaptiveSnappy) {
             selectedTab = tab
         }
     }
@@ -256,7 +256,7 @@ struct ModernTabButtonStyle: ButtonStyle {
         configuration.label
             .scaleEffect(configuration.isPressed ? 0.96 : 1.0)
             .opacity(configuration.isPressed ? 0.85 : 1.0)
-            .animation(.adaptiveSnappy, value: configuration.isPressed)
+            .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
     }
 }
 

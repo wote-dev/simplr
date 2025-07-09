@@ -31,6 +31,7 @@ struct TaskRowView: View {
     @State private var showDeleteIcon = false
     @State private var hasTriggeredHaptic = false
     @State private var initialSwipeDirection: SwipeDirection? = nil
+    @State private var hasShownIcon = false // Track if any icon has been shown
     
     // Enum to track initial swipe direction
     private enum SwipeDirection {
@@ -522,38 +523,73 @@ struct TaskRowView: View {
             initialSwipeDirection = translation > 0 ? .right : .left
         }
         
-        // Check if user is swiping in opposite direction from initial swipe
-        if let initialDirection = initialSwipeDirection {
-            let isSwipingOpposite = (initialDirection == .right && translation < 0) || 
-                                   (initialDirection == .left && translation > 0)
-            
-            // If swiping in opposite direction, only allow return to neutral
-            if isSwipingOpposite {
-                // Limit translation to only allow return to neutral (0)
-                let limitedTranslation = initialDirection == .right ? 
-                    max(0, translation) : min(0, translation)
-                
-                withAnimation(.interpolatingSpring(stiffness: 300, damping: 40)) {
-                dragOffset = limitedTranslation
-                isDragging = abs(limitedTranslation) > 10
-            }
-                
-                // Reset visual indicators when returning to neutral
-                dragProgress = 0
-                showCompletionIcon = false
-                showDeleteIcon = false
-                
-                return
-            }
-        }
-        
         // Trigger gesture start haptic on first movement
         if !isDragging && abs(translation) > 8 {
             HapticManager.shared.gestureStart()
             HapticManager.shared.prepareForGestures()
         }
         
-        // Limit drag distance for better UX
+        // ULTIMATE FIX: Once ANY icon is shown, ONLY allow return to neutral
+        if hasShownIcon {
+            // Calculate how close we are to neutral (0)
+            let distanceFromNeutral = abs(translation)
+            
+            // If we're moving away from neutral after showing an icon, BLOCK IT
+            if distanceFromNeutral > abs(dragOffset) {
+                // User is trying to swipe further after showing an icon - BLOCK
+                withAnimation(.interpolatingSpring(stiffness: 300, damping: 40)) {
+                    dragOffset = dragOffset // Keep current position, don't allow further movement
+                    isDragging = true
+                }
+                
+                // Reset all visual indicators
+                dragProgress = 0
+                showCompletionIcon = false
+                showDeleteIcon = false
+                
+                // STOP ALL FURTHER PROCESSING
+                return
+            } else {
+                // User is returning toward neutral - allow this movement only
+                let constrainedTranslation = translation
+                if let initialDirection = initialSwipeDirection {
+                    // Only allow movement back toward neutral
+                    if initialDirection == .right {
+                        // Original swipe was right, only allow movement back to 0 or less
+                        if translation > dragOffset {
+                            withAnimation(.interpolatingSpring(stiffness: 300, damping: 40)) {
+                                dragOffset = dragOffset // Don't allow further right movement
+                            }
+                            return
+                        }
+                    } else {
+                        // Original swipe was left, only allow movement back to 0 or more
+                        if translation < dragOffset {
+                            withAnimation(.interpolatingSpring(stiffness: 300, damping: 40)) {
+                                dragOffset = dragOffset // Don't allow further left movement
+                            }
+                            return
+                        }
+                    }
+                }
+                
+                // Allow movement toward neutral
+                withAnimation(.interpolatingSpring(stiffness: 300, damping: 40)) {
+                    dragOffset = constrainedTranslation
+                    isDragging = abs(constrainedTranslation) > 10
+                }
+                
+                // Reset visual indicators when returning to neutral
+                dragProgress = 0
+                showCompletionIcon = false
+                showDeleteIcon = false
+                
+                // STOP ALL FURTHER PROCESSING
+                return
+            }
+        }
+        
+        // Normal gesture processing (only reached if not in opposite direction mode)
         let limitedTranslation = max(-maxDragDistance, min(maxDragDistance, translation))
         
         withAnimation(.interpolatingSpring(stiffness: 300, damping: 40)) {
@@ -562,29 +598,37 @@ struct TaskRowView: View {
         }
         
         // Calculate progress for visual feedback
-        if translation > 0 {
-            dragProgress = min(1.0, translation / completionThreshold)
-            showCompletionIcon = translation > 40
+        if limitedTranslation > 0 {
+            dragProgress = min(1.0, limitedTranslation / completionThreshold)
+            let shouldShowIcon = limitedTranslation > 40
+            showCompletionIcon = shouldShowIcon
             showDeleteIcon = false
+            if shouldShowIcon {
+                hasShownIcon = true
+            }
         } else {
-            dragProgress = min(1.0, abs(translation) / abs(deletionThreshold))
-            showDeleteIcon = abs(translation) > 40
+            dragProgress = min(1.0, abs(limitedTranslation) / abs(deletionThreshold))
+            let shouldShowIcon = abs(limitedTranslation) > 40
+            showDeleteIcon = shouldShowIcon
             showCompletionIcon = false
+            if shouldShowIcon {
+                hasShownIcon = true
+            }
         }
         
         // Trigger haptic feedback at threshold
         if !hasTriggeredHaptic {
-            if translation > completionThreshold {
+            if limitedTranslation > completionThreshold {
                 HapticManager.shared.gestureThreshold()
                 hasTriggeredHaptic = true
-            } else if translation < deletionThreshold {
+            } else if limitedTranslation < deletionThreshold {
                 HapticManager.shared.gestureThreshold()
                 hasTriggeredHaptic = true
             }
         }
         
         // Reset haptic flag if user pulls back
-        if abs(translation) < abs(completionThreshold * 0.8) && abs(translation) < abs(deletionThreshold * 0.8) {
+        if abs(limitedTranslation) < abs(completionThreshold * 0.8) && abs(limitedTranslation) < abs(deletionThreshold * 0.8) {
             hasTriggeredHaptic = false
         }
     }
@@ -618,7 +662,20 @@ struct TaskRowView: View {
             return
         }
         
-        // Check if gesture should trigger confirmation
+        // If user was swiping in opposite direction after showing an icon, always reset
+        if let initialDirection = initialSwipeDirection, hasShownIcon {
+            let isSwipingOpposite = (initialDirection == .right && translation < 0) || 
+                                   (initialDirection == .left && translation > 0)
+            
+            if isSwipingOpposite {
+                // User swiped in opposite direction after showing an icon, always reset
+                HapticManager.shared.gestureCancelled()
+                resetGestureState()
+                return
+            }
+        }
+        
+        // Check if gesture should trigger confirmation (only in the original direction)
         let shouldShowCompletionConfirmation = translation > completionThreshold || (translation > 70 && velocity > 800)
         let shouldShowDeleteConfirmation = translation < deletionThreshold || (translation < -70 && velocity < -800)
         
@@ -727,6 +784,7 @@ struct TaskRowView: View {
         gestureCompleted = false
         confirmationProgress = 0
         initialSwipeDirection = nil
+        hasShownIcon = false
     }
     
     private func duplicateTask() {

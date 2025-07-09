@@ -76,9 +76,9 @@ extension Animation {
     
     static var adaptiveSnappy: Animation {
         if #available(iOS 17.0, *) {
-            return .snappy(duration: 0.3)
+            return .snappy(duration: 0.2)
         } else {
-            return responsiveSpringLegacy
+            return Animation.interpolatingSpring(stiffness: 800, damping: 30)
         }
     }
     
