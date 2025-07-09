@@ -217,14 +217,7 @@ struct QuickListDetailView: View {
                                     // Immediately restore focus to prevent keyboard dismissal
                                     isTextFieldFocused = true
                                 }
-                                .onChange(of: isTextFieldFocused) { _, newValue in
-                                    // Prevent any focus loss
-                                    if !newValue {
-                                        DispatchQueue.main.async {
-                                            isTextFieldFocused = true
-                                        }
-                                    }
-                                }
+
                                 .autocorrectionDisabled(false)
                                 .textInputAutocapitalization(.sentences)
                             
@@ -261,6 +254,14 @@ struct QuickListDetailView: View {
                     }
                     .padding(.horizontal, 16)
                 }
+                .simultaneousGesture(
+                    DragGesture()
+                        .onChanged { _ in
+                            if isTextFieldFocused {
+                                isTextFieldFocused = false
+                            }
+                        }
+                )
                 .onTapGesture {
                     // Prevent scroll view from dismissing keyboard
                 }

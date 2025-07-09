@@ -19,6 +19,20 @@ struct QuickListView: View {
     
     let taskId: UUID?
     
+    // Binding to expose focus state to parent view
+    @Binding var isQuickListFocused: Bool
+    
+    // Expose focus states to parent view
+    var isAnyFieldFocused: Bool {
+        isAddingFocused || isEditingFocused
+    }
+    
+    init(quickListItems: Binding<[QuickListItem]>, taskId: UUID?, isQuickListFocused: Binding<Bool> = .constant(false)) {
+        self._quickListItems = quickListItems
+        self.taskId = taskId
+        self._isQuickListFocused = isQuickListFocused
+    }
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             // Progress indicator
@@ -183,6 +197,19 @@ struct QuickListView: View {
             }
         }
         .animation(.easeInOut(duration: 0.3), value: quickListItems.count)
+        .onChange(of: isAnyFieldFocused) { _, newValue in
+            // Sync with parent binding
+            isQuickListFocused = newValue
+        }
+        .onChange(of: isQuickListFocused) { _, newValue in
+            // Handle focus dismissal from parent
+            if !newValue && isAnyFieldFocused {
+                withAnimation(.easeOut(duration: 0.2)) {
+                    isAddingFocused = false
+                    isEditingFocused = false
+                }
+            }
+        }
     }
     
     // MARK: - Actions
@@ -496,7 +523,8 @@ struct QuickListProgressView: View {
             QuickListItem(text: "Buy milk"),
             QuickListItem(text: "Buy bread")
         ]),
-        taskId: nil
+        taskId: nil,
+        isQuickListFocused: .constant(false)
     )
     .environmentObject(TaskManager())
     .environment(\.theme, ThemeManager().currentTheme)

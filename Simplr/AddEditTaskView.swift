@@ -33,6 +33,8 @@ struct AddEditTaskView: View {
     @State private var savingTask = false
     @State private var quickListItems: [QuickListItem] = []
     @Namespace private var formNamespace
+    @State private var isKeyboardVisible = false
+    @State private var quickListFocused = false
     
     let taskToEdit: Task?
     
@@ -79,6 +81,12 @@ struct AddEditTaskView: View {
                         isTitleFocused = true
                     }
                 }
+                
+                // Setup keyboard observers
+                setupKeyboardObservers()
+            }
+            .onDisappear {
+                removeKeyboardObservers()
             }
             .onChange(of: title) { _, newTitle in
                 // Update category suggestion based on title
@@ -103,30 +111,32 @@ struct AddEditTaskView: View {
                 .navigationTitle("")
                 .navigationBarHidden(true)
                 .toolbar {
-                    ToolbarItem(placement: .navigationBarLeading) {
-                        Button("Cancel") {
-                            withAnimation(.smoothSpring) {
-                                dismiss()
+                    if !isKeyboardVisible {
+                        ToolbarItem(placement: .navigationBarLeading) {
+                            Button("Cancel") {
+                                withAnimation(.smoothSpring) {
+                                    dismiss()
+                                }
                             }
+                            .foregroundColor(theme.textSecondary)
+                            .animatedButton()
                         }
-                        .foregroundColor(theme.textSecondary)
-                        .animatedButton()
-                    }
-                    
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        Button("Save") {
-                            saveTask()
+                        
+                        ToolbarItem(placement: .navigationBarTrailing) {
+                            Button("Save") {
+                                saveTask()
+                            }
+                            .foregroundColor(theme.primary)
+                            .fontWeight(.semibold)
+                            .disabled(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                            .opacity(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 0.5 : 1.0)
+                            .scaleEffect(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 0.9 : 1.0)
+                            .animation(.smoothEase, value: title.isEmpty)
+                            .animatedButton()
                         }
-                        .foregroundColor(theme.primary)
-                        .fontWeight(.semibold)
-                        .disabled(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                        .opacity(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 0.5 : 1.0)
-                        .scaleEffect(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 0.9 : 1.0)
-                        .animation(.smoothEase, value: title.isEmpty)
-                        .animatedButton()
                     }
                 }
-                .overlay(floatingButtons)
+                .overlay(isKeyboardVisible ? nil : floatingButtons)
         }
         .onChange(of: hasDueDate) { _, newValue in
             withAnimation(.smoothSpring) {
@@ -169,10 +179,11 @@ struct AddEditTaskView: View {
                 DragGesture()
                     .onChanged { _ in
                         // Dismiss keyboard when user starts scrolling
-                        if isTitleFocused || isDescriptionFocused {
+                        if isTitleFocused || isDescriptionFocused || quickListFocused {
                             withAnimation(.easeOut(duration: 0.2)) {
                                 isTitleFocused = false
                                 isDescriptionFocused = false
+                                quickListFocused = false
                             }
                         }
                     }
@@ -203,9 +214,13 @@ struct AddEditTaskView: View {
             SectionHeader(title: "Quick List", icon: "list.bullet")
                 .matchedGeometryEffect(id: "quicklist-header", in: formNamespace)
             
-            QuickListView(quickListItems: $quickListItems, taskId: taskToEdit?.id)
-                .padding(20)
-                .neumorphicCard(theme, cornerRadius: 16)
+            QuickListView(
+                quickListItems: $quickListItems, 
+                taskId: taskToEdit?.id,
+                isQuickListFocused: $quickListFocused
+            )
+            .padding(20)
+            .neumorphicCard(theme, cornerRadius: 16)
         }
         .transition(.scaleAndSlide)
     }
@@ -902,6 +917,42 @@ struct AddEditTaskView: View {
                 }
             }
         }
+    }
+    
+    // MARK: - Keyboard Observers
+    private func setupKeyboardObservers() {
+        NotificationCenter.default.addObserver(
+            forName: UIResponder.keyboardWillShowNotification,
+            object: nil,
+            queue: .main
+        ) { _ in
+            withAnimation(.easeInOut(duration: 0.3)) {
+                isKeyboardVisible = true
+            }
+        }
+        
+        NotificationCenter.default.addObserver(
+            forName: UIResponder.keyboardWillHideNotification,
+            object: nil,
+            queue: .main
+        ) { _ in
+            withAnimation(.easeInOut(duration: 0.3)) {
+                isKeyboardVisible = false
+            }
+        }
+    }
+    
+    private func removeKeyboardObservers() {
+        NotificationCenter.default.removeObserver(
+            self,
+            name: UIResponder.keyboardWillShowNotification,
+            object: nil
+        )
+        NotificationCenter.default.removeObserver(
+            self,
+            name: UIResponder.keyboardWillHideNotification,
+            object: nil
+        )
     }
 }
 
