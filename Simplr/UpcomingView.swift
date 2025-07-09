@@ -50,8 +50,10 @@ struct UpcomingView: View {
             guard let dueDate = task.dueDate else { return "No Date" }
             
             let today = Date()
-            let tomorrow = calendar.date(byAdding: .day, value: 1, to: today)!
-            let nextWeek = calendar.date(byAdding: .weekOfYear, value: 1, to: today)!
+            guard let tomorrow = calendar.date(byAdding: .day, value: 1, to: today),
+              let nextWeek = calendar.date(byAdding: .weekOfYear, value: 1, to: today) else {
+                return "Unknown Date"
+            }
             
             if calendar.isDate(dueDate, inSameDayAs: tomorrow) {
                 return "Tomorrow"
@@ -115,11 +117,15 @@ struct UpcomingView: View {
         }
         .confirmationDialog("Delete Task", isPresented: $showingDeleteAlert, presenting: taskToDelete) { task in
             Button("Delete", role: .destructive) {
+                // Trigger the deletion animation and then delete the task
                 withAnimation(.smoothSpring) {
                     taskManager.deleteTask(task)
                 }
+                taskToDelete = nil
             }
-            Button("Cancel", role: .cancel) { }
+            Button("Cancel", role: .cancel) {
+                taskToDelete = nil
+            }
         } message: { task in
             Text("Are you sure you want to delete '\(task.title)'?")
         }
@@ -292,6 +298,10 @@ struct UpcomingView: View {
             onDelete: {
                 taskToDelete = task
                 showingDeleteAlert = true
+            },
+            onDeleteCanceled: {
+                // Reset gesture state when deletion is canceled via swipe dismissal
+                taskToDelete = nil
             }
         )
         .environmentObject(taskManager)

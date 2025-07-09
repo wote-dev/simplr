@@ -16,6 +16,7 @@ struct TaskRowView: View {
     let onToggleCompletion: () -> Void
     let onEdit: () -> Void
     let onDelete: () -> Void
+    let onDeleteCanceled: (() -> Void)? // New callback for when deletion is canceled
     @State private var isPressed = false
     @State private var showCompletionParticles = false
     @State private var completionScale: CGFloat = 1.0
@@ -39,8 +40,7 @@ struct TaskRowView: View {
     }
     
     // Simplified confirmation states
-    @State private var showCompletionConfirmation = false
-    @State private var showDeleteConfirmation = false
+    @State private var showBothActionsConfirmation = false
     
     // Additional state variables
     @State private var gestureCompleted = false
@@ -48,71 +48,35 @@ struct TaskRowView: View {
     @State private var confirmationProgress: CGFloat = 0
     
     // Constants for gesture thresholds
-    private let completionThreshold: CGFloat = 120
-    private let deletionThreshold: CGFloat = -120
+    private let actionThreshold: CGFloat = -120 // Only left swipe triggers actions
     private let maxDragDistance: CGFloat = 150
     
     var body: some View {
         ZStack {
-            // Background action indicators
-            HStack {
-                // Completion background (left side)
-                if dragOffset > 0 {
-                    HStack {
+            // Background action indicators - positioned absolutely behind the task card
+            if dragOffset < 0 {
+                HStack {
+                    Spacer()
+                    
+                    HStack(spacing: 8) {
+                        // Delete action (on the left)
                         ZStack {
                             Circle()
-                                .fill(showCompletionConfirmation ? theme.success : theme.success.opacity(0.3))
-                                .frame(width: showCompletionConfirmation ? 50 : 40, height: showCompletionConfirmation ? 50 : 40)
-                                .scaleEffect(showCompletionIcon ? 1.1 : 0.9)
-                .animation(.interpolatingSpring(stiffness: 300, damping: 35), value: showCompletionIcon)
-                .animation(.interpolatingSpring(stiffness: 250, damping: 30), value: showCompletionConfirmation)
-                            
-                            if showCompletionConfirmation {
-                                // Confirmation button
-                                Button(action: {
-                                    confirmCompletionAction()
-                                }) {
-                                    Image(systemName: task.isCompleted ? "arrow.uturn.backward" : "checkmark")
-                                        .font(.system(size: 18, weight: .bold))
-                                        .foregroundColor(getIconColor(for: theme.success))
-                                }
-                                .buttonStyle(PlainButtonStyle())
-                            } else {
-                                // Preview icon
-                                Image(systemName: task.isCompleted ? "arrow.uturn.backward" : "checkmark")
-                                    .font(.system(size: 18, weight: .bold))
-                                    .foregroundColor(getIconColor(for: theme.success))
-                                    .scaleEffect(showCompletionIcon ? 1.0 : 0.5)
-                                .animation(Animation.adaptiveSnappy, value: showCompletionIcon)
-                            }
-                        }
-                        .opacity(showCompletionConfirmation ? 1.0 : dragProgress)
-                        .animation(.easeOut(duration: 0.2), value: dragProgress)
-                        
-                        Spacer()
-                    }
-                    .padding(.leading, 20)
-                }
-                
-                Spacer()
-                
-                // Deletion background (right side)
-                if dragOffset < 0 {
-                    HStack {
-                        Spacer()
-                        
-                        ZStack {
-                            Circle()
-                                .fill(showDeleteConfirmation ? theme.error : theme.error.opacity(0.3))
-                                .frame(width: showDeleteConfirmation ? 50 : 40, height: showDeleteConfirmation ? 50 : 40)
+                                .fill(showBothActionsConfirmation ? theme.error : theme.error.opacity(0.3))
+                                .frame(width: showBothActionsConfirmation ? 50 : 40, height: showBothActionsConfirmation ? 50 : 40)
                                 .scaleEffect(showDeleteIcon ? 1.1 : 0.9)
-                .animation(.interpolatingSpring(stiffness: 300, damping: 35), value: showDeleteIcon)
-                .animation(.interpolatingSpring(stiffness: 250, damping: 30), value: showDeleteConfirmation)
+                                .animation(.interpolatingSpring(stiffness: 300, damping: 35), value: showDeleteIcon)
+                                .animation(.interpolatingSpring(stiffness: 250, damping: 30), value: showBothActionsConfirmation)
                             
-                            if showDeleteConfirmation {
-                                // Confirmation button
+                            if showBothActionsConfirmation {
+                                // Confirmation button - reset gesture state first, then show dialog
                                 Button(action: {
-                                    confirmDeleteAction()
+                                    // Reset the gesture state first to restore card position
+                                    dismissConfirmations()
+                                    // Then show the confirmation dialog after a brief delay
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                        onDelete()
+                                    }
                                 }) {
                                     Image(systemName: "trash")
                                         .font(.system(size: 18, weight: .bold))
@@ -128,11 +92,43 @@ struct TaskRowView: View {
                                     .animation(Animation.adaptiveSnappy, value: showDeleteIcon)
                             }
                         }
-                        .opacity(showDeleteConfirmation ? 1.0 : abs(dragProgress))
+                        .opacity(showBothActionsConfirmation ? 1.0 : abs(dragProgress))
+                        .animation(.easeOut(duration: 0.2), value: dragProgress)
+                        
+                        // Complete action (on the right)
+                        ZStack {
+                            Circle()
+                                .fill(showBothActionsConfirmation ? theme.success : theme.success.opacity(0.3))
+                                .frame(width: showBothActionsConfirmation ? 50 : 40, height: showBothActionsConfirmation ? 50 : 40)
+                                .scaleEffect(showCompletionIcon ? 1.1 : 0.9)
+                                .animation(.interpolatingSpring(stiffness: 300, damping: 35), value: showCompletionIcon)
+                                .animation(.interpolatingSpring(stiffness: 250, damping: 30), value: showBothActionsConfirmation)
+                            
+                            if showBothActionsConfirmation {
+                                // Confirmation button - execute completion immediately
+                                Button(action: {
+                                    confirmCompletionAction()
+                                }) {
+                                    Image(systemName: task.isCompleted ? "arrow.uturn.backward" : "checkmark")
+                                        .font(.system(size: 18, weight: .bold))
+                                        .foregroundColor(getIconColor(for: theme.success))
+                                }
+                                .buttonStyle(PlainButtonStyle())
+                            } else {
+                                // Preview icon
+                                Image(systemName: task.isCompleted ? "arrow.uturn.backward" : "checkmark")
+                                    .font(.system(size: 18, weight: .bold))
+                                    .foregroundColor(getIconColor(for: theme.success))
+                                    .scaleEffect(showCompletionIcon ? 1.0 : 0.5)
+                                    .animation(Animation.adaptiveSnappy, value: showCompletionIcon)
+                            }
+                        }
+                        .opacity(showBothActionsConfirmation ? 1.0 : abs(dragProgress))
                         .animation(.easeOut(duration: 0.2), value: dragProgress)
                     }
                     .padding(.trailing, 20)
                 }
+                .zIndex(1) // Background actions layer - behind the task card
             }
             
             // Main task content
@@ -350,7 +346,7 @@ struct TaskRowView: View {
                 Spacer()
                 
                 // Action buttons with enhanced interactions (hidden during drag)
-                if !isDragging && !showCompletionConfirmation && !showDeleteConfirmation {
+                if !isDragging && !showBothActionsConfirmation {
                     HStack(spacing: 12) {
                         Button(action: {
                             HapticManager.shared.buttonTap()
@@ -390,6 +386,7 @@ struct TaskRowView: View {
             .offset(x: dragOffset)
             .scaleEffect(isDragging ? 0.98 : 1.0)
             .animation(.easeInOut(duration: 0.2), value: isDragging)
+            .zIndex(2) // Task card layer - above action buttons
         }
         .gesture(
             DragGesture()
@@ -402,7 +399,7 @@ struct TaskRowView: View {
         )
         .onTapGesture {
             // Dismiss confirmations if tapped elsewhere
-            if showCompletionConfirmation || showDeleteConfirmation {
+            if showBothActionsConfirmation {
                 dismissConfirmations()
             } else if task.hasQuickList {
                 // Open quick list detail view for tasks with quick lists
@@ -498,29 +495,38 @@ struct TaskRowView: View {
         let translation = value.translation.width
         
         // If confirmations are showing, handle dismissal gesture
-        if showCompletionConfirmation || showDeleteConfirmation {
-            // Allow dismissal by swiping in opposite direction or back to center
+        if showBothActionsConfirmation {
+            // Allow dismissal by swiping right or back to center
             let dismissThreshold: CGFloat = 30
             
-            if showCompletionConfirmation && translation < -dismissThreshold {
-                // Swiping left while completion confirmation is showing - dismiss
-                HapticManager.shared.gestureCancelled()
-                resetGestureState()
-                return
-            } else if showDeleteConfirmation && translation > dismissThreshold {
-                // Swiping right while delete confirmation is showing - dismiss
-                HapticManager.shared.gestureCancelled()
-                resetGestureState()
+            if translation > dismissThreshold {
+                // Swiping right while both actions confirmation is showing - dismiss
+                dismissConfirmations()
                 return
             }
             
-            // If swiping in same direction as confirmation, don't do anything
+            // If swiping in same direction (left), don't do anything
+            return
+        }
+        
+        // Only respond to left swipes (negative translation)
+        guard translation < 0 else {
+            // Right swipes are ignored, reset to neutral
+            if dragOffset != 0 {
+                withAnimation(.interpolatingSpring(stiffness: 300, damping: 55)) {
+                    dragOffset = 0
+                    isDragging = false
+                    dragProgress = 0
+                    showCompletionIcon = false
+                    showDeleteIcon = false
+                }
+            }
             return
         }
         
         // Determine initial swipe direction on first significant movement
         if initialSwipeDirection == nil && abs(translation) > 15 {
-            initialSwipeDirection = translation > 0 ? .right : .left
+            initialSwipeDirection = .left
         }
         
         // Trigger gesture start haptic on first movement
@@ -537,7 +543,7 @@ struct TaskRowView: View {
             // If we're moving away from neutral after showing an icon, BLOCK IT
             if distanceFromNeutral > abs(dragOffset) {
                 // User is trying to swipe further after showing an icon - BLOCK
-                withAnimation(.interpolatingSpring(stiffness: 300, damping: 40)) {
+                withAnimation(.interpolatingSpring(stiffness: 300, damping: 55)) {
                     dragOffset = dragOffset // Keep current position, don't allow further movement
                     isDragging = true
                 }
@@ -551,32 +557,17 @@ struct TaskRowView: View {
                 return
             } else {
                 // User is returning toward neutral - allow this movement only
-                let constrainedTranslation = translation
-                if let initialDirection = initialSwipeDirection {
-                    // Only allow movement back toward neutral
-                    if initialDirection == .right {
-                        // Original swipe was right, only allow movement back to 0 or less
-                        if translation > dragOffset {
-                            withAnimation(.interpolatingSpring(stiffness: 300, damping: 40)) {
-                                dragOffset = dragOffset // Don't allow further right movement
-                            }
-                            return
-                        }
-                    } else {
-                        // Original swipe was left, only allow movement back to 0 or more
-                        if translation < dragOffset {
-                            withAnimation(.interpolatingSpring(stiffness: 300, damping: 40)) {
-                                dragOffset = dragOffset // Don't allow further left movement
-                            }
-                            return
-                        }
+                if translation > dragOffset {
+                    withAnimation(.interpolatingSpring(stiffness: 300, damping: 55)) {
+                        dragOffset = dragOffset // Don't allow further left movement
                     }
+                    return
                 }
                 
                 // Allow movement toward neutral
-                withAnimation(.interpolatingSpring(stiffness: 300, damping: 40)) {
-                    dragOffset = constrainedTranslation
-                    isDragging = abs(constrainedTranslation) > 10
+                withAnimation(.interpolatingSpring(stiffness: 300, damping: 55)) {
+                    dragOffset = translation
+                    isDragging = abs(translation) > 10
                 }
                 
                 // Reset visual indicators when returning to neutral
@@ -589,46 +580,33 @@ struct TaskRowView: View {
             }
         }
         
-        // Normal gesture processing (only reached if not in opposite direction mode)
-        let limitedTranslation = max(-maxDragDistance, min(maxDragDistance, translation))
+        // Normal gesture processing for left swipes only
+        let limitedTranslation = max(-maxDragDistance, translation)
         
-        withAnimation(.interpolatingSpring(stiffness: 300, damping: 40)) {
+        withAnimation(.interpolatingSpring(stiffness: 300, damping: 55)) {
             dragOffset = limitedTranslation
             isDragging = abs(limitedTranslation) > 10
         }
         
-        // Calculate progress for visual feedback
-        if limitedTranslation > 0 {
-            dragProgress = min(1.0, limitedTranslation / completionThreshold)
-            let shouldShowIcon = limitedTranslation > 40
-            showCompletionIcon = shouldShowIcon
-            showDeleteIcon = false
-            if shouldShowIcon {
-                hasShownIcon = true
-            }
-        } else {
-            dragProgress = min(1.0, abs(limitedTranslation) / abs(deletionThreshold))
-            let shouldShowIcon = abs(limitedTranslation) > 40
-            showDeleteIcon = shouldShowIcon
-            showCompletionIcon = false
-            if shouldShowIcon {
-                hasShownIcon = true
-            }
+        // Calculate progress for visual feedback (only for left swipes)
+        dragProgress = min(1.0, abs(limitedTranslation) / abs(actionThreshold))
+        let shouldShowIcons = abs(limitedTranslation) > 40
+        showDeleteIcon = shouldShowIcons
+        showCompletionIcon = shouldShowIcons
+        if shouldShowIcons {
+            hasShownIcon = true
         }
         
         // Trigger haptic feedback at threshold
         if !hasTriggeredHaptic {
-            if limitedTranslation > completionThreshold {
-                HapticManager.shared.gestureThreshold()
-                hasTriggeredHaptic = true
-            } else if limitedTranslation < deletionThreshold {
+            if limitedTranslation < actionThreshold {
                 HapticManager.shared.gestureThreshold()
                 hasTriggeredHaptic = true
             }
         }
         
         // Reset haptic flag if user pulls back
-        if abs(limitedTranslation) < abs(completionThreshold * 0.8) && abs(limitedTranslation) < abs(deletionThreshold * 0.8) {
+        if abs(limitedTranslation) < abs(actionThreshold * 0.8) {
             hasTriggeredHaptic = false
         }
     }
@@ -638,65 +616,49 @@ struct TaskRowView: View {
         let velocity = value.velocity.width
         
         // If confirmations are already showing, handle dismissal
-        if showCompletionConfirmation || showDeleteConfirmation {
+        if showBothActionsConfirmation {
             let dismissThreshold: CGFloat = 30
             
-            if showCompletionConfirmation && translation < -dismissThreshold {
-                // Dismiss completion confirmation by swiping left
-                HapticManager.shared.gestureCancelled()
-                resetGestureState()
-            } else if showDeleteConfirmation && translation > dismissThreshold {
-                // Dismiss delete confirmation by swiping right
-                HapticManager.shared.gestureCancelled()
-                resetGestureState()
+            if translation > dismissThreshold {
+                // Dismiss both actions confirmation by swiping right
+                dismissConfirmations()
             } else {
                 // Not enough movement to dismiss, snap back to confirmation position
-                withAnimation(.interpolatingSpring(stiffness: 250, damping: 35)) {
-                    if showCompletionConfirmation {
-                        dragOffset = 80
-                    } else if showDeleteConfirmation {
-                        dragOffset = -80
-                    }
+                withAnimation(.interpolatingSpring(stiffness: 300, damping: 50)) {
+                    dragOffset = -140
                 }
             }
             return
         }
         
-        // If user was swiping in opposite direction after showing an icon, always reset
-        if let initialDirection = initialSwipeDirection, hasShownIcon {
-            let isSwipingOpposite = (initialDirection == .right && translation < 0) || 
-                                   (initialDirection == .left && translation > 0)
-            
-            if isSwipingOpposite {
-                // User swiped in opposite direction after showing an icon, always reset
-                HapticManager.shared.gestureCancelled()
-                resetGestureState()
-                return
-            }
+        // Only respond to left swipes
+        guard translation < 0 else {
+            HapticManager.shared.gestureCancelled()
+            dismissConfirmations()
+            return
         }
         
-        // Check if gesture should trigger confirmation (only in the original direction)
-        let shouldShowCompletionConfirmation = translation > completionThreshold || (translation > 70 && velocity > 800)
-        let shouldShowDeleteConfirmation = translation < deletionThreshold || (translation < -70 && velocity < -800)
+        // If user was swiping right after showing icons, always reset
+        if hasShownIcon && translation > 0 {
+            HapticManager.shared.gestureCancelled()
+            dismissConfirmations()
+            return
+        }
         
-        if shouldShowCompletionConfirmation {
-            // Show completion confirmation
+        // Check if gesture should trigger confirmation (only for left swipes)
+        let shouldShowBothActionsConfirmation = translation < actionThreshold || (translation < -70 && velocity < -800)
+        
+        if shouldShowBothActionsConfirmation {
+            // Show both actions confirmation
             HapticManager.shared.gestureThreshold()
-            withAnimation(.interpolatingSpring(stiffness: 250, damping: 35)) {
-                showCompletionConfirmation = true
-                dragOffset = 80 // Keep some offset to show the confirmation button
-            }
-        } else if shouldShowDeleteConfirmation {
-            // Show deletion confirmation
-            HapticManager.shared.gestureThreshold()
-            withAnimation(.interpolatingSpring(stiffness: 250, damping: 35)) {
-                showDeleteConfirmation = true
-                dragOffset = -80 // Keep some offset to show the confirmation button
+            withAnimation(.interpolatingSpring(stiffness: 300, damping: 50)) {
+                showBothActionsConfirmation = true
+                dragOffset = -140 // Move card further left to fully reveal action buttons
             }
         } else {
             // Snap back to original position with cancel haptic
             HapticManager.shared.gestureCancelled()
-            resetGestureState()
+            dismissConfirmations()
         }
     }
     
@@ -716,7 +678,7 @@ struct TaskRowView: View {
     }
     
     private func confirmDeleteAction() {
-        // Execute the deletion action
+        // Execute the deletion action with animation
         gestureCompleted = true
         HapticManager.shared.swipeToDelete()
         
@@ -733,6 +695,8 @@ struct TaskRowView: View {
     private func dismissConfirmations() {
         HapticManager.shared.gestureCancelled()
         resetGestureState()
+        // Notify parent that deletion was canceled
+        onDeleteCanceled?()
     }
     
     private func performCompletionToggle() {
@@ -770,14 +734,14 @@ struct TaskRowView: View {
     }
     
     private func resetGestureState() {
-        withAnimation(.interpolatingSpring(stiffness: 200, damping: 45)) {
+        withAnimation(.interpolatingSpring(stiffness: 300, damping: 60)) {
             dragOffset = 0
             isDragging = false
             dragProgress = 0
             showCompletionIcon = false
             showDeleteIcon = false
-            showCompletionConfirmation = false
-            showDeleteConfirmation = false
+            showBothActionsConfirmation = false
+            completionOpacity = 1.0 // Ensure task card is fully visible
         }
         
         hasTriggeredHaptic = false
@@ -912,7 +876,8 @@ struct TaskRowView: View {
             namespace: Namespace().wrappedValue,
             onToggleCompletion: {},
             onEdit: {},
-            onDelete: {}
+            onDelete: {},
+            onDeleteCanceled: nil
         )
         
         TaskRowView(
@@ -924,7 +889,8 @@ struct TaskRowView: View {
             namespace: Namespace().wrappedValue,
             onToggleCompletion: {},
             onEdit: {},
-            onDelete: {}
+            onDelete: {},
+            onDeleteCanceled: nil
         )
         
         TaskRowView(
@@ -935,7 +901,8 @@ struct TaskRowView: View {
             namespace: Namespace().wrappedValue,
             onToggleCompletion: {},
             onEdit: {},
-            onDelete: {}
+            onDelete: {},
+            onDeleteCanceled: nil
         )
     }
     .padding()

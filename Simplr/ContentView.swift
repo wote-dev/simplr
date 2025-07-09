@@ -147,6 +147,10 @@ struct ContentView: View {
             onDelete: {
                 taskToDelete = task
                 showingDeleteAlert = true
+            },
+            onDeleteCanceled: {
+                // Reset gesture state when deletion is canceled via swipe dismissal
+                taskToDelete = nil
             }
         )
         .environmentObject(taskManager)
@@ -319,12 +323,14 @@ struct ContentView: View {
         }
         .confirmationDialog("Delete Task", isPresented: $showingDeleteAlert, presenting: taskToDelete) { task in
             Button("Delete", role: .destructive) {
-                withAnimation(.interpolatingSpring(stiffness: 300, damping: 30)) {
+                // Trigger the deletion animation and then delete the task
+                withAnimation(.smoothSpring) {
                     taskManager.deleteTask(task)
                 }
+                taskToDelete = nil
             }
             Button("Cancel", role: .cancel) {
-                HapticManager.shared.buttonTap()
+                taskToDelete = nil
             }
         } message: { task in
             Text("Are you sure you want to delete '\(task.title)'?")

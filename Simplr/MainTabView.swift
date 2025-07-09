@@ -174,18 +174,62 @@ struct MainTabView: View {
 
     private var customTabBar: some View {
         ZStack {
-            // Simplified tab bar background for better performance
+            // Enhanced dark mode tab bar with much darker background
             RoundedRectangle(cornerRadius: 28)
-                .fill(.ultraThinMaterial)
+                .fill(
+                    themeManager.isDarkMode ? 
+                    LinearGradient(
+                        colors: [
+                            Color.black.opacity(0.95),
+                            Color(red: 0.02, green: 0.02, blue: 0.02).opacity(0.98)
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    ) :
+                    LinearGradient(
+                        colors: [Color.white.opacity(0.9), Color.white.opacity(0.8)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
                 .overlay(
                     RoundedRectangle(cornerRadius: 28)
-                        .stroke(Color.white.opacity(0.2), lineWidth: 0.5)
+                        .stroke(
+                            themeManager.isDarkMode ? 
+                            LinearGradient(
+                                colors: [
+                                    Color.white.opacity(0.08),
+                                    Color.white.opacity(0.02)
+                                ],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            ) :
+                            LinearGradient(
+                                colors: [
+                                    Color.white.opacity(0.3),
+                                    Color.white.opacity(0.1)
+                                ],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            ),
+                            lineWidth: themeManager.isDarkMode ? 0.8 : 0.5
+                        )
                 )
                 .shadow(
-                    color: Color.black.opacity(0.1),
-                    radius: 10,
+                    color: themeManager.isDarkMode ? 
+                    Color.black.opacity(0.6) : 
+                    Color.black.opacity(0.1),
+                    radius: themeManager.isDarkMode ? 12 : 10,
                     x: 0,
-                    y: 5
+                    y: themeManager.isDarkMode ? 4 : 5
+                )
+                .shadow(
+                    color: themeManager.isDarkMode ? 
+                    Color.black.opacity(0.3) : 
+                    Color.clear,
+                    radius: themeManager.isDarkMode ? 6 : 0,
+                    x: 0,
+                    y: themeManager.isDarkMode ? 2 : 0
                 )
             
             HStack(spacing: 0) {
@@ -207,17 +251,47 @@ struct MainTabView: View {
         } label: {
             VStack(spacing: 6) {
                 ZStack {
-                    // Simplified active background
+                    // Enhanced active background with better dark mode styling
                     if selectedTab == tab {
                         RoundedRectangle(cornerRadius: 16)
-                            .fill(theme.primary)
+                            .fill(
+                                themeManager.isDarkMode ?
+                                LinearGradient(
+                                    colors: [
+                                        Color.white.opacity(0.95),
+                                        Color.white.opacity(0.85)
+                                    ],
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                ) :
+                                LinearGradient(
+                                    colors: [
+                                        Color.black.opacity(0.9),
+                                        Color.black.opacity(0.8)
+                                    ],
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                )
+                            )
                             .frame(width: 56, height: 40)
+                            .shadow(
+                                color: themeManager.isDarkMode ? 
+                                Color.white.opacity(0.2) : 
+                                Color.black.opacity(0.15),
+                                radius: themeManager.isDarkMode ? 4 : 3,
+                                x: 0,
+                                y: themeManager.isDarkMode ? 1 : 2
+                            )
                             .matchedGeometryEffect(id: "activeTab", in: tabTransition)
                     }
                     
                     Image(systemName: selectedTab == tab ? tab.selectedIcon : tab.icon)
                         .font(.system(size: 20, weight: selectedTab == tab ? .semibold : .medium, design: .rounded))
-                        .foregroundColor(selectedTab == tab ? .white : theme.textSecondary)
+                        .foregroundColor(
+                            selectedTab == tab ? 
+                            (themeManager.isDarkMode ? Color.black : Color.white) : 
+                            (themeManager.isDarkMode ? Color.white.opacity(0.7) : Color.black.opacity(0.6))
+                        )
                         .scaleEffect(selectedTab == tab ? 1.0 : 0.9)
                         .animation(.adaptiveSnappy, value: selectedTab == tab)
                 }
@@ -225,7 +299,11 @@ struct MainTabView: View {
                 
                 Text(tab.title)
                     .font(.system(size: 10, weight: selectedTab == tab ? .semibold : .medium, design: .rounded))
-                    .foregroundColor(selectedTab == tab ? theme.text : theme.textSecondary)
+                    .foregroundColor(
+                        selectedTab == tab ? 
+                        (themeManager.isDarkMode ? Color.white : Color.black) : 
+                        (themeManager.isDarkMode ? Color.white.opacity(0.7) : Color.black.opacity(0.6))
+                    )
                     .opacity(selectedTab == tab ? 1.0 : 0.8)
                     .scaleEffect(selectedTab == tab ? 1.0 : 0.95)
                     .animation(.adaptiveSnappy, value: selectedTab == tab)

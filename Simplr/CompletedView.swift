@@ -109,11 +109,15 @@ struct CompletedView: View {
         }
         .confirmationDialog("Delete Task", isPresented: $showingDeleteAlert, presenting: taskToDelete) { task in
             Button("Delete", role: .destructive) {
+                // Trigger the deletion animation and then delete the task
                 withAnimation(.smoothSpring) {
                     taskManager.deleteTask(task)
                 }
+                taskToDelete = nil
             }
-            Button("Cancel", role: .cancel) { }
+            Button("Cancel", role: .cancel) {
+                taskToDelete = nil
+            }
         } message: { task in
             Text("Are you sure you want to delete '\(task.title)'?")
         }
@@ -285,6 +289,10 @@ struct CompletedView: View {
             onDelete: {
                 taskToDelete = task
                 showingDeleteAlert = true
+            },
+            onDeleteCanceled: {
+                // Reset gesture state when deletion is canceled via swipe dismissal
+                taskToDelete = nil
             }
         )
         .environmentObject(taskManager)
