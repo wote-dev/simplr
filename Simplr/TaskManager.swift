@@ -163,17 +163,7 @@ class TaskManager: ObservableObject {
         }
     }
     
-    func moveTask(from sourceIndex: Int, to destinationIndex: Int) {
-        guard sourceIndex != destinationIndex,
-              sourceIndex >= 0, sourceIndex < tasks.count,
-              destinationIndex >= 0, destinationIndex < tasks.count else {
-            return
-        }
-        
-        let movedTask = tasks.remove(at: sourceIndex)
-        tasks.insert(movedTask, at: destinationIndex)
-        saveTasks()
-    }
+
     
     func duplicateTask(_ task: Task) {
         // Create a new task with same properties but new ID and current timestamp

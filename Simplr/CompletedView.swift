@@ -195,7 +195,7 @@ struct CompletedView: View {
     
     private var emptyStateView: some View {
         VStack(spacing: 24) {
-            Image(systemName: "checkmark.circle")
+            Image(systemName: "checkmark.seal")
                 .font(.system(size: 50, weight: .light))
                 .foregroundStyle(theme.accentGradient)
                 .shadow(
@@ -288,7 +288,7 @@ struct CompletedView: View {
             }
         )
         .environmentObject(taskManager)
-        .padding(.horizontal, 16)
+        .padding(.horizontal, 20)
         .opacity(0.8) // Slightly dimmed to show it's completed
         .transition(.asymmetric(
             insertion: .scale(scale: 0.8).combined(with: .opacity).combined(with: .offset(x: 50)),

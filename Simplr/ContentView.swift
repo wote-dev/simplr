@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UniformTypeIdentifiers
 
 // MARK: - Themed Image Extension
 extension Image {
@@ -36,9 +37,7 @@ struct ContentView: View {
     @State private var showingDeleteAlert = false
     @State private var taskToDelete: Task?
     @State private var showingThemeSelector = false
-    @State private var draggedTask: Task?
-    @State private var dragOffset: CGSize = .zero
-    @State private var isReordering = false
+
     @Namespace private var taskNamespace
     
     private var isDarkModeActive: Bool {
@@ -151,58 +150,16 @@ struct ContentView: View {
             }
         )
         .environmentObject(taskManager)
-        .padding(.horizontal, 16)
-        .zIndex(draggedTask?.id == task.id ? 1 : 0)
-        .scaleEffect(draggedTask?.id == task.id ? 1.05 : 1.0)
-        .shadow(
-            color: draggedTask?.id == task.id ? .black.opacity(0.3) : .clear,
-            radius: draggedTask?.id == task.id ? 10 : 0,
-            x: 0,
-            y: draggedTask?.id == task.id ? 5 : 0
-        )
-        .offset(draggedTask?.id == task.id ? dragOffset : .zero)
-        .animation(.interpolatingSpring(stiffness: 300, damping: 30), value: draggedTask?.id == task.id)
+        .padding(.horizontal, 20)
         .transition(.asymmetric(
             insertion: .scale(scale: 0.8).combined(with: .opacity).combined(with: .offset(x: 50)),
             removal: .scale(scale: 0.8).combined(with: .opacity).combined(with: .offset(x: -50))
         ))
         .matchedGeometryEffect(id: task.id, in: taskNamespace)
-        .gesture(taskDragGesture(for: task))
+
     }
     
-    private func taskDragGesture(for task: Task) -> some Gesture {
-        DragGesture()
-            .onChanged { value in
-                if draggedTask == nil {
-                    draggedTask = task
-                    isReordering = true
-                    // Haptic feedback when starting to drag
-                    HapticManager.shared.dragStart()
-                }
-                if draggedTask?.id == task.id {
-                    dragOffset = value.translation
-                }
-            }
-            .onEnded { value in
-                if draggedTask?.id == task.id {
-                    withAnimation(.interpolatingSpring(stiffness: 300, damping: 30)) {
-                        dragOffset = .zero
-                        draggedTask = nil
-                        isReordering = false
-                    }
-                    
-                    // Handle reordering logic if needed
-                    if abs(value.translation.height) > 60 {
-                        reorderTask(task, translation: value.translation.height)
-                        // Haptic feedback when task is reordered
-                        HapticManager.shared.dragEnd()
-                    } else {
-                        // Light haptic when drag is cancelled
-                        HapticManager.shared.selectionChange()
-                    }
-                }
-            }
-    }
+
     
     private var leadingToolbarItems: some View {
         HStack(spacing: 12) {
@@ -229,8 +186,7 @@ struct ContentView: View {
                             x: 0,
                             y: 0.5
                         )
-                        .scaleEffect(isReordering ? 1.1 : 1.0)
-                        .animation(.easeInOut(duration: 0.2), value: isReordering)
+
                 }
             }
             
@@ -384,22 +340,10 @@ struct ContentView: View {
         }
     }
     
-    private func reorderTask(_ task: Task, translation: CGFloat) {
-        // Simple reordering logic - move task up or down in the list
-        guard let currentIndex = taskManager.tasks.firstIndex(where: { $0.id == task.id }) else { return }
-        
-        let newIndex: Int
-        if translation < 0 { // Moving up
-            newIndex = max(0, currentIndex - 1)
-        } else { // Moving down
-            newIndex = min(taskManager.tasks.count - 1, currentIndex + 1)
-        }
-        
-        if newIndex != currentIndex {
-            taskManager.moveTask(from: currentIndex, to: newIndex)
-        }
-    }
+
 }
+
+
 
 #Preview {
     ContentView()

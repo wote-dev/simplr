@@ -81,17 +81,7 @@ class HapticManager {
         impact.impactOccurred(intensity: 0.5)
     }
     
-    /// Subtle haptic for drag and reorder operations
-    func dragStart() {
-        let impact = UIImpactFeedbackGenerator(style: .light)
-        impact.impactOccurred()
-    }
-    
-    /// Confirmation haptic for successful reordering
-    func dragEnd() {
-        let impact = UIImpactFeedbackGenerator(style: .soft)
-        impact.impactOccurred()
-    }
+
     
     // MARK: - Gesture-Specific Haptics
     
@@ -191,4 +181,4 @@ class HapticManager {
         let notification = UINotificationFeedbackGenerator()
         notification.prepare()
     }
-} 
+}

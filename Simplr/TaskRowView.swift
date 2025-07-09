@@ -47,8 +47,8 @@ struct TaskRowView: View {
     @State private var confirmationProgress: CGFloat = 0
     
     // Constants for gesture thresholds
-    private let completionThreshold: CGFloat = 100
-    private let deletionThreshold: CGFloat = -100
+    private let completionThreshold: CGFloat = 120
+    private let deletionThreshold: CGFloat = -120
     private let maxDragDistance: CGFloat = 150
     
     var body: some View {
@@ -62,9 +62,9 @@ struct TaskRowView: View {
                             Circle()
                                 .fill(showCompletionConfirmation ? theme.success : theme.success.opacity(0.3))
                                 .frame(width: showCompletionConfirmation ? 50 : 40, height: showCompletionConfirmation ? 50 : 40)
-                                .scaleEffect(showCompletionIcon ? 1.2 : 0.8)
-                                .animation(.interpolatingSpring(stiffness: 600, damping: 20), value: showCompletionIcon)
-                                .animation(.interpolatingSpring(stiffness: 400, damping: 20), value: showCompletionConfirmation)
+                                .scaleEffect(showCompletionIcon ? 1.1 : 0.9)
+                .animation(.interpolatingSpring(stiffness: 300, damping: 35), value: showCompletionIcon)
+                .animation(.interpolatingSpring(stiffness: 250, damping: 30), value: showCompletionConfirmation)
                             
                             if showCompletionConfirmation {
                                 // Confirmation button
@@ -104,9 +104,9 @@ struct TaskRowView: View {
                             Circle()
                                 .fill(showDeleteConfirmation ? theme.error : theme.error.opacity(0.3))
                                 .frame(width: showDeleteConfirmation ? 50 : 40, height: showDeleteConfirmation ? 50 : 40)
-                                .scaleEffect(showDeleteIcon ? 1.2 : 0.8)
-                                .animation(.interpolatingSpring(stiffness: 600, damping: 20), value: showDeleteIcon)
-                                .animation(.interpolatingSpring(stiffness: 400, damping: 20), value: showDeleteConfirmation)
+                                .scaleEffect(showDeleteIcon ? 1.1 : 0.9)
+                .animation(.interpolatingSpring(stiffness: 300, damping: 35), value: showDeleteIcon)
+                .animation(.interpolatingSpring(stiffness: 250, damping: 30), value: showDeleteConfirmation)
                             
                             if showDeleteConfirmation {
                                 // Confirmation button
@@ -197,8 +197,8 @@ struct TaskRowView: View {
                             .strikethrough(task.isCompleted)
                             .foregroundColor(task.isCompleted ? theme.textSecondary : theme.text)
                             .opacity(task.isCompleted ? 0.7 : 1.0)
-                            .scaleEffect(task.isCompleted ? 0.98 : 1.0, anchor: .leading)
-                            .animation(Animation.adaptiveSmooth, value: task.isCompleted)
+                            .scaleEffect(task.isCompleted ? 0.99 : 1.0, anchor: .leading)
+                            .animation(.easeInOut(duration: 0.2), value: task.isCompleted)
                             .matchedGeometryEffect(id: "\(task.id)-title", in: namespace)
                         
                         Spacer()
@@ -232,9 +232,9 @@ struct TaskRowView: View {
                                             .stroke(category.color.color.opacity(0.2), lineWidth: 0.5)
                                     )
                             )
-                            .scaleEffect(task.isCompleted ? 0.95 : 1.0)
+                            .scaleEffect(task.isCompleted ? 0.98 : 1.0)
                             .opacity(task.isCompleted ? 0.6 : 1.0)
-                            .animation(.easeInOut(duration: 0.3).delay(0.05), value: task.isCompleted)
+                            .animation(.easeInOut(duration: 0.2), value: task.isCompleted)
                             
                             Spacer()
                         }
@@ -247,8 +247,8 @@ struct TaskRowView: View {
                             .foregroundColor(theme.textSecondary)
                             .lineLimit(2)
                             .opacity(task.isCompleted ? 0.5 : 0.8)
-                            .scaleEffect(task.isCompleted ? 0.98 : 1.0, anchor: .leading)
-                            .animation(.easeInOut(duration: 0.3).delay(0.1), value: task.isCompleted)
+                            .scaleEffect(task.isCompleted ? 0.99 : 1.0, anchor: .leading)
+                            .animation(.easeInOut(duration: 0.2), value: task.isCompleted)
                             .matchedGeometryEffect(id: "\(task.id)-description", in: namespace)
                     }
                     
@@ -310,8 +310,8 @@ struct TaskRowView: View {
                             Spacer()
                         }
                         .opacity(task.isCompleted ? 0.6 : 1.0)
-                        .scaleEffect(task.isCompleted ? 0.98 : 1.0, anchor: .leading)
-                        .animation(.easeInOut(duration: 0.3).delay(0.15), value: task.isCompleted)
+                        .scaleEffect(task.isCompleted ? 0.99 : 1.0, anchor: .leading)
+                        .animation(.easeInOut(duration: 0.2), value: task.isCompleted)
                     }
                     
                     // Due date and reminder info with improved spacing - vertical layout when both present
@@ -383,12 +383,12 @@ struct TaskRowView: View {
             }
             .padding(20)
             .neumorphicCard(theme, cornerRadius: 16)
-            .scaleEffect(isPressed ? 0.98 : 1.0)
+            .scaleEffect(isPressed ? 0.99 : 1.0)
             .opacity(completionOpacity)
-            .animation(.interpolatingSpring(stiffness: 400, damping: 25), value: isPressed)
+            .animation(.easeInOut(duration: 0.15), value: isPressed)
             .offset(x: dragOffset)
-            .scaleEffect(isDragging ? 0.95 : 1.0)
-            .animation(.interpolatingSpring(stiffness: 400, damping: 25), value: isDragging)
+            .scaleEffect(isDragging ? 0.98 : 1.0)
+            .animation(.easeInOut(duration: 0.2), value: isDragging)
         }
         .gesture(
             DragGesture()
@@ -419,19 +419,10 @@ struct TaskRowView: View {
         }
         .contextMenu {
             contextMenuContent
-        } preview: {
-            taskDetailPreview
-        }
-        .onLongPressGesture(minimumDuration: 0) {
-            // Handle long press for potential context menu
-        } onPressingChanged: { pressing in
-            withAnimation(.easeInOut(duration: 0.2)) {
-                isPressed = pressing
-            }
         }
         .onAppear {
             // Initial animation when task appears
-            withAnimation(.interpolatingSpring(stiffness: 300, damping: 30).delay(0.1)) {
+            withAnimation(.easeInOut(duration: 0.3).delay(0.1)) {
                 completionOpacity = 1.0
             }
         }
@@ -443,26 +434,14 @@ struct TaskRowView: View {
         }
     }
     
-    // MARK: - Context Menu and Preview
-    
-    private var taskDetailPreview: some View {
-        TaskDetailPreviewView(task: task)
-            .environmentObject(categoryManager)
-            .environment(\.theme, theme)
-            .onAppear {
-                HapticManager.shared.previewAppears()
-            }
-            .onDisappear {
-                HapticManager.shared.previewDismissed()
-            }
-    }
+    // MARK: - Context Menu
     
     private var contextMenuContent: some View {
         VStack {
             // Toggle completion action
             Button(action: {
                 HapticManager.shared.contextMenuAction()
-                withAnimation(.interpolatingSpring(stiffness: 300, damping: 30)) {
+                withAnimation(.easeInOut(duration: 0.2)) {
                     onToggleCompletion()
                 }
             }) {
@@ -539,7 +518,7 @@ struct TaskRowView: View {
         }
         
         // Determine initial swipe direction on first significant movement
-        if initialSwipeDirection == nil && abs(translation) > 10 {
+        if initialSwipeDirection == nil && abs(translation) > 15 {
             initialSwipeDirection = translation > 0 ? .right : .left
         }
         
@@ -554,10 +533,10 @@ struct TaskRowView: View {
                 let limitedTranslation = initialDirection == .right ? 
                     max(0, translation) : min(0, translation)
                 
-                withAnimation(.interpolatingSpring(stiffness: 600, damping: 30)) {
-                    dragOffset = limitedTranslation
-                    isDragging = abs(limitedTranslation) > 10
-                }
+                withAnimation(.interpolatingSpring(stiffness: 300, damping: 40)) {
+                dragOffset = limitedTranslation
+                isDragging = abs(limitedTranslation) > 10
+            }
                 
                 // Reset visual indicators when returning to neutral
                 dragProgress = 0
@@ -569,7 +548,7 @@ struct TaskRowView: View {
         }
         
         // Trigger gesture start haptic on first movement
-        if !isDragging && abs(translation) > 5 {
+        if !isDragging && abs(translation) > 8 {
             HapticManager.shared.gestureStart()
             HapticManager.shared.prepareForGestures()
         }
@@ -577,7 +556,7 @@ struct TaskRowView: View {
         // Limit drag distance for better UX
         let limitedTranslation = max(-maxDragDistance, min(maxDragDistance, translation))
         
-        withAnimation(.interpolatingSpring(stiffness: 600, damping: 30)) {
+        withAnimation(.interpolatingSpring(stiffness: 300, damping: 40)) {
             dragOffset = limitedTranslation
             isDragging = abs(limitedTranslation) > 10
         }
@@ -585,11 +564,11 @@ struct TaskRowView: View {
         // Calculate progress for visual feedback
         if translation > 0 {
             dragProgress = min(1.0, translation / completionThreshold)
-            showCompletionIcon = translation > 30
+            showCompletionIcon = translation > 40
             showDeleteIcon = false
         } else {
             dragProgress = min(1.0, abs(translation) / abs(deletionThreshold))
-            showDeleteIcon = abs(translation) > 30
+            showDeleteIcon = abs(translation) > 40
             showCompletionIcon = false
         }
         
@@ -628,7 +607,7 @@ struct TaskRowView: View {
                 resetGestureState()
             } else {
                 // Not enough movement to dismiss, snap back to confirmation position
-                withAnimation(.interpolatingSpring(stiffness: 400, damping: 25)) {
+                withAnimation(.interpolatingSpring(stiffness: 250, damping: 35)) {
                     if showCompletionConfirmation {
                         dragOffset = 80
                     } else if showDeleteConfirmation {
@@ -640,20 +619,20 @@ struct TaskRowView: View {
         }
         
         // Check if gesture should trigger confirmation
-        let shouldShowCompletionConfirmation = translation > completionThreshold || (translation > 50 && velocity > 500)
-        let shouldShowDeleteConfirmation = translation < deletionThreshold || (translation < -50 && velocity < -500)
+        let shouldShowCompletionConfirmation = translation > completionThreshold || (translation > 70 && velocity > 800)
+        let shouldShowDeleteConfirmation = translation < deletionThreshold || (translation < -70 && velocity < -800)
         
         if shouldShowCompletionConfirmation {
             // Show completion confirmation
             HapticManager.shared.gestureThreshold()
-            withAnimation(.interpolatingSpring(stiffness: 400, damping: 25)) {
+            withAnimation(.interpolatingSpring(stiffness: 250, damping: 35)) {
                 showCompletionConfirmation = true
                 dragOffset = 80 // Keep some offset to show the confirmation button
             }
         } else if shouldShowDeleteConfirmation {
             // Show deletion confirmation
             HapticManager.shared.gestureThreshold()
-            withAnimation(.interpolatingSpring(stiffness: 400, damping: 25)) {
+            withAnimation(.interpolatingSpring(stiffness: 250, damping: 35)) {
                 showDeleteConfirmation = true
                 dragOffset = -80 // Keep some offset to show the confirmation button
             }
@@ -669,7 +648,7 @@ struct TaskRowView: View {
         gestureCompleted = true
         HapticManager.shared.swipeToComplete()
         
-        withAnimation(.interpolatingSpring(stiffness: 400, damping: 25)) {
+        withAnimation(.interpolatingSpring(stiffness: 250, damping: 35)) {
             dragOffset = UIScreen.main.bounds.width
         }
         
@@ -684,7 +663,7 @@ struct TaskRowView: View {
         gestureCompleted = true
         HapticManager.shared.swipeToDelete()
         
-        withAnimation(.interpolatingSpring(stiffness: 400, damping: 25)) {
+        withAnimation(.interpolatingSpring(stiffness: 250, damping: 35)) {
             dragOffset = -UIScreen.main.bounds.width
             completionOpacity = 0
         }
@@ -734,7 +713,7 @@ struct TaskRowView: View {
     }
     
     private func resetGestureState() {
-        withAnimation(.interpolatingSpring(stiffness: 400, damping: 25)) {
+        withAnimation(.interpolatingSpring(stiffness: 200, damping: 45)) {
             dragOffset = 0
             isDragging = false
             dragProgress = 0

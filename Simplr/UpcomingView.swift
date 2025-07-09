@@ -16,9 +16,7 @@ struct UpcomingView: View {
     @State private var searchText = ""
     @State private var showingDeleteAlert = false
     @State private var taskToDelete: Task?
-    @State private var draggedTask: Task?
-    @State private var dragOffset: CGSize = .zero
-    @State private var isReordering = false
+
     @Namespace private var taskNamespace
     
     // Spotlight navigation
@@ -201,7 +199,7 @@ struct UpcomingView: View {
     
     private var emptyStateView: some View {
         VStack(spacing: 24) {
-            Image(systemName: "calendar")
+            Image(systemName: "clock")
                 .font(.system(size: 50, weight: .light))
                 .foregroundStyle(theme.accentGradient)
                 .shadow(
@@ -297,42 +295,11 @@ struct UpcomingView: View {
             }
         )
         .environmentObject(taskManager)
-        .padding(.horizontal, 16)
-        .zIndex(draggedTask?.id == task.id ? 1 : 0)
-        .scaleEffect(draggedTask?.id == task.id ? 1.05 : 1.0)
-        .shadow(
-            color: draggedTask?.id == task.id ? .black.opacity(0.3) : .clear,
-            radius: draggedTask?.id == task.id ? 10 : 0,
-            x: 0,
-            y: draggedTask?.id == task.id ? 5 : 0
-        )
-        .offset(draggedTask?.id == task.id ? dragOffset : .zero)
-        .animation(.interpolatingSpring(stiffness: 300, damping: 30), value: draggedTask?.id == task.id)
+        .padding(.horizontal, 20)
         .transition(.asymmetric(
             insertion: .scale(scale: 0.8).combined(with: .opacity).combined(with: .offset(x: 50)),
             removal: .scale(scale: 0.8).combined(with: .opacity).combined(with: .offset(x: -50))
         ))
         .matchedGeometryEffect(id: task.id, in: taskNamespace)
-        .gesture(taskDragGesture(for: task))
     }
-    
-    private func taskDragGesture(for task: Task) -> some Gesture {
-        DragGesture()
-            .onChanged { value in
-                if draggedTask == nil {
-                    draggedTask = task
-                    isReordering = true
-                    HapticManager.shared.dragStart()
-                }
-                dragOffset = value.translation
-            }
-            .onEnded { value in
-                withAnimation(.smoothSpring) {
-                    draggedTask = nil
-                    dragOffset = .zero
-                    isReordering = false
-                }
-                HapticManager.shared.dragEnd()
-            }
-    }
-} 
+}
