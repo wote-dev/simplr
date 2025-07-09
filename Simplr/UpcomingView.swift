@@ -159,114 +159,295 @@ struct UpcomingView: View {
     }
     
     private var headerView: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Upcoming")
-                        .font(.largeTitle)
-                        .fontWeight(.bold)
-                        .foregroundColor(theme.text)
+        VStack(spacing: 0) {
+            // Main header content
+            HStack(alignment: .top, spacing: 20) {
+                VStack(alignment: .leading, spacing: 8) {
+                    // Title with enhanced typography
+                    HStack(alignment: .firstTextBaseline, spacing: 12) {
+                        Text("Upcoming")
+                            .font(.system(size: 34, weight: .bold, design: .rounded))
+                            .foregroundStyle(theme.accentGradient)
+                            .tracking(-0.5)
+                        
+                        // Animated task count badge
+                        if upcomingTasks.count > 0 {
+                            Text("\(upcomingTasks.count)")
+                                .font(.system(size: 16, weight: .semibold, design: .rounded))
+                                .foregroundColor(theme.background)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 4)
+                                .background(
+                                    Capsule()
+                                        .fill(theme.accentGradient)
+                                        .shadow(
+                                            color: theme.shadow,
+                                            radius: 4,
+                                            x: 0,
+                                            y: 2
+                                        )
+                                )
+                                .transition(.asymmetric(
+                                    insertion: .scale.combined(with: .opacity),
+                                    removal: .scale.combined(with: .opacity)
+                                ))
+                                .animation(.adaptiveBouncy, value: upcomingTasks.count)
+                        }
+                    }
                     
-                    Text("\(upcomingTasks.count) pending tasks")
-                        .font(.subheadline)
+                    // Subtitle with better hierarchy
+                    Text(upcomingTasks.isEmpty ? "All caught up!" : "Tasks scheduled ahead")
+                        .font(.system(size: 16, weight: .medium, design: .rounded))
                         .foregroundColor(theme.textSecondary)
+                        .opacity(0.8)
+                        .animation(.adaptiveSmooth, value: upcomingTasks.isEmpty)
                 }
                 
-                Spacer()
+                Spacer(minLength: 0)
                 
+                // Enhanced add button
                 Button {
-                    showingAddTask = true
+                    withAnimation(.adaptiveBouncy) {
+                        showingAddTask = true
+                    }
                     HapticManager.shared.buttonTap()
                 } label: {
                     ZStack {
+                        // Background with enhanced shadow
                         Circle()
                             .fill(theme.accentGradient)
-                            .frame(width: 50, height: 50)
-                            .applyNeumorphicShadow(theme.neumorphicButtonStyle)
+                            .frame(width: 56, height: 56)
+                            .shadow(
+                                color: theme.shadow,
+                                radius: 8,
+                                x: 0,
+                                y: 4
+                            )
+                            .shadow(
+                                color: theme.accent.opacity(0.3),
+                                radius: 12,
+                                x: 0,
+                                y: 6
+                            )
                         
+                        // Plus icon with better styling
                         Image(systemName: "plus")
-                            .font(.system(size: 20, weight: .semibold))
+                            .font(.system(size: 22, weight: .semibold, design: .rounded))
                             .foregroundColor(theme.background)
                             .shadow(
-                                color: theme.background == .black ? Color.white.opacity(0.3) : Color.black.opacity(0.3),
-                                radius: 2,
+                                color: theme.background == .black ? Color.white.opacity(0.2) : Color.black.opacity(0.2),
+                                radius: 1,
                                 x: 0,
                                 y: 1
                             )
                     }
+                    .scaleEffect(showingAddTask ? 0.95 : 1.0)
+                    .animation(.adaptiveSnappy, value: showingAddTask)
                 }
                 .animatedButton()
             }
+            .padding(.horizontal, 24)
+            .padding(.top, 12)
+            .padding(.bottom, 20)
+            
+            // Subtle divider
+            if !upcomingTasks.isEmpty {
+                Rectangle()
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                theme.textSecondary.opacity(0.1),
+                                theme.textSecondary.opacity(0.05),
+                                theme.textSecondary.opacity(0.1)
+                            ],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .frame(height: 1)
+                    .padding(.horizontal, 24)
+                    .transition(.opacity.combined(with: .scale(scale: 0.8)))
+                    .animation(.adaptiveSmooth.delay(0.1), value: upcomingTasks.isEmpty)
+            }
         }
-        .padding(.horizontal, 20)
-        .padding(.top, 8)
-        .padding(.bottom, 16)
+        .background(
+            // Subtle background enhancement
+            Rectangle()
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            theme.background,
+                            theme.background.opacity(0.98)
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+                .ignoresSafeArea(edges: .top)
+        )
     }
     
     private var emptyStateView: some View {
-        VStack(spacing: 24) {
-            Image(systemName: "clock")
-                .font(.system(size: 50, weight: .light))
-                .foregroundStyle(theme.accentGradient)
-                .shadow(
-                    color: theme.background == .black ? Color.white.opacity(0.15) : Color.black.opacity(0.1),
-                    radius: 3,
-                    x: 0,
-                    y: 2
-                )
-                .scaleEffect(showingAddTask ? 1.1 : 1.0)
-                .animation(.easeInOut(duration: 0.3), value: showingAddTask)
-            
-            VStack(spacing: 12) {
-                Text("No Upcoming Tasks")
-                    .font(.title2)
-                    .fontWeight(.semibold)
-                    .foregroundColor(theme.text)
+        VStack(spacing: 32) {
+            // Enhanced icon with floating animation
+            ZStack {
+                // Background glow effect
+                Circle()
+                    .fill(
+                        RadialGradient(
+                            colors: [
+                                theme.accent.opacity(0.1),
+                                theme.accent.opacity(0.05),
+                                Color.clear
+                            ],
+                            center: .center,
+                            startRadius: 20,
+                            endRadius: 80
+                        )
+                    )
+                    .frame(width: 160, height: 160)
+                    .scaleEffect(showingAddTask ? 1.1 : 1.0)
+                    .animation(.adaptiveSmooth.repeatForever(autoreverses: true).speed(0.5), value: showingAddTask)
                 
-                Text("All caught up! Add new tasks to plan ahead.")
-                    .font(.subheadline)
-                    .foregroundColor(theme.textSecondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 32)
+                // Main icon
+                Image(systemName: "calendar.badge.clock")
+                    .font(.system(size: 64, weight: .ultraLight, design: .rounded))
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [
+                                theme.accent,
+                                theme.accent.opacity(0.7)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .shadow(
+                        color: theme.shadow,
+                        radius: 8,
+                        x: 0,
+                        y: 4
+                    )
+                    .scaleEffect(showingAddTask ? 0.95 : 1.0)
+                    .animation(.adaptiveBouncy, value: showingAddTask)
             }
-            .opacity(showingAddTask ? 0.7 : 1.0)
-            .animation(.easeInOut(duration: 0.3), value: showingAddTask)
+            
+            // Enhanced text content
+            VStack(spacing: 16) {
+                Text("You're All Set!")
+                    .font(.system(size: 28, weight: .bold, design: .rounded))
+                    .foregroundStyle(theme.accentGradient)
+                    .tracking(-0.3)
+                
+                VStack(spacing: 8) {
+                    Text("No upcoming tasks scheduled.")
+                        .font(.system(size: 18, weight: .medium, design: .rounded))
+                        .foregroundColor(theme.text)
+                    
+                    Text("Tap the + button to plan ahead and stay organized.")
+                        .font(.system(size: 16, weight: .regular, design: .rounded))
+                        .foregroundColor(theme.textSecondary)
+                        .opacity(0.8)
+                }
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 40)
+            }
+            .opacity(showingAddTask ? 0.6 : 1.0)
+            .animation(.adaptiveSmooth, value: showingAddTask)
+            
+            // Subtle call-to-action hint
+            HStack(spacing: 8) {
+                Image(systemName: "arrow.up")
+                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                    .foregroundColor(theme.textTertiary)
+                    .rotationEffect(.degrees(45))
+                
+                Text("Tap to add your first task")
+                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                    .foregroundColor(theme.textTertiary)
+            }
+            .opacity(0.6)
+            .scaleEffect(showingAddTask ? 0.9 : 1.0)
+            .animation(.adaptiveSmooth.delay(0.5), value: showingAddTask)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding(.top, -50)
+        .padding(.top, -40)
         .transition(.asymmetric(
-            insertion: .scale.combined(with: .opacity),
-            removal: .scale.combined(with: .opacity)
+            insertion: .scale(scale: 0.8).combined(with: .opacity).combined(with: .offset(y: 20)),
+            removal: .scale(scale: 0.8).combined(with: .opacity).combined(with: .offset(y: -20))
         ))
     }
     
     private var taskListView: some View {
         ScrollView {
-            LazyVStack(spacing: 20) {
+            LazyVStack(spacing: 24) {
                 ForEach(groupedTasks, id: \.0) { sectionTitle, tasks in
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack {
+                    VStack(alignment: .leading, spacing: 16) {
+                        // Enhanced section header
+                        HStack(alignment: .center, spacing: 12) {
+                            // Section title with better typography
                             Text(sectionTitle)
-                                .font(.headline)
-                                .fontWeight(.semibold)
-                                .foregroundColor(theme.text)
+                                .font(.system(size: 20, weight: .bold, design: .rounded))
+                                .foregroundStyle(
+                                    LinearGradient(
+                                        colors: [
+                                            theme.text,
+                                            theme.text.opacity(0.8)
+                                        ],
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
+                                )
+                                .tracking(-0.2)
                             
-                            Spacer()
+                            // Decorative line
+                            Rectangle()
+                                .fill(
+                                    LinearGradient(
+                                        colors: [
+                                            Color.clear,
+                                            theme.textSecondary.opacity(0.3),
+                                            Color.clear
+                                        ],
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
+                                )
+                                .frame(height: 1)
                             
+                            // Enhanced task count badge
                             Text("\(tasks.count)")
-                                .font(.caption)
-                                .fontWeight(.medium)
-                                .foregroundColor(theme.textSecondary)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
+                                .font(.system(size: 14, weight: .bold, design: .rounded))
+                                .foregroundColor(theme.background)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 6)
                                 .background(
                                     Capsule()
-                                        .fill(theme.surfaceSecondary)
+                                        .fill(
+                                            LinearGradient(
+                                                colors: [
+                                                    theme.accent,
+                                                    theme.accent.opacity(0.8)
+                                                ],
+                                                startPoint: .topLeading,
+                                                endPoint: .bottomTrailing
+                                            )
+                                        )
+                                        .shadow(
+                                            color: theme.shadow,
+                                            radius: 3,
+                                            x: 0,
+                                            y: 2
+                                        )
                                 )
+                                .transition(.scale.combined(with: .opacity))
+                                .animation(.adaptiveBouncy, value: tasks.count)
                         }
-                        .padding(.horizontal, 20)
+                        .padding(.horizontal, 24)
+                        .padding(.bottom, 4)
                         
-                        LazyVStack(spacing: 8) {
+                        // Task cards with enhanced spacing
+                        LazyVStack(spacing: 10) {
                             ForEach(tasks, id: \.id) { task in
                                 taskRowWithEffects(task)
                             }
@@ -274,12 +455,12 @@ struct UpcomingView: View {
                     }
                 }
             }
-            .padding(.top, 8)
-            .padding(.bottom, 100)
+            .padding(.top, 16)
+            .padding(.bottom, 120)
         }
         .transition(.asymmetric(
-            insertion: .opacity.combined(with: .scale(scale: 0.95)),
-            removal: .opacity.combined(with: .scale(scale: 0.95))
+            insertion: .opacity.combined(with: .scale(scale: 0.95)).combined(with: .offset(y: 10)),
+            removal: .opacity.combined(with: .scale(scale: 0.95)).combined(with: .offset(y: -10))
         ))
     }
     
