@@ -20,6 +20,7 @@ struct MainTabView: View {
     // Quick Actions
     @Binding var quickActionTriggered: SimplrApp.QuickAction?
     @State private var showingAddTask = false
+    @State private var showingClearTodayAlert = false
     
     enum Tab: String, CaseIterable {
         case today = "today"
@@ -94,6 +95,16 @@ struct MainTabView: View {
         }
         .sheet(isPresented: $showingAddTask) {
             AddEditTaskView(taskManager: taskManager)
+        }
+        .confirmationDialog("Clear All Today's Tasks", isPresented: $showingClearTodayAlert) {
+            Button("Clear All Tasks", role: .destructive) {
+                withAnimation(.smoothSpring) {
+                    taskManager.clearTodayTasks()
+                }
+            }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("This will permanently delete all incomplete tasks for today, including overdue tasks and tasks without due dates. This action cannot be undone.")
         }
     }
     
@@ -311,6 +322,16 @@ struct MainTabView: View {
             .padding(.vertical, 8)
         }
         .buttonStyle(ModernTabButtonStyle())
+        .if(tab == .today) { view in
+            view.contextMenu {
+                Button {
+                    showingClearTodayAlert = true
+                    HapticManager.shared.buttonTap()
+                } label: {
+                    Label("Clear All Tasks", systemImage: "trash")
+                }
+            }
+        }
     }
     
     private func selectTab(_ tab: Tab) {
@@ -335,6 +356,18 @@ struct ModernTabButtonStyle: ButtonStyle {
             .scaleEffect(configuration.isPressed ? 0.96 : 1.0)
             .opacity(configuration.isPressed ? 0.85 : 1.0)
             .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
+    }
+}
+
+// MARK: - View Extension for Conditional Modifiers
+extension View {
+    @ViewBuilder
+    func `if`<Content: View>(_ condition: Bool, transform: (Self) -> Content) -> some View {
+        if condition {
+            transform(self)
+        } else {
+            self
+        }
     }
 }
 

@@ -580,6 +580,45 @@ class TaskManager: ObservableObject {
         }
     }
     
+    /// Clear all today's tasks (incomplete tasks due today, overdue, or without due dates)
+    func clearTodayTasks() {
+        let calendar = Calendar.current
+        let today = Date()
+        
+        let todayTasksToDelete = tasks.filter { task in
+            // Only delete incomplete tasks
+            guard !task.isCompleted else { return false }
+            
+            // Include tasks due today, overdue incomplete tasks, and tasks without due dates
+            if let dueDate = task.dueDate {
+                return calendar.isDate(dueDate, inSameDayAs: today) || 
+                       (dueDate < today && !task.isCompleted)
+            }
+            // Also include tasks without due dates that aren't completed
+            return !task.isCompleted
+        }
+        
+        if !todayTasksToDelete.isEmpty {
+            print("Clearing \(todayTasksToDelete.count) today's tasks")
+            
+            for task in todayTasksToDelete {
+                cancelNotification(for: task)
+                // Remove from Spotlight index
+                SpotlightManager.shared.removeTask(task)
+            }
+            
+            tasks.removeAll { task in
+                todayTasksToDelete.contains { $0.id == task.id }
+            }
+            
+            invalidateCache()
+            saveTasks()
+            
+            // Haptic feedback for clearing tasks
+            HapticManager.shared.successFeedback()
+        }
+    }
+    
     /// Call this method when the app becomes active to clean up old tasks
     func performMaintenanceTasks() {
         // Reload tasks from UserDefaults to sync with widget changes
