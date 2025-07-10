@@ -188,7 +188,7 @@ struct TodayView: View {
                     Text("Today")
                         .font(.largeTitle)
                         .fontWeight(.bold)
-                        .foregroundColor(theme.text)
+                        .foregroundStyle(theme.accentGradient)
                     
                     Text(todayDateString)
                         .font(.subheadline)
@@ -420,11 +420,25 @@ struct TaskStatCard: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 12)
             .background(
-                RoundedRectangle(cornerRadius: 12)
+                RoundedRectangle(cornerRadius: 16)
                     .fill(isSelected ? color : Color.clear)
                     .background(
-                        RoundedRectangle(cornerRadius: 12)
+                        RoundedRectangle(cornerRadius: 16)
                             .fill(theme.surfaceGradient)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 16)
+                                    .stroke(
+                                        LinearGradient(
+                                            colors: [
+                                                theme.accent.opacity(0.3),
+                                                theme.accent.opacity(0.2)
+                                            ],
+                                            startPoint: .top,
+                                            endPoint: .bottom
+                                        ),
+                                        lineWidth: 0
+                                    )
+                            )
                     )
                     .applyNeumorphicShadow(isSelected ? theme.neumorphicButtonStyle : theme.neumorphicStyle)
             )

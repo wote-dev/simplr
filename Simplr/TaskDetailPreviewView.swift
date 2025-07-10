@@ -10,6 +10,7 @@ import SwiftUI
 struct TaskDetailPreviewView: View {
     @Environment(\.theme) var theme
     @EnvironmentObject var categoryManager: CategoryManager
+    @EnvironmentObject var themeManager: ThemeManager
     let task: Task
     
     private var taskCategory: TaskCategory? {
@@ -51,7 +52,7 @@ struct TaskDetailPreviewView: View {
         )
         .overlay(
             RoundedRectangle(cornerRadius: 16)
-                .stroke(theme.primary.opacity(0.1), lineWidth: 1)
+                .stroke(theme.primary.opacity(0.1), lineWidth: 0)
         )
         .frame(maxWidth: 320)
     }
@@ -66,7 +67,7 @@ struct TaskDetailPreviewView: View {
                         .frame(width: 24, height: 24)
                         .overlay(
                             Circle()
-                                .stroke(task.isCompleted ? theme.success : theme.textTertiary, lineWidth: 2)
+                                .stroke(task.isCompleted ? theme.success : theme.textTertiary, lineWidth: 0)
                         )
                     
                     if task.isCompleted {
@@ -145,11 +146,14 @@ struct TaskDetailPreviewView: View {
                         .foregroundColor(.red)
                 } else {
                     Circle()
-                        .fill(category.color.gradient)
+                        .fill(themeManager.themeMode == .kawaii ? category.color.kawaiiGradient : category.color.gradient)
                         .frame(width: 12, height: 12)
                         .overlay(
                             Circle()
-                                .stroke(category.color.darkColor, lineWidth: 0.5)
+                                .stroke(
+                                    themeManager.themeMode == .kawaii ? category.color.kawaiiDarkColor : category.color.darkColor,
+                                    lineWidth: 0
+                                )
                                 .opacity(0.3)
                         )
                 }
@@ -157,15 +161,18 @@ struct TaskDetailPreviewView: View {
                 Text(category.name)
                     .font(.subheadline)
                     .fontWeight(.medium)
-                    .foregroundColor(category.color.darkColor)
+                    .foregroundColor(themeManager.themeMode == .kawaii ? category.color.kawaiiDarkColor : category.color.darkColor)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 4)
                     .background(
                         Capsule()
-                            .fill(category.color.lightColor)
+                            .fill(themeManager.themeMode == .kawaii ? category.color.kawaiiLightColor : category.color.lightColor)
                             .overlay(
                                 Capsule()
-                                    .stroke(category.color.color.opacity(0.2), lineWidth: 0.5)
+                                    .stroke(
+                                    (themeManager.themeMode == .kawaii ? category.color.kawaiiColor.opacity(0.2) : category.color.color.opacity(0.2)),
+                                    lineWidth: 0
+                                )
                             )
                     )
             }
@@ -221,11 +228,11 @@ struct TaskDetailPreviewView: View {
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
         .background(
-            RoundedRectangle(cornerRadius: 8)
+            RoundedRectangle(cornerRadius: 16)
                 .fill(color.opacity(0.1))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(color.opacity(0.2), lineWidth: 0.5)
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(color.opacity(0.2), lineWidth: 0)
                 )
         )
     }

@@ -157,7 +157,7 @@ struct PaywallView: View {
                 // Mini preview
                 HStack(spacing: 8) {
                     ForEach(0..<3) { _ in
-                        RoundedRectangle(cornerRadius: 8)
+                        RoundedRectangle(cornerRadius: 16)
                             .fill(
                                 LinearGradient(
                                     colors: [
@@ -170,7 +170,7 @@ struct PaywallView: View {
                             )
                             .frame(height: 40)
                             .overlay(
-                                RoundedRectangle(cornerRadius: 8)
+                                RoundedRectangle(cornerRadius: 16)
                                     .stroke(Color(red: 1.0, green: 0.4, blue: 0.7).opacity(0.3), lineWidth: 1)
                             )
                     }
@@ -232,7 +232,7 @@ struct PaywallView: View {
                 .fill(Color.white.opacity(0.8))
                 .overlay(
                     RoundedRectangle(cornerRadius: 12)
-                        .stroke(Color(red: 1.0, green: 0.4, blue: 0.7).opacity(0.2), lineWidth: 1)
+                        .stroke(Color(red: 1.0, green: 0.4, blue: 0.7).opacity(0.2), lineWidth: 0)
                 )
         )
     }
@@ -316,7 +316,7 @@ struct PaywallView: View {
                                 selectedPlan == plan ? 
                                 Color(red: 1.0, green: 0.2, blue: 0.6) : 
                                 Color(red: 1.0, green: 0.4, blue: 0.7).opacity(0.3),
-                                lineWidth: selectedPlan == plan ? 2 : 1
+                                lineWidth: 0
                             )
                     )
                     .shadow(

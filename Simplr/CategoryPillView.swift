@@ -9,6 +9,7 @@ import SwiftUI
 
 struct CategoryPillView: View {
     @Environment(\.theme) var theme
+    @EnvironmentObject var themeManager: ThemeManager
     let category: TaskCategory?
     let isSelected: Bool
     let taskCount: Int?
@@ -22,7 +23,14 @@ struct CategoryPillView: View {
     }
     
     private var categoryColor: Color {
-        category?.color.color ?? theme.textSecondary
+        guard let category = category else { return theme.textSecondary }
+        
+        // Use kawaii colors when in kawaii theme mode
+        if themeManager.themeMode == .kawaii {
+            return category.color.kawaiiColor
+        } else {
+            return category.color.color
+        }
     }
     
     private var isUrgentCategory: Bool {
@@ -31,7 +39,14 @@ struct CategoryPillView: View {
     
     private var backgroundColor: Color {
         if isSelected {
-            return category?.color.lightColor ?? theme.surface
+            guard let category = category else { return theme.surface }
+            
+            // Use kawaii light colors when in kawaii theme mode
+            if themeManager.themeMode == .kawaii {
+                return category.color.kawaiiLightColor
+            } else {
+                return category.color.lightColor
+            }
         } else {
             return theme.surface
         }
@@ -39,7 +54,14 @@ struct CategoryPillView: View {
     
     private var textColor: Color {
         if isSelected {
-            return category?.color.darkColor ?? theme.text
+            guard let category = category else { return theme.text }
+            
+            // Use kawaii dark colors when in kawaii theme mode
+            if themeManager.themeMode == .kawaii {
+                return category.color.kawaiiDarkColor
+            } else {
+                return category.color.darkColor
+            }
         } else {
             return theme.textSecondary
         }
@@ -59,7 +81,9 @@ struct CategoryPillView: View {
                         // Warning triangle for urgent category
                         Image(systemName: "exclamationmark.triangle.fill")
                             .font(.system(size: 12, weight: .bold))
-                            .foregroundColor(category.color.color)
+                            .foregroundColor(
+                                themeManager.themeMode == .kawaii ? category.color.kawaiiColor : category.color.color
+                            )
                             .scaleEffect(isSelected ? 1.1 : 1.0)
                             .scaleEffect(pulsateScale)
                             .opacity(pulsateOpacity)
@@ -71,11 +95,14 @@ struct CategoryPillView: View {
                     } else {
                         // Regular circle for other categories
                         Circle()
-                            .fill(category.color.gradient)
+                            .fill(themeManager.themeMode == .kawaii ? category.color.kawaiiGradient : category.color.gradient)
                             .frame(width: 12, height: 12)
                             .overlay(
                                 Circle()
-                                    .stroke(category.color.darkColor, lineWidth: 1)
+                                    .stroke(
+                                        themeManager.themeMode == .kawaii ? category.color.kawaiiDarkColor : category.color.darkColor,
+                                        lineWidth: 1
+                                    )
                                     .opacity(0.3)
                             )
                             .scaleEffect(isSelected ? 1.1 : 1.0)

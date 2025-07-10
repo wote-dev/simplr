@@ -70,8 +70,9 @@ class PremiumManager: ObservableObject {
         loadPremiumStatus()
         
         // For development/testing - uncomment to simulate premium access
-        // isPremium = true
-        // purchasedFeatures = Set(PremiumFeature.allCases)
+        // Temporarily enable kawaii theme access for testing theme persistence
+        isPremium = true
+        purchasedFeatures = Set(PremiumFeature.allCases)
     }
     
     // MARK: - Premium Status Management

@@ -11,19 +11,36 @@ import UniformTypeIdentifiers
 // MARK: - Themed Image Extension
 extension Image {
     init(themedIcon name: String, themeManager: ThemeManager) {
-        let isDarkMode: Bool
         switch themeManager.themeMode {
-        case .dark:
-            isDarkMode = true
-        case .light:
-            isDarkMode = false
-        case .system:
-            isDarkMode = themeManager.isDarkMode
         case .kawaii:
-            isDarkMode = false
+            // Use kawaii-specific icon if available, otherwise fall back to light theme
+            if name == "simplr" {
+                self.init("kawaii-icon")
+            } else {
+                self.init("\(name)-light")
+            }
+        case .dark:
+            self.init("\(name)-dark")
+        case .light:
+            self.init("\(name)-light")
+        case .system:
+            let isDarkMode = themeManager.isDarkMode
+            self.init(isDarkMode ? "\(name)-dark" : "\(name)-light")
         }
-        
-        self.init(isDarkMode ? "\(name)-dark" : "\(name)-light")
+    }
+    
+    init(themedBCSLogo themeManager: ThemeManager) {
+        switch themeManager.themeMode {
+        case .kawaii:
+            self.init("bcs-kawaii")
+        case .dark:
+            self.init("bcs-dark")
+        case .light:
+            self.init("bcs-light")
+        case .system:
+            let isDarkMode = themeManager.isDarkMode
+            self.init(isDarkMode ? "bcs-dark" : "bcs-light")
+        }
     }
 }
 
@@ -41,21 +58,6 @@ struct ContentView: View {
     @State private var showingThemeSelector = false
 
     @Namespace private var taskNamespace
-    
-    private var isDarkModeActive: Bool {
-        switch themeManager.themeMode {
-        case .dark:
-            return true
-        case .light:
-            return false
-        case .system:
-            return themeManager.isDarkMode
-        case .kawaii:
-            return false
-        }
-    }
-    
-
     
     // Optimized filtered tasks with memoization
     private var filteredTasks: [Task] {
@@ -263,9 +265,9 @@ struct ContentView: View {
     var body: some View {
         NavigationView {
             ZStack {
-                // Background gradient
-                theme.backgroundGradient
-                    .ignoresSafeArea()
+                // Background with image support
+                Color.clear
+                    .themedBackground(theme)
                 
                 VStack(spacing: 0) {
                     if taskManager.tasks.isEmpty {
@@ -285,7 +287,7 @@ struct ContentView: View {
                             .aspectRatio(contentMode: .fit)
                             .frame(height: 32)
                             .transition(.opacity.combined(with: .scale))
-                            .animation(.easeInOut(duration: 0.3), value: isDarkModeActive)
+                            .animation(.easeInOut(duration: 0.3), value: themeManager.themeMode)
                         
                         Text("Simplr")
                             .font(.title2)

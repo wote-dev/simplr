@@ -26,6 +26,7 @@ protocol Theme {
     var backgroundGradient: LinearGradient { get }
     var surfaceGradient: LinearGradient { get }
     var accentGradient: LinearGradient { get }
+    var backgroundImage: String? { get }
     
     var shadowStyle: ShadowStyle { get }
     var cardShadowStyle: ShadowStyle { get }
@@ -67,22 +68,22 @@ struct LightTheme: Theme {
     let primary = Color.black
     let secondary = Color.gray
     let accent = Color.black
-    let background = Color.white
-    let surface = Color.white
-    let surfaceSecondary = Color(red: 0.98, green: 0.98, blue: 0.98)
+    let background = Color(red: 0.98, green: 0.98, blue: 0.98) // Slightly off-white for better contrast
+    let surface = Color.white // Pure white for better contrast against background
+    let surfaceSecondary = Color(red: 0.95, green: 0.95, blue: 0.95) // More contrast for secondary surfaces
     let text = Color.black
-    let textSecondary = Color.gray
+    let textSecondary = Color(red: 0.4, green: 0.4, blue: 0.4) // Darker for better readability
     let textTertiary = Color(red: 0.6, green: 0.6, blue: 0.6)
     let success = Color(red: 0.2, green: 0.8, blue: 0.2) // Green for success actions
     let warning = Color(red: 1.0, green: 0.7, blue: 0.0) // Orange for warnings
     let error = Color(red: 0.9, green: 0.2, blue: 0.2) // Red for error actions
-    let shadow = Color.black.opacity(0.1)
+    let shadow = Color.black.opacity(0.15) // Stronger shadow for better definition
     
     var backgroundGradient: LinearGradient {
         LinearGradient(
             colors: [
-                Color.white,
-                Color(red: 0.99, green: 0.99, blue: 0.99)
+                Color(red: 0.98, green: 0.98, blue: 0.98),
+                Color(red: 0.96, green: 0.96, blue: 0.96)
             ],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
@@ -93,7 +94,7 @@ struct LightTheme: Theme {
         LinearGradient(
             colors: [
                 Color.white,
-                Color(red: 0.99, green: 0.99, blue: 0.99)
+                Color(red: 0.98, green: 0.98, blue: 0.98)
             ],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
@@ -111,19 +112,23 @@ struct LightTheme: Theme {
         )
     }
     
+    var backgroundImage: String? {
+        nil
+    }
+    
     var shadowStyle: ShadowStyle {
         ShadowStyle(
-            color: Color.black.opacity(0.08),
-            radius: 8,
-            y: 2
+            color: Color.black.opacity(0.02),
+            radius: 2,
+            y: 0.5
         )
     }
     
     var cardShadowStyle: ShadowStyle {
         ShadowStyle(
-            color: Color.black.opacity(0.12),
-            radius: 12,
-            y: 4
+            color: Color.black.opacity(0.03),
+            radius: 3,
+            y: 1
         )
     }
     
@@ -131,15 +136,15 @@ struct LightTheme: Theme {
         NeumorphicShadowStyle(
             lightShadow: ShadowStyle(
                 color: Color.white.opacity(0.8),
-                radius: 8,
-                x: -4,
-                y: -4
+                radius: 4,
+                x: -2,
+                y: -2
             ),
             darkShadow: ShadowStyle(
-                color: Color.black.opacity(0.15),
-                radius: 8,
-                x: 4,
-                y: 4
+                color: Color.black.opacity(0.08),
+                radius: 4,
+                x: 2,
+                y: 2
             )
         )
     }
@@ -148,15 +153,15 @@ struct LightTheme: Theme {
         NeumorphicShadowStyle(
             lightShadow: ShadowStyle(
                 color: Color.white.opacity(0.9),
-                radius: 6,
-                x: -3,
-                y: -3
+                radius: 3,
+                x: -1.5,
+                y: -1.5
             ),
             darkShadow: ShadowStyle(
-                color: Color.black.opacity(0.12),
-                radius: 6,
-                x: 3,
-                y: 3
+                color: Color.black.opacity(0.06),
+                radius: 3,
+                x: 1.5,
+                y: 1.5
             )
         )
     }
@@ -184,11 +189,11 @@ struct DarkTheme: Theme {
     let primary = Color.white
     let secondary = Color(red: 0.85, green: 0.85, blue: 0.85)
     let accent = Color.white
-    let background = Color.black
-    let surface = Color(red: 0.05, green: 0.05, blue: 0.05)
-    let surfaceSecondary = Color(red: 0.1, green: 0.1, blue: 0.1)
+    let background = Color(red: 0.02, green: 0.02, blue: 0.02) // Slightly lighter than pure black
+    let surface = Color(red: 0.08, green: 0.08, blue: 0.08) // Better contrast against background
+    let surfaceSecondary = Color(red: 0.12, green: 0.12, blue: 0.12) // More visible secondary surface
     let text = Color.white
-    let textSecondary = Color(red: 0.85, green: 0.85, blue: 0.85)
+    let textSecondary = Color(red: 0.75, green: 0.75, blue: 0.75) // Better contrast for secondary text
     let textTertiary = Color(red: 0.6, green: 0.6, blue: 0.6)
     let success = Color(red: 0.3, green: 0.9, blue: 0.3) // Bright green for success actions
     let warning = Color(red: 1.0, green: 0.8, blue: 0.2) // Bright orange for warnings  
@@ -198,8 +203,8 @@ struct DarkTheme: Theme {
     var backgroundGradient: LinearGradient {
         LinearGradient(
             colors: [
-                Color.black,
-                Color(red: 0.02, green: 0.02, blue: 0.02)
+                Color(red: 0.02, green: 0.02, blue: 0.02),
+                Color.black
             ],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
@@ -209,8 +214,8 @@ struct DarkTheme: Theme {
     var surfaceGradient: LinearGradient {
         LinearGradient(
             colors: [
-                Color(red: 0.05, green: 0.05, blue: 0.05),
-                Color(red: 0.08, green: 0.08, blue: 0.08)
+                Color(red: 0.08, green: 0.08, blue: 0.08),
+                Color(red: 0.06, green: 0.06, blue: 0.06)
             ],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
@@ -226,6 +231,10 @@ struct DarkTheme: Theme {
             startPoint: .topLeading,
             endPoint: .bottomTrailing
         )
+    }
+    
+    var backgroundImage: String? {
+        nil
     }
     
     var shadowStyle: ShadowStyle {
@@ -298,37 +307,40 @@ struct DarkTheme: Theme {
 
 // MARK: - Kawaii Theme (Premium)
 struct KawaiiTheme: Theme {
-    let primary = Color(red: 1.0, green: 0.4, blue: 0.7) // Hot pink
-    let secondary = Color(red: 1.0, green: 0.7, blue: 0.8) // Light pink
-    let accent = Color(red: 1.0, green: 0.2, blue: 0.6) // Vibrant pink
-    let background = Color(red: 1.0, green: 0.95, blue: 0.97) // Very light pink
-    let surface = Color(red: 1.0, green: 0.98, blue: 0.99) // Almost white pink
-    let surfaceSecondary = Color(red: 1.0, green: 0.92, blue: 0.95) // Soft pink
-    let text = Color(red: 0.4, green: 0.2, blue: 0.3) // Dark pink-brown
-    let textSecondary = Color(red: 0.6, green: 0.4, blue: 0.5) // Medium pink-brown
-    let textTertiary = Color(red: 0.7, green: 0.5, blue: 0.6) // Light pink-brown
-    let success = Color(red: 1.0, green: 0.6, blue: 0.8) // Pink success
-    let warning = Color(red: 1.0, green: 0.8, blue: 0.4) // Peachy warning
-    let error = Color(red: 1.0, green: 0.5, blue: 0.6) // Soft pink error
-    let shadow = Color(red: 1.0, green: 0.4, blue: 0.7).opacity(0.15) // Pink shadow
+    let primary = Color(red: 0.98, green: 0.85, blue: 0.88) // Soft blush pink
+    let secondary = Color(red: 0.7, green: 0.95, blue: 0.8) // Mint green
+    let accent = Color(red: 0.85, green: 0.45, blue: 0.55) // Deeper Hello Kitty pink for better contrast
+    let background = Color(red: 0.97, green: 0.94, blue: 0.92) // Slightly darker background for better contrast
+    let surface = Color.white // Pure white for maximum contrast
+    let surfaceSecondary = Color(red: 0.95, green: 0.92, blue: 0.90) // More visible secondary surface
+    let text = Color(red: 0.15, green: 0.05, blue: 0.1) // Even darker text for better readability
+    let textSecondary = Color(red: 0.35, green: 0.25, blue: 0.3) // Darker secondary text
+    let textTertiary = Color(red: 0.55, green: 0.45, blue: 0.5) // Improved tertiary text contrast
+    let success = Color(red: 0.7, green: 0.95, blue: 0.8) // Mint green success
+    let warning = Color(red: 1.0, green: 0.85, blue: 0.6) // Soft peach warning
+    let error = Color(red: 1.0, green: 0.71, blue: 0.76) // Hello Kitty pink error
+    let shadow = Color(red: 0.98, green: 0.85, blue: 0.88).opacity(0.2) // Stronger shadow for better definition
     
     var backgroundGradient: LinearGradient {
         LinearGradient(
             colors: [
-                Color(red: 1.0, green: 0.95, blue: 0.97),
-                Color(red: 1.0, green: 0.92, blue: 0.95),
-                Color(red: 1.0, green: 0.88, blue: 0.93)
+                background,
+                Color(red: 0.95, green: 0.92, blue: 0.90)
             ],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
         )
     }
     
+    var backgroundImage: String? {
+        nil
+    }
+    
     var surfaceGradient: LinearGradient {
         LinearGradient(
             colors: [
-                Color(red: 1.0, green: 0.98, blue: 0.99),
-                Color(red: 1.0, green: 0.95, blue: 0.97)
+                Color.white,
+                Color(red: 0.98, green: 0.96, blue: 0.94)
             ],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
@@ -337,11 +349,7 @@ struct KawaiiTheme: Theme {
     
     var accentGradient: LinearGradient {
         LinearGradient(
-            colors: [
-                Color(red: 1.0, green: 0.2, blue: 0.6),
-                Color(red: 1.0, green: 0.4, blue: 0.7),
-                Color(red: 1.0, green: 0.6, blue: 0.8)
-            ],
+            colors: [accent],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
         )
@@ -349,7 +357,7 @@ struct KawaiiTheme: Theme {
     
     var shadowStyle: ShadowStyle {
         ShadowStyle(
-            color: Color(red: 1.0, green: 0.4, blue: 0.7).opacity(0.12),
+            color: primary.opacity(0.12),
             radius: 10,
             y: 3
         )
@@ -357,7 +365,7 @@ struct KawaiiTheme: Theme {
     
     var cardShadowStyle: ShadowStyle {
         ShadowStyle(
-            color: Color(red: 1.0, green: 0.4, blue: 0.7).opacity(0.18),
+            color: primary.opacity(0.18),
             radius: 15,
             y: 5
         )
@@ -372,7 +380,7 @@ struct KawaiiTheme: Theme {
                 y: -5
             ),
             darkShadow: ShadowStyle(
-                color: Color(red: 1.0, green: 0.4, blue: 0.7).opacity(0.2),
+                color: primary.opacity(0.2),
                 radius: 10,
                 x: 5,
                 y: 5
@@ -389,7 +397,7 @@ struct KawaiiTheme: Theme {
                 y: -4
             ),
             darkShadow: ShadowStyle(
-                color: Color(red: 1.0, green: 0.4, blue: 0.7).opacity(0.15),
+                color: primary.opacity(0.15),
                 radius: 8,
                 x: 4,
                 y: 4
@@ -400,7 +408,7 @@ struct KawaiiTheme: Theme {
     var neumorphicPressedStyle: NeumorphicShadowStyle {
         NeumorphicShadowStyle(
             lightShadow: ShadowStyle(
-                color: Color(red: 1.0, green: 0.4, blue: 0.7).opacity(0.1),
+                color: primary.opacity(0.1),
                 radius: 6,
                 x: 3,
                 y: 3
@@ -443,12 +451,37 @@ extension View {
     }
     
     func themedBackground(_ theme: Theme) -> some View {
-        self.background(theme.backgroundGradient)
+        Group {
+            if let backgroundImageName = theme.backgroundImage {
+                self.background(
+                    ZStack {
+                        Image(backgroundImageName)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .clipped()
+                        
+                        // Stronger overlay for better text readability
+                        LinearGradient(
+                            colors: [
+                                theme.background.opacity(0.6),
+                                theme.background.opacity(0.4),
+                                theme.background.opacity(0.6)
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    }
+                    .ignoresSafeArea()
+                )
+            } else {
+                self.background(theme.backgroundGradient)
+            }
+        }
     }
     
     func themedSurface(_ theme: Theme) -> some View {
         self.background(
-            RoundedRectangle(cornerRadius: 12)
+            RoundedRectangle(cornerRadius: 16)
                 .fill(theme.surfaceGradient)
                 .applyShadow(theme.cardShadowStyle)
         )
@@ -462,7 +495,7 @@ extension View {
         )
     }
     
-    func neumorphicButton(_ theme: Theme, cornerRadius: CGFloat = 12, isPressed: Bool = false) -> some View {
+    func neumorphicButton(_ theme: Theme, cornerRadius: CGFloat = 16, isPressed: Bool = false) -> some View {
         self.background(
             RoundedRectangle(cornerRadius: cornerRadius)
                 .fill(theme.surfaceGradient)

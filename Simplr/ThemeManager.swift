@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Combine
 
 // MARK: - Theme Mode
 enum ThemeMode: String, CaseIterable {
@@ -58,7 +59,13 @@ class ThemeManager: ObservableObject {
     private let themeModeKey = "ThemeMode"
     
     // Premium manager reference
-    var premiumManager: PremiumManager?
+    var premiumManager: PremiumManager? {
+        didSet {
+            // Set up observation of premium status changes
+            setupPremiumObservation()
+        }
+    }
+    private var premiumObservationCancellable: AnyCancellable?
     
     init() {
         // Load saved theme mode or default to system
@@ -77,6 +84,10 @@ class ThemeManager: ObservableObject {
         
         // Update theme based on current mode
         updateTheme()
+    }
+    
+    deinit {
+        premiumObservationCancellable?.cancel()
     }
     
     // MARK: - Theme Management
@@ -116,12 +127,10 @@ class ThemeManager: ObservableObject {
                premiumManager.hasAccess(to: .kawaiiTheme) {
                 newTheme = KawaiiTheme()
             } else {
-                // Fallback to light theme if no access
+                // Fallback to light theme if no access, but preserve the kawaii theme selection
+                // This allows the theme choice to persist when the user gains premium access
                 newTheme = LightTheme()
-                // Reset theme mode to light
-                DispatchQueue.main.async {
-                    self.themeMode = .light
-                }
+                // Don't reset the theme mode - keep it as kawaii so it persists
             }
         }
         
@@ -134,6 +143,28 @@ class ThemeManager: ObservableObject {
     
     func setPremiumManager(_ manager: PremiumManager) {
         self.premiumManager = manager
+        // Refresh theme after premium manager is set to ensure proper access checking
+        updateTheme()
+    }
+    
+    private func setupPremiumObservation() {
+        // Cancel any existing observation
+        premiumObservationCancellable?.cancel()
+        
+        guard let premiumManager = premiumManager else { return }
+        
+        // Observe changes to premium status and purchased features
+        premiumObservationCancellable = Publishers.CombineLatest(
+            premiumManager.$isPremium,
+            premiumManager.$purchasedFeatures
+        )
+        .sink { [weak self] _, _ in
+            // When premium status changes, update the theme
+            // This ensures the kawaii theme is applied immediately when purchased
+            DispatchQueue.main.async {
+                self?.updateTheme()
+            }
+        }
     }
     
     func setThemeMode(_ mode: ThemeMode, checkPremium: Bool = true) {

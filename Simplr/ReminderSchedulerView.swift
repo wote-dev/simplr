@@ -66,7 +66,7 @@ struct ReminderSchedulerView: View {
                     
                     VStack(spacing: 20) {
                         // Drag handle
-                        RoundedRectangle(cornerRadius: 2.5)
+                        RoundedRectangle(cornerRadius: 4)
                             .fill(theme.textSecondary.opacity(0.3))
                             .frame(width: 36, height: 5)
                             .padding(.top, 12)
@@ -297,7 +297,7 @@ struct ReminderSchedulerView: View {
                  .padding(.horizontal, 12)
                  .padding(.vertical, 8)
                  .background(
-                     RoundedRectangle(cornerRadius: 8)
+                     RoundedRectangle(cornerRadius: 12)
                          .fill(theme.surfaceSecondary)
                  )
          }
@@ -352,7 +352,7 @@ struct ReminderSchedulerView: View {
                      .padding(.horizontal, 12)
                      .padding(.vertical, 6)
                      .background(
-                         RoundedRectangle(cornerRadius: 8)
+                         RoundedRectangle(cornerRadius: 12)
                              .fill(Color.orange)
                      )
                  }

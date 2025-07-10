@@ -157,7 +157,7 @@ struct CompletedView: View {
                     Text("Completed")
                         .font(.largeTitle)
                         .fontWeight(.bold)
-                        .foregroundColor(theme.text)
+                        .foregroundStyle(theme.accentGradient)
                     
                     Text("\(completedTasks.count) tasks completed")
                         .font(.subheadline)
@@ -181,7 +181,7 @@ struct CompletedView: View {
                         .padding(.vertical, 8)
                         .background(
                             Capsule()
-                                .stroke(theme.error, lineWidth: 1)
+                                .stroke(theme.error, lineWidth: 0)
                         )
                     }
                     .animatedButton()

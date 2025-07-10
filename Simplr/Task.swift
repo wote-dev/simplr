@@ -100,9 +100,55 @@ enum CategoryColor: String, CaseIterable, Codable {
         }
     }
     
+    /// Soft pastel colors for kawaii theme
+    var kawaiiColor: Color {
+        switch self {
+        case .blue: return Color(red: 0.85, green: 0.92, blue: 0.98)    // Soft sky blue
+        case .green: return Color(red: 0.88, green: 0.96, blue: 0.88)   // Soft mint green
+        case .orange: return Color(red: 0.98, green: 0.92, blue: 0.85)  // Soft peach
+        case .red: return Color(red: 0.98, green: 0.88, blue: 0.88)     // Soft rose
+        case .purple: return Color(red: 0.94, green: 0.88, blue: 0.98)  // Soft lavender
+        case .indigo: return Color(red: 0.90, green: 0.90, blue: 0.98)  // Soft periwinkle
+        case .pink: return Color(red: 0.98, green: 0.88, blue: 0.92)    // Soft blush
+        case .teal: return Color(red: 0.85, green: 0.96, blue: 0.94)    // Soft aqua
+        case .yellow: return Color(red: 0.98, green: 0.96, blue: 0.85)  // Soft cream
+        case .gray: return Color(red: 0.92, green: 0.92, blue: 0.94)    // Soft silver
+        }
+    }
+    
+    /// Kawaii light color for backgrounds
+    var kawaiiLightColor: Color {
+        kawaiiColor.opacity(0.3)
+    }
+    
+    /// Kawaii dark color for text and borders
+    var kawaiiDarkColor: Color {
+        switch self {
+        case .blue: return Color(red: 0.65, green: 0.75, blue: 0.85)
+        case .green: return Color(red: 0.70, green: 0.82, blue: 0.70)
+        case .orange: return Color(red: 0.85, green: 0.75, blue: 0.65)
+        case .red: return Color(red: 0.85, green: 0.70, blue: 0.70)
+        case .purple: return Color(red: 0.80, green: 0.70, blue: 0.85)
+        case .indigo: return Color(red: 0.75, green: 0.75, blue: 0.85)
+        case .pink: return Color(red: 0.85, green: 0.70, blue: 0.78)
+        case .teal: return Color(red: 0.65, green: 0.82, blue: 0.80)
+        case .yellow: return Color(red: 0.85, green: 0.82, blue: 0.65)
+        case .gray: return Color(red: 0.75, green: 0.75, blue: 0.78)
+        }
+    }
+    
     var gradient: LinearGradient {
         LinearGradient(
             colors: [color, darkColor],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+    
+    /// Kawaii gradient for soft pastel appearance
+    var kawaiiGradient: LinearGradient {
+        LinearGradient(
+            colors: [kawaiiColor, kawaiiDarkColor],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
         )

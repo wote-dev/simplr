@@ -128,7 +128,7 @@ struct SettingsView: View {
                                     .padding(.horizontal, 16)
                                     .padding(.vertical, 12)
                                     .background(
-                                        RoundedRectangle(cornerRadius: 12)
+                                        RoundedRectangle(cornerRadius: 16)
                                             .stroke(theme.accent.opacity(0.3), lineWidth: 1)
                                             .background(
                                                 RoundedRectangle(cornerRadius: 12)
@@ -253,13 +253,17 @@ struct SettingsView: View {
                     .foregroundColor(theme.text)
             }
             
-            VStack(spacing: 12) {
+            VStack(spacing: 16) { // Increased spacing between items
                 content()
             }
             .padding(20)
             .background(
                 RoundedRectangle(cornerRadius: 16)
                     .fill(theme.surfaceGradient)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(theme.textTertiary.opacity(0.1), lineWidth: 1)
+                    )
                     .applyNeumorphicShadow(theme.neumorphicStyle)
             )
         }
@@ -328,14 +332,14 @@ struct SettingsView: View {
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
         .background(
-            RoundedRectangle(cornerRadius: 8)
+            RoundedRectangle(cornerRadius: 12)
                 .fill(theme.surface.opacity(0.5))
         )
     }
     
     private func settingsToggle(title: String, subtitle: String, isOn: Binding<Bool>) -> some View {
         HStack {
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 4) { // Increased spacing
                 Text(title)
                     .font(.subheadline)
                     .fontWeight(.medium)
@@ -344,13 +348,16 @@ struct SettingsView: View {
                 Text(subtitle)
                     .font(.caption)
                     .foregroundColor(theme.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true) // Allow text wrapping
             }
             
             Spacer()
             
             Toggle("", isOn: isOn)
                 .tint(theme.accent)
+                .scaleEffect(1.1) // Slightly larger toggle for better visibility
         }
+        .padding(.vertical, 4) // Added vertical padding
     }
     
     private var reminderTimePicker: some View {
@@ -377,11 +384,11 @@ struct SettingsView: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
             .background(
-                RoundedRectangle(cornerRadius: 10)
+                RoundedRectangle(cornerRadius: 16)
                     .fill(theme.surface.opacity(0.5))
                     .overlay(
-                        RoundedRectangle(cornerRadius: 10)
-                            .stroke(theme.accent.opacity(0.2), lineWidth: 1)
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(theme.accent.opacity(0.2), lineWidth: 0)
                     )
             )
         }
@@ -397,7 +404,7 @@ struct SettingsView: View {
             Image(systemName: icon)
                 .font(.system(size: 16, weight: .medium))
                 .foregroundColor(theme.accent)
-                .frame(width: 20)
+                .frame(width: 24, height: 24) // Fixed frame for better alignment
             
             Text(title)
                 .font(.subheadline)
@@ -409,6 +416,7 @@ struct SettingsView: View {
             if !value.isEmpty {
                 Text(value)
                     .font(.caption)
+                    .fontWeight(.medium)
                     .foregroundColor(theme.textSecondary)
             }
             
@@ -418,6 +426,7 @@ struct SettingsView: View {
                     .foregroundColor(theme.textTertiary)
             }
         }
+        .padding(.vertical, 4) // Added vertical padding for better touch targets
         .contentShape(Rectangle())
     }
     
@@ -439,7 +448,7 @@ struct SettingsView: View {
                         .font(.caption)
                         .foregroundColor(theme.textSecondary)
                     
-                    Image("bcs-logo")
+                    Image(themedBCSLogo: themeManager)
                         .resizable()
                         .aspectRatio(contentMode: .fit)
                         .frame(height: 20)
@@ -476,11 +485,11 @@ struct SettingsView: View {
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)
                 .background(
-                    RoundedRectangle(cornerRadius: 8)
+                    RoundedRectangle(cornerRadius: 12)
                         .fill(theme.accent.opacity(0.1))
                         .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(theme.accent.opacity(0.3), lineWidth: 1)
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(theme.accent.opacity(0.3), lineWidth: 0)
                         )
                 )
             }
@@ -493,11 +502,14 @@ struct SettingsView: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {
                 Circle()
-                    .fill(category.color.gradient)
+                    .fill(themeManager.themeMode == .kawaii ? category.color.kawaiiGradient : category.color.gradient)
                     .frame(width: 16, height: 16)
                     .overlay(
                         Circle()
-                            .stroke(category.color.darkColor, lineWidth: 1)
+                            .stroke(
+                                themeManager.themeMode == .kawaii ? category.color.kawaiiDarkColor : category.color.darkColor,
+                                lineWidth: 1
+                            )
                             .opacity(0.3)
                     )
                 
@@ -535,11 +547,16 @@ struct SettingsView: View {
         }
         .padding(12)
         .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(category.color.lightColor.opacity(0.3))
+            RoundedRectangle(cornerRadius: 16)
+                .fill(
+                    (themeManager.themeMode == .kawaii ? category.color.kawaiiLightColor.opacity(0.3) : category.color.lightColor.opacity(0.3))
+                )
                 .overlay(
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(category.color.color.opacity(0.3), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(
+                            (themeManager.themeMode == .kawaii ? category.color.kawaiiColor.opacity(0.3) : category.color.color.opacity(0.3)),
+                            lineWidth: 0
+                        )
                 )
         )
     }

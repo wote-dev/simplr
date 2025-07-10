@@ -66,7 +66,13 @@ struct QuickListView: View {
                                 .focused($isEditingFocused)
                                 .submitLabel(.done)
                                 .onSubmit {
-                                    saveEdit()
+                                    let trimmedText = editText.trimmingCharacters(in: .whitespacesAndNewlines)
+                                    if trimmedText.isEmpty {
+                                        // Dismiss keyboard if text is empty
+                                        isEditingFocused = false
+                                    } else {
+                                        saveEdit()
+                                    }
                                 }
                             
                             HStack(spacing: 8) {
@@ -85,6 +91,13 @@ struct QuickListView: View {
                                 .buttonStyle(PlainButtonStyle())
                             }
                         }
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            // Ensure tapping anywhere in the edit field area focuses the text field
+                            if !isEditingFocused {
+                                isEditingFocused = true
+                            }
+                        }
                     }
                     .padding(.horizontal, 16)
                     .padding(.vertical, 12)
@@ -94,7 +107,7 @@ struct QuickListView: View {
                     )
                     .overlay(
                         RoundedRectangle(cornerRadius: 12)
-                            .stroke(theme.accentGradient, lineWidth: 2)
+                            .stroke(theme.accentGradient, lineWidth: 0)
                     )
                     .shadow(
                         color: theme.primary.opacity(0.15),
@@ -137,10 +150,16 @@ struct QuickListView: View {
                         .focused($isAddingFocused)
                         .submitLabel(.done)
                         .onSubmit {
-                            addNewItem()
-                            // Keep keyboard open by maintaining focus after adding item
-                            DispatchQueue.main.async {
-                                isAddingFocused = true
+                            let trimmedText = newItemText.trimmingCharacters(in: .whitespacesAndNewlines)
+                            if trimmedText.isEmpty {
+                                // Dismiss keyboard if text is empty
+                                isAddingFocused = false
+                            } else {
+                                addNewItem()
+                                // Keep keyboard open by maintaining focus after adding item
+                                DispatchQueue.main.async {
+                                    isAddingFocused = true
+                                }
                             }
                         }
                         .onChange(of: isAddingFocused) { _, newValue in
@@ -171,6 +190,13 @@ struct QuickListView: View {
                         .transition(.scale.combined(with: .opacity))
                     }
                 }
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    // Ensure tapping anywhere in the text field area focuses the text field
+                    if !isAddingFocused {
+                        isAddingFocused = true
+                    }
+                }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
                 .background(
@@ -183,7 +209,7 @@ struct QuickListView: View {
                     RoundedRectangle(cornerRadius: 12)
                         .stroke(
                             isAddingFocused ? theme.accentGradient : LinearGradient(colors: [theme.textTertiary.opacity(0.3)], startPoint: .leading, endPoint: .trailing),
-                            lineWidth: isAddingFocused ? 2 : 1
+                            lineWidth: 0
                         )
                         .animation(.easeInOut(duration: 0.2), value: isAddingFocused)
                 )
@@ -408,13 +434,28 @@ struct QuickListItemRow: View {
             HStack(spacing: 12) {
                 Button(action: onEdit) {
                     Image(systemName: "pencil")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(theme.textSecondary)
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(
+                            theme is KawaiiTheme ? 
+                            Color.white : theme.textSecondary
+                        )
                         .padding(6)
                         .background(
                             Circle()
-                                .fill(theme.surfaceSecondary)
-                                .opacity(isHovered ? 1.0 : 0.0)
+                                .fill(
+                                    theme is KawaiiTheme ? 
+                                    theme.accent.opacity(0.8) : theme.surfaceSecondary
+                                )
+                                .opacity(isHovered ? 1.0 : (theme is KawaiiTheme ? 0.9 : 0.0))
+                        )
+                        .overlay(
+                            Circle()
+                                .stroke(
+                                    theme is KawaiiTheme ? 
+                                    theme.accent.opacity(0.4) : Color.clear,
+                                    lineWidth: theme is KawaiiTheme ? 1 : 0
+                                )
+                                .opacity(theme is KawaiiTheme ? 1.0 : 0.0)
                         )
                 }
                 .buttonStyle(PlainButtonStyle())
@@ -489,22 +530,22 @@ struct QuickListProgressView: View {
             GeometryReader { geometry in
                 ZStack(alignment: .leading) {
                     // Background track with border
-                    RoundedRectangle(cornerRadius: 4)
+                    RoundedRectangle(cornerRadius: 8)
                         .fill(theme.surface)
                         .overlay(
-                            RoundedRectangle(cornerRadius: 4)
+                            RoundedRectangle(cornerRadius: 8)
                                 .stroke(theme.textTertiary.opacity(0.3), lineWidth: 1)
                         )
                         .frame(height: 8)
                     
                     // Progress fill with clear end indicator
                     if progress > 0 {
-                        RoundedRectangle(cornerRadius: 4)
+                        RoundedRectangle(cornerRadius: 8)
                             .fill(progress == 1.0 ? Color.green.gradient : theme.primary.gradient)
                             .frame(width: max(8, geometry.size.width * progress), height: 8)
                             .overlay(
                                 // End cap indicator
-                                RoundedRectangle(cornerRadius: 4)
+                                RoundedRectangle(cornerRadius: 8)
                                     .stroke(progress == 1.0 ? Color.green : theme.primary, lineWidth: 1.5)
                                     .frame(width: max(8, geometry.size.width * progress), height: 8)
                             )

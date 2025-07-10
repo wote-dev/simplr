@@ -128,7 +128,7 @@ struct MainTabView: View {
         
         // Navigate to the appropriate tab if not already there
         if selectedTab != targetTab {
-            withAnimation(.adaptiveSnappy) {
+            withAnimation(.interpolatingSpring(stiffness: 300, damping: 30)) {
                 selectedTab = targetTab
             }
             HapticManager.shared.selectionChanged()
@@ -148,7 +148,7 @@ struct MainTabView: View {
         case .viewToday:
             // Navigate to today tab if not already there
             if selectedTab != .today {
-                withAnimation(.adaptiveSnappy) {
+                withAnimation(.interpolatingSpring(stiffness: 300, damping: 30)) {
                     selectedTab = .today
                 }
                 HapticManager.shared.selectionChanged()
@@ -162,172 +162,85 @@ struct MainTabView: View {
     }
     
     private var backgroundView: some View {
-        // Simplified background for better performance
-        theme.backgroundGradient
-            .ignoresSafeArea()
+        // Use themedBackground to support background images
+        Color.clear
+            .themedBackground(theme)
     }
     
+    // MARK: - Tab Content Display (Swipe removed)
+    
     private var contentView: some View {
-        TabView(selection: $selectedTab) {
-            TodayView(selectedTaskId: $selectedTaskId)
-                .tag(Tab.today)
-            
-            UpcomingView(selectedTaskId: $selectedTaskId)
-                .tag(Tab.upcoming)
-            
-            CompletedView(selectedTaskId: $selectedTaskId)
-                .tag(Tab.completed)
+        // Display only the selected tab content without swipe gestures
+        Group {
+            switch selectedTab {
+            case .today:
+                TodayView(selectedTaskId: $selectedTaskId)
+            case .upcoming:
+                UpcomingView(selectedTaskId: $selectedTaskId)
+            case .completed:
+                CompletedView(selectedTaskId: $selectedTaskId)
+            }
         }
-        .tabViewStyle(.page(indexDisplayMode: .never))
-        .animation(.adaptiveSnappy, value: selectedTab)
+        .animation(.interpolatingSpring(stiffness: 300, damping: 30), value: selectedTab)
     }
     
 
     private var customTabBar: some View {
-        ZStack {
-            // Enhanced dark mode tab bar with much darker background
-            RoundedRectangle(cornerRadius: 28)
-                .fill(
-                    themeManager.isDarkMode ? 
-                    LinearGradient(
-                        colors: [
-                            Color.black.opacity(0.95),
-                            Color(red: 0.02, green: 0.02, blue: 0.02).opacity(0.98)
-                        ],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    ) :
-                    LinearGradient(
-                        colors: [Color.white.opacity(0.9), Color.white.opacity(0.8)],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 28)
-                        .stroke(
-                            themeManager.isDarkMode ? 
-                            LinearGradient(
-                                colors: [
-                                    Color.white.opacity(0.08),
-                                    Color.white.opacity(0.02)
-                                ],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            ) :
-                            LinearGradient(
-                                colors: [
-                                    Color.white.opacity(0.3),
-                                    Color.white.opacity(0.1)
-                                ],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            ),
-                            lineWidth: themeManager.isDarkMode ? 0.8 : 0.5
-                        )
-                )
-                .shadow(
-                    color: themeManager.isDarkMode ? 
-                    Color.black.opacity(0.6) : 
-                    Color.black.opacity(0.1),
-                    radius: themeManager.isDarkMode ? 12 : 10,
-                    x: 0,
-                    y: themeManager.isDarkMode ? 4 : 5
-                )
-                .shadow(
-                    color: themeManager.isDarkMode ? 
-                    Color.black.opacity(0.3) : 
-                    Color.clear,
-                    radius: themeManager.isDarkMode ? 6 : 0,
-                    x: 0,
-                    y: themeManager.isDarkMode ? 2 : 0
-                )
-            
-            HStack(spacing: 0) {
-                ForEach(Tab.allCases, id: \.self) { tab in
-                    tabButton(for: tab)
-                        .frame(maxWidth: .infinity)
-                }
+        // Tab bar content with frosted glass background
+        HStack(spacing: 0) {
+            ForEach(Tab.allCases, id: \.self) { tab in
+                tabButton(for: tab)
+                    .frame(maxWidth: .infinity)
             }
-            .padding(.horizontal, 12)
         }
-        .frame(height: 84)
         .padding(.horizontal, 16)
-        .padding(.bottom, 34) // Account for safe area
+        .padding(.top, 16)
+        .padding(.bottom, 8)
+        .background(
+            // Solid background colors for each theme
+            Rectangle()
+                .fill(
+                    themeManager.themeMode == .kawaii ?
+                    Color(red: 243/255, green: 236/255, blue: 230/255) :
+                    (themeManager.isDarkMode ?
+                     Color.black :
+                     Color(red: 247/255, green: 247/255, blue: 246/255))
+                )
+                .ignoresSafeArea(.container, edges: .bottom)
+        )
     }
     
     private func tabButton(for tab: Tab) -> some View {
         Button {
             selectTab(tab)
         } label: {
-            VStack(spacing: 6) {
-                ZStack {
-                    // Enhanced active background with theme-aware styling
-                    if selectedTab == tab {
-                        RoundedRectangle(cornerRadius: 16)
-                            .fill(
-                                themeManager.themeMode == .kawaii ?
-                                theme.accentGradient :
-                                (themeManager.isDarkMode ?
-                                LinearGradient(
-                                    colors: [
-                                        Color.white.opacity(0.95),
-                                        Color.white.opacity(0.85)
-                                    ],
-                                    startPoint: .top,
-                                    endPoint: .bottom
-                                ) :
-                                LinearGradient(
-                                    colors: [
-                                        Color.black.opacity(0.9),
-                                        Color.black.opacity(0.8)
-                                    ],
-                                    startPoint: .top,
-                                    endPoint: .bottom
-                                ))
-                            )
-                            .frame(width: 56, height: 40)
-                            .shadow(
-                                color: themeManager.themeMode == .kawaii ?
-                                theme.shadow :
-                                (themeManager.isDarkMode ? 
-                                Color.white.opacity(0.2) : 
-                                Color.black.opacity(0.15)),
-                                radius: themeManager.isDarkMode ? 4 : 3,
-                                x: 0,
-                                y: themeManager.isDarkMode ? 1 : 2
-                            )
-                            .matchedGeometryEffect(id: "activeTab", in: tabTransition)
-                    }
-                    
-                    Image(systemName: selectedTab == tab ? tab.selectedIcon : tab.icon)
-                        .font(.system(size: 20, weight: selectedTab == tab ? .semibold : .medium, design: .rounded))
-                        .foregroundColor(
-                            selectedTab == tab ? 
-                            (themeManager.themeMode == .kawaii ? Color.white :
-                             (themeManager.isDarkMode ? Color.black : Color.white)) : 
-                            (themeManager.themeMode == .kawaii ? theme.textSecondary :
-                             (themeManager.isDarkMode ? Color.white.opacity(0.7) : Color.black.opacity(0.6)))
-                        )
-                        .scaleEffect(selectedTab == tab ? 1.0 : 0.9)
-                        .animation(.adaptiveSnappy, value: selectedTab == tab)
-                }
-                .frame(width: 56, height: 40)
-                
-                Text(tab.title)
-                    .font(.system(size: 10, weight: selectedTab == tab ? .semibold : .medium, design: .rounded))
+            VStack(spacing: 4) {
+                Image(systemName: selectedTab == tab ? tab.selectedIcon : tab.icon)
+                    .font(.system(size: 22, weight: selectedTab == tab ? .semibold : .medium, design: .default))
                     .foregroundColor(
                         selectedTab == tab ? 
-                        (themeManager.themeMode == .kawaii ? theme.text :
+                        (themeManager.themeMode == .kawaii ? theme.accent :
                          (themeManager.isDarkMode ? Color.white : Color.black)) : 
                         (themeManager.themeMode == .kawaii ? theme.textSecondary :
-                         (themeManager.isDarkMode ? Color.white.opacity(0.7) : Color.black.opacity(0.6)))
+                         (themeManager.isDarkMode ? Color.white.opacity(0.6) : Color.black.opacity(0.5)))
                     )
-                    .opacity(selectedTab == tab ? 1.0 : 0.8)
-                    .scaleEffect(selectedTab == tab ? 1.0 : 0.95)
-                    .animation(.adaptiveSnappy, value: selectedTab == tab)
+                    .scaleEffect(selectedTab == tab ? 1.0 : 0.9)
+                    .animation(.easeInOut(duration: 0.2), value: selectedTab == tab)
+                
+                Text(tab.title)
+                    .font(.system(size: 10, weight: selectedTab == tab ? .medium : .regular, design: .default))
+                    .foregroundColor(
+                        selectedTab == tab ? 
+                        (themeManager.themeMode == .kawaii ? theme.accent :
+                         (themeManager.isDarkMode ? Color.white : Color.black)) : 
+                        (themeManager.themeMode == .kawaii ? theme.textSecondary :
+                         (themeManager.isDarkMode ? Color.white.opacity(0.6) : Color.black.opacity(0.5)))
+                    )
+                    .opacity(selectedTab == tab ? 1.0 : 0.7)
+                    .animation(.easeInOut(duration: 0.2), value: selectedTab == tab)
             }
-            .padding(.vertical, 8)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 12)
         }
         .buttonStyle(ModernTabButtonStyle())
         .if(tab == .today) { view in
@@ -347,7 +260,7 @@ struct MainTabView: View {
         
         HapticManager.shared.selectionChanged()
         
-        withAnimation(.adaptiveSnappy) {
+        withAnimation(.interpolatingSpring(stiffness: 300, damping: 30)) {
             selectedTab = tab
         }
     }

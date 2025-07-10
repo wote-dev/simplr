@@ -18,9 +18,9 @@ struct ThemeSelectorView: View {
     var body: some View {
         NavigationView {
             ZStack {
-                // Background gradient
-                theme.backgroundGradient
-                    .ignoresSafeArea()
+                // Background with image support
+                Color.clear
+                    .themedBackground(theme)
                 
                 VStack(spacing: 24) {
                     // Header
@@ -195,7 +195,7 @@ struct ThemeOptionCard: View {
                     .applyShadow(isSelected ? theme.cardShadowStyle : theme.shadowStyle)
                     .overlay(
                         RoundedRectangle(cornerRadius: 16)
-                            .stroke(isSelected ? theme.accent : Color.clear, lineWidth: 2)
+                            .stroke(isSelected ? theme.accent : Color.clear, lineWidth: 0)
                     )
             )
         }
@@ -246,9 +246,29 @@ struct ThemePreviewCard: View {
                 
                 Spacer()
                 
-                Image(systemName: "pencil")
-                    .foregroundColor(theme.primary)
-                    .font(.system(size: 16))
+                ZStack {
+                    if theme is KawaiiTheme {
+                        Circle()
+                            .fill(theme.accent.opacity(0.8))
+                            .frame(width: 28, height: 28)
+                            .overlay(
+                                Circle()
+                                    .stroke(theme.accent.opacity(0.4), lineWidth: 1)
+                            )
+                    }
+                    
+                    Image(systemName: "pencil")
+                        .foregroundColor(
+                            theme is KawaiiTheme ? Color.white : theme.primary
+                        )
+                        .font(.system(size: 14, weight: theme is KawaiiTheme ? .bold : .medium))
+                        .shadow(
+                            color: theme is KawaiiTheme ? theme.accent.opacity(0.5) : Color.clear,
+                            radius: theme is KawaiiTheme ? 1 : 0,
+                            x: 0,
+                            y: theme is KawaiiTheme ? 0.5 : 0
+                        )
+                }
             }
             .padding(16)
             .background(

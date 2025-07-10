@@ -176,14 +176,14 @@ struct AddEditTaskView: View {
                 .opacity(formOpacity)
             }
             .simultaneousGesture(
-                DragGesture()
+                DragGesture(minimumDistance: 10)
                     .onChanged { _ in
-                        // Dismiss keyboard when user starts scrolling
-                        if isTitleFocused || isDescriptionFocused || quickListFocused {
+                        // Dismiss keyboard when user starts scrolling, but only for non-QuickList fields
+                        // QuickListView handles its own focus management
+                        if isTitleFocused || isDescriptionFocused {
                             withAnimation(.easeOut(duration: 0.2)) {
                                 isTitleFocused = false
                                 isDescriptionFocused = false
-                                quickListFocused = false
                             }
                         }
                     }
@@ -220,7 +220,15 @@ struct AddEditTaskView: View {
                 isQuickListFocused: $quickListFocused
             )
             .padding(20)
-            .neumorphicCard(theme, cornerRadius: 16)
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(theme.surfaceGradient)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(theme.textTertiary.opacity(0.1), lineWidth: 1)
+                    )
+                    .applyNeumorphicShadow(theme.neumorphicStyle)
+            )
         }
         .transition(.scaleAndSlide)
     }
@@ -246,6 +254,7 @@ struct AddEditTaskView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Title")
                         .font(.headline)
+                        .fontWeight(.semibold)
                         .foregroundColor(theme.text)
                     
                     TextField("Enter task title", text: $title)
@@ -260,16 +269,18 @@ struct AddEditTaskView: View {
                         }
                         .padding(16)
                         .background(
-                            RoundedRectangle(cornerRadius: 12)
+                            RoundedRectangle(cornerRadius: 16)
                                 .fill(theme.surface)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 16)
+                                        .stroke(
+                                            isTitleFocused ? theme.accent : theme.textTertiary.opacity(0.2),
+                                            lineWidth: isTitleFocused ? 2 : 1
+                                        )
+                                )
                         )
                         .scaleEffect(isTitleFocused ? 1.01 : 1.0)
                         .animation(.easeInOut(duration: 0.15), value: isTitleFocused)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(isTitleFocused ? theme.accentGradient : LinearGradient(colors: [.clear], startPoint: .leading, endPoint: .trailing), lineWidth: 2)
-                                .animation(.easeInOut(duration: 0.2), value: isTitleFocused)
-                        )
                 }
                 .transition(.slideInFromTrailing)
                 
@@ -277,6 +288,7 @@ struct AddEditTaskView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Description")
                         .font(.headline)
+                        .fontWeight(.semibold)
                         .foregroundColor(theme.text)
                     
                     TextField("Add details (optional)", text: $description, axis: .vertical)
@@ -293,21 +305,31 @@ struct AddEditTaskView: View {
                         .lineLimit(3...6)
                         .padding(16)
                         .background(
-                            RoundedRectangle(cornerRadius: 12)
+                            RoundedRectangle(cornerRadius: 16)
                                 .fill(theme.surface)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 16)
+                                        .stroke(
+                                            isDescriptionFocused ? theme.accent : theme.textTertiary.opacity(0.2),
+                                            lineWidth: isDescriptionFocused ? 2 : 1
+                                        )
+                                )
                         )
                         .scaleEffect(isDescriptionFocused ? 1.01 : 1.0)
                         .animation(.easeInOut(duration: 0.15), value: isDescriptionFocused)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(isDescriptionFocused ? theme.accentGradient : LinearGradient(colors: [.clear], startPoint: .leading, endPoint: .trailing), lineWidth: 2)
-                                .animation(.easeInOut(duration: 0.2), value: isDescriptionFocused)
-                        )
                 }
                 .transition(.slideInFromTrailing)
             }
             .padding(20)
-            .neumorphicCard(theme, cornerRadius: 16)
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(theme.surfaceGradient)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(theme.textTertiary.opacity(0.1), lineWidth: 1)
+                    )
+                    .applyNeumorphicShadow(theme.neumorphicStyle)
+            )
         }
         .transition(.scaleAndSlide)
     }
@@ -341,7 +363,7 @@ struct AddEditTaskView: View {
                         }) {
                             HStack(spacing: 8) {
                                 Circle()
-                                    .fill(suggestedCategory.color.gradient)
+                                    .fill(themeManager.themeMode == .kawaii ? suggestedCategory.color.kawaiiGradient : suggestedCategory.color.gradient)
                                     .frame(width: 12, height: 12)
                                 
                                 Text(suggestedCategory.name)
@@ -356,10 +378,13 @@ struct AddEditTaskView: View {
                             .padding(.vertical, 6)
                             .background(
                                 Capsule()
-                                    .stroke(suggestedCategory.color.color.opacity(0.3), lineWidth: 1)
+                                    .stroke(
+                                        (themeManager.themeMode == .kawaii ? suggestedCategory.color.kawaiiColor.opacity(0.3) : suggestedCategory.color.color.opacity(0.3)),
+                                        lineWidth: 0
+                                    )
                                     .background(
                                         Capsule()
-                                            .fill(suggestedCategory.color.lightColor)
+                                            .fill(themeManager.themeMode == .kawaii ? suggestedCategory.color.kawaiiLightColor : suggestedCategory.color.lightColor)
                                     )
                             )
                         }
@@ -391,15 +416,15 @@ struct AddEditTaskView: View {
                                     .foregroundColor(selectedCategory == nil ? theme.text : theme.textSecondary)
                             }
                             .padding(.horizontal, 16)
-                            .padding(.vertical, 8)
+                            .padding(.vertical, 10)
                             .background(
                                 Capsule()
                                     .fill(selectedCategory == nil ? theme.surface : theme.surfaceSecondary)
                                     .overlay(
                                         Capsule()
                                             .stroke(
-                                                selectedCategory == nil ? theme.textSecondary.opacity(0.3) : Color.clear,
-                                                lineWidth: 1
+                                                selectedCategory == nil ? theme.textSecondary.opacity(0.3) : theme.textTertiary.opacity(0.2),
+                                                lineWidth: selectedCategory == nil ? 2 : 1
                                             )
                                     )
                             )
@@ -416,11 +441,14 @@ struct AddEditTaskView: View {
                             }) {
                                 HStack(spacing: 8) {
                                     Circle()
-                                        .fill(category.color.gradient)
+                                        .fill(themeManager.themeMode == .kawaii ? category.color.kawaiiGradient : category.color.gradient)
                                         .frame(width: 12, height: 12)
                                         .overlay(
                                             Circle()
-                                                .stroke(category.color.darkColor, lineWidth: 1)
+                                                .stroke(
+                                                    themeManager.themeMode == .kawaii ? category.color.kawaiiDarkColor : category.color.darkColor,
+                                                    lineWidth: 0
+                                                )
                                                 .opacity(0.3)
                                         )
                                         .scaleEffect(selectedCategory?.id == category.id ? 1.1 : 1.0)
@@ -428,18 +456,18 @@ struct AddEditTaskView: View {
                                     
                                     Text(category.name)
                                         .font(.system(size: 14, weight: selectedCategory?.id == category.id ? .semibold : .medium))
-                                        .foregroundColor(selectedCategory?.id == category.id ? category.color.darkColor : theme.textSecondary)
+                                        .foregroundColor(selectedCategory?.id == category.id ? (themeManager.themeMode == .kawaii ? category.color.kawaiiDarkColor : category.color.darkColor) : theme.textSecondary)
                                 }
                                 .padding(.horizontal, 16)
-                                .padding(.vertical, 8)
+                                .padding(.vertical, 10)
                                 .background(
                                     Capsule()
-                                        .fill(selectedCategory?.id == category.id ? category.color.lightColor : theme.surface)
+                                        .fill(selectedCategory?.id == category.id ? (themeManager.themeMode == .kawaii ? category.color.kawaiiLightColor : category.color.lightColor) : theme.surface)
                                         .overlay(
                                             Capsule()
                                                 .stroke(
-                                                    selectedCategory?.id == category.id ? category.color.color.opacity(0.3) : Color.clear,
-                                                    lineWidth: 1
+                                                    selectedCategory?.id == category.id ? (themeManager.themeMode == .kawaii ? category.color.kawaiiColor.opacity(0.5) : category.color.color.opacity(0.5)) : theme.textTertiary.opacity(0.2),
+                                                    lineWidth: selectedCategory?.id == category.id ? 2 : 1
                                                 )
                                         )
                                 )
@@ -472,6 +500,7 @@ struct AddEditTaskView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Set due date")
                             .font(.headline)
+                            .fontWeight(.semibold)
                             .foregroundColor(theme.text)
                         
                         Text("Add a deadline for this task")
@@ -493,8 +522,12 @@ struct AddEditTaskView: View {
                         .foregroundColor(theme.text)
                         .padding(16)
                         .background(
-                            RoundedRectangle(cornerRadius: 12)
+                            RoundedRectangle(cornerRadius: 16)
                                 .fill(theme.surface)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 16)
+                                        .stroke(theme.textTertiary.opacity(0.2), lineWidth: 1)
+                                )
                         )
                         .transition(.asymmetric(
                             insertion: .scale.combined(with: .opacity).combined(with: .offset(y: -10)),
@@ -520,6 +553,7 @@ struct AddEditTaskView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Set reminder")
                             .font(.headline)
+                            .fontWeight(.semibold)
                             .foregroundColor(theme.text)
                         
                         if hasReminder {
@@ -614,7 +648,7 @@ struct AddEditTaskView: View {
                             .padding(.horizontal, 8)
                             .padding(.vertical, 4)
                             .background(
-                                RoundedRectangle(cornerRadius: 6)
+                                RoundedRectangle(cornerRadius: 12)
                                     .fill(theme.surfaceSecondary)
                             )
                             .animatedButton(pressedScale: 0.95)
@@ -677,13 +711,16 @@ struct AddEditTaskView: View {
             .frame(maxWidth: .infinity)
             .frame(height: 56)
             .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(isSelected ? theme.accentGradient : LinearGradient(colors: [theme.surfaceSecondary], startPoint: .leading, endPoint: .trailing))
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(isSelected ? theme.accentGradient : LinearGradient(colors: [theme.surface], startPoint: .leading, endPoint: .trailing))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(
+                                isSelected ? theme.accent : theme.textTertiary.opacity(0.3),
+                                lineWidth: isSelected ? 2 : 1
+                            )
+                    )
                     .applyNeumorphicShadow(isSelected ? theme.neumorphicPressedStyle : theme.neumorphicButtonStyle)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(isSelected ? theme.accent : Color.clear, lineWidth: isSelected ? 2 : 0)
             )
             .scaleEffect(isSelected ? 1.02 : 1.0)
         }

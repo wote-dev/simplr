@@ -193,7 +193,7 @@ struct QuickListDetailView: View {
                             .padding(.horizontal, 16)
                             .padding(.vertical, 12)
                             .background(
-                                RoundedRectangle(cornerRadius: 12)
+                                RoundedRectangle(cornerRadius: 16)
                                     .fill(theme.surfaceGradient)
                             )
                         }
@@ -242,10 +242,10 @@ struct QuickListDetailView: View {
                         .padding(.horizontal, 16)
                         .padding(.vertical, 12)
                         .background(
-                            RoundedRectangle(cornerRadius: 12)
+                            RoundedRectangle(cornerRadius: 16)
                                 .fill(theme.surface)
                                 .overlay(
-                                    RoundedRectangle(cornerRadius: 12)
+                                    RoundedRectangle(cornerRadius: 16)
                                         .stroke(theme.textTertiary, lineWidth: 1)
                                 )
                         )

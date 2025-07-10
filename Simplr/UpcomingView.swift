@@ -213,33 +213,15 @@ struct UpcomingView: View {
                     HapticManager.shared.buttonTap()
                 } label: {
                     ZStack {
-                        // Background with enhanced shadow
+                        // Background
                         Circle()
                             .fill(theme.accentGradient)
                             .frame(width: 56, height: 56)
-                            .shadow(
-                                color: theme.shadow,
-                                radius: 8,
-                                x: 0,
-                                y: 4
-                            )
-                            .shadow(
-                                color: theme.accent.opacity(0.3),
-                                radius: 12,
-                                x: 0,
-                                y: 6
-                            )
                         
-                        // Plus icon with better styling
+                        // Plus icon
                         Image(systemName: "plus")
                             .font(.system(size: 22, weight: .semibold, design: .rounded))
                             .foregroundColor(theme.background)
-                            .shadow(
-                                color: theme.background == .black ? Color.white.opacity(0.2) : Color.black.opacity(0.2),
-                                radius: 1,
-                                x: 0,
-                                y: 1
-                            )
                     }
                     .scaleEffect(showingAddTask ? 0.95 : 1.0)
                     .animation(.adaptiveSnappy, value: showingAddTask)
@@ -291,24 +273,6 @@ struct UpcomingView: View {
         VStack(spacing: 32) {
             // Enhanced icon with floating animation
             ZStack {
-                // Background glow effect
-                Circle()
-                    .fill(
-                        RadialGradient(
-                            colors: [
-                                theme.accent.opacity(0.1),
-                                theme.accent.opacity(0.05),
-                                Color.clear
-                            ],
-                            center: .center,
-                            startRadius: 20,
-                            endRadius: 80
-                        )
-                    )
-                    .frame(width: 160, height: 160)
-                    .scaleEffect(showingAddTask ? 1.1 : 1.0)
-                    .animation(.adaptiveSmooth.repeatForever(autoreverses: true).speed(0.5), value: showingAddTask)
-                
                 // Main icon
                 Image(systemName: "calendar.badge.clock")
                     .font(.system(size: 64, weight: .ultraLight, design: .rounded))
@@ -321,12 +285,6 @@ struct UpcomingView: View {
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
-                    )
-                    .shadow(
-                        color: theme.shadow,
-                        radius: 8,
-                        x: 0,
-                        y: 4
                     )
                     .scaleEffect(showingAddTask ? 0.95 : 1.0)
                     .animation(.adaptiveBouncy, value: showingAddTask)
@@ -343,11 +301,6 @@ struct UpcomingView: View {
                     Text("No upcoming tasks scheduled.")
                         .font(.system(size: 18, weight: .medium, design: .rounded))
                         .foregroundColor(theme.text)
-                    
-                    Text("Tap the + button to plan ahead and stay organized.")
-                        .font(.system(size: 16, weight: .regular, design: .rounded))
-                        .foregroundColor(theme.textSecondary)
-                        .opacity(0.8)
                 }
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
@@ -355,20 +308,7 @@ struct UpcomingView: View {
             .opacity(showingAddTask ? 0.6 : 1.0)
             .animation(.adaptiveSmooth, value: showingAddTask)
             
-            // Subtle call-to-action hint
-            HStack(spacing: 8) {
-                Image(systemName: "arrow.up")
-                    .font(.system(size: 14, weight: .medium, design: .rounded))
-                    .foregroundColor(theme.textTertiary)
-                    .rotationEffect(.degrees(45))
-                
-                Text("Tap to add your first task")
-                    .font(.system(size: 14, weight: .medium, design: .rounded))
-                    .foregroundColor(theme.textTertiary)
-            }
-            .opacity(0.6)
-            .scaleEffect(showingAddTask ? 0.9 : 1.0)
-            .animation(.adaptiveSmooth.delay(0.5), value: showingAddTask)
+
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(.top, -40)

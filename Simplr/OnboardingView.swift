@@ -57,7 +57,7 @@ struct OnboardingView: View {
                 
                 // App icon and title
                 VStack(spacing: 20) {
-                    Image(themeManager.currentTheme is DarkTheme ? "simplr-dark" : "simplr-light")
+                    Image(themedIcon: "simplr", themeManager: themeManager)
                         .resizable()
                         .frame(width: 70, height: 70)
                     

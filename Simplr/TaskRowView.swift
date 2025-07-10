@@ -11,6 +11,7 @@ struct TaskRowView: View {
     @Environment(\.theme) var theme
     @EnvironmentObject var categoryManager: CategoryManager
     @EnvironmentObject var taskManager: TaskManager
+    @EnvironmentObject var themeManager: ThemeManager
     let task: Task
     let namespace: Namespace.ID
     let onToggleCompletion: () -> Void
@@ -24,28 +25,33 @@ struct TaskRowView: View {
     @State private var showCheckmark = false
     @State private var showingQuickListDetail = false
     
-    // Optimized gesture states - reduced state variables
+    // Optimized gesture states for 120fps performance
     @State private var dragOffset: CGFloat = 0
     @State private var isDragging = false
     @State private var dragProgress: CGFloat = 0
     @State private var showCompletionIcon = false
     @State private var showDeleteIcon = false
     @State private var hasTriggeredHaptic = false
-    @State private var initialSwipeDirection: SwipeDirection? = nil
-    @State private var hasShownIcon = false // Track if any icon has been shown
+    @State private var gestureCompleted = false
+    @State private var completionOpacity: CGFloat = 0.8
+    @State private var showBothActionsConfirmation = false
+    
+    // Performance optimization: Combine related states
+    @State private var gestureState = GestureState()
     
     // Enum to track initial swipe direction
     private enum SwipeDirection {
         case left, right
     }
     
-    // Simplified confirmation states
-    @State private var showBothActionsConfirmation = false
-    
-    // Additional state variables
-    @State private var gestureCompleted = false
-    @State private var completionOpacity: CGFloat = 0.8
-    @State private var confirmationProgress: CGFloat = 0
+    // Optimized gesture state container
+    private struct GestureState {
+        var initialDirection: SwipeDirection? = nil
+        var hasShownIcon = false
+        var lastTranslation: CGFloat = 0
+        var velocity: CGFloat = 0
+        var isActive = false
+    }
     
     // URGENT category pulsating animation states
     @State private var urgentPulseScale: CGFloat = 1.0
@@ -76,8 +82,8 @@ struct TaskRowView: View {
                                 .fill(showBothActionsConfirmation ? theme.error : theme.error.opacity(0.3))
                                 .frame(width: showBothActionsConfirmation ? 50 : 40, height: showBothActionsConfirmation ? 50 : 40)
                                 .scaleEffect(showDeleteIcon ? 1.1 : 0.9)
-                                .animation(.interpolatingSpring(stiffness: 300, damping: 35), value: showDeleteIcon)
-                                .animation(.interpolatingSpring(stiffness: 250, damping: 30), value: showBothActionsConfirmation)
+                                .animation(.interactiveSpring(response: 0.3, dampingFraction: 0.7, blendDuration: 0), value: showDeleteIcon)
+                                .animation(.interactiveSpring(response: 0.35, dampingFraction: 0.8, blendDuration: 0), value: showBothActionsConfirmation)
                             
                             if showBothActionsConfirmation {
                                 // Confirmation button - reset gesture state first, then show dialog
@@ -112,8 +118,8 @@ struct TaskRowView: View {
                                 .fill(showBothActionsConfirmation ? theme.success : theme.success.opacity(0.3))
                                 .frame(width: showBothActionsConfirmation ? 50 : 40, height: showBothActionsConfirmation ? 50 : 40)
                                 .scaleEffect(showCompletionIcon ? 1.1 : 0.9)
-                                .animation(.interpolatingSpring(stiffness: 300, damping: 35), value: showCompletionIcon)
-                                .animation(.interpolatingSpring(stiffness: 250, damping: 30), value: showBothActionsConfirmation)
+                                .animation(.interactiveSpring(response: 0.3, dampingFraction: 0.7, blendDuration: 0), value: showCompletionIcon)
+                                .animation(.interactiveSpring(response: 0.35, dampingFraction: 0.8, blendDuration: 0), value: showBothActionsConfirmation)
                             
                             if showBothActionsConfirmation {
                                 // Confirmation button - execute completion immediately
@@ -205,7 +211,8 @@ struct TaskRowView: View {
                             .strikethrough(task.isCompleted)
                             .foregroundColor(
                                 task.isCompleted ? theme.textSecondary :
-                                (isUrgentTask && !task.isCompleted ? Color.red.opacity(0.9) : theme.text)
+                                (isUrgentTask && !task.isCompleted ? Color.red.opacity(0.9) : 
+                                 (theme is KawaiiTheme ? theme.accent : theme.text))
                             )
                             .opacity(task.isCompleted ? 0.7 : 1.0)
                             .scaleEffect(task.isCompleted ? 0.99 : 1.0, anchor: .leading)
@@ -242,12 +249,12 @@ struct TaskRowView: View {
                                 } else {
                                     // Regular circle for other categories
                                     Circle()
-                                        .fill(category.color.gradient)
+                                        .fill(themeManager.themeMode == .kawaii ? category.color.kawaiiGradient : category.color.gradient)
                                         .frame(width: 8, height: 8)
                                         .overlay(
                                             Circle()
                                                 .stroke(
-                                                    category.color.darkColor,
+                                                    themeManager.themeMode == .kawaii ? category.color.kawaiiDarkColor : category.color.darkColor,
                                                     lineWidth: 0.5
                                                 )
                                                 .opacity(0.3)
@@ -260,7 +267,7 @@ struct TaskRowView: View {
                                     .foregroundColor(
                                         isUrgentTask && !task.isCompleted ?
                                         Color.red :
-                                        category.color.darkColor
+                                        (themeManager.themeMode == .kawaii ? category.color.kawaiiDarkColor : category.color.darkColor)
                                     )
                                     .shadow(
                                         color: isUrgentTask && !task.isCompleted ?
@@ -285,7 +292,7 @@ struct TaskRowView: View {
                                             endPoint: .bottomTrailing
                                         ) :
                                         LinearGradient(
-                                            colors: [category.color.lightColor],
+                                            colors: [themeManager.themeMode == .kawaii ? category.color.kawaiiLightColor : category.color.lightColor],
                                             startPoint: .top,
                                             endPoint: .bottom
                                         )
@@ -295,7 +302,7 @@ struct TaskRowView: View {
                                             .stroke(
                                                 isUrgentTask && !task.isCompleted ?
                                                 Color.red.opacity(0.4) :
-                                                category.color.color.opacity(0.2),
+                                                (themeManager.themeMode == .kawaii ? category.color.kawaiiColor.opacity(0.2) : category.color.color.opacity(0.2)),
                                                 lineWidth: isUrgentTask && !task.isCompleted ? 1 : 0.5
                                             )
                                     )
@@ -425,18 +432,59 @@ struct TaskRowView: View {
                         }) {
                             ZStack {
                                 Circle()
-                                    .fill(theme.surfaceGradient)
+                                    .fill(
+                                        themeManager.themeMode == .kawaii ? 
+                                        LinearGradient(
+                                            colors: [
+                                                theme.accent.opacity(0.8),
+                                                theme.accent.opacity(0.6)
+                                            ],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        ) :
+                                        theme.surfaceGradient
+                                    )
                                     .frame(width: 36, height: 36)
-                                    .applyNeumorphicShadow(theme.neumorphicButtonStyle)
+                                    .overlay(
+                                        Circle()
+                                            .stroke(
+                                                themeManager.themeMode == .kawaii ? 
+                                                theme.accent.opacity(0.4) : Color.clear,
+                                                lineWidth: themeManager.themeMode == .kawaii ? 1.5 : 0
+                                            )
+                                    )
+                                    .applyNeumorphicShadow(
+                                        themeManager.themeMode == .kawaii ? 
+                                        NeumorphicShadowStyle(
+                                            lightShadow: ShadowStyle(
+                                                color: Color.white.opacity(0.8),
+                                                radius: 6,
+                                                x: -3,
+                                                y: -3
+                                            ),
+                                            darkShadow: ShadowStyle(
+                                                color: theme.accent.opacity(0.3),
+                                                radius: 6,
+                                                x: 3,
+                                                y: 3
+                                            )
+                                        ) :
+                                        theme.neumorphicButtonStyle
+                                    )
                                 
                                 Image(systemName: "pencil")
-                                    .font(.system(size: 14, weight: .medium))
-                                    .foregroundColor(theme.primary)
+                                    .font(.system(size: 14, weight: .bold))
+                                    .foregroundColor(
+                                        themeManager.themeMode == .kawaii ? 
+                                        Color.white : theme.primary
+                                    )
                                     .shadow(
-                                        color: theme.background == .black ? Color.white.opacity(0.1) : Color.clear,
-                                        radius: 1,
+                                        color: themeManager.themeMode == .kawaii ? 
+                                        theme.accent.opacity(0.5) : 
+                                        (theme.background == .black ? Color.white.opacity(0.1) : Color.clear),
+                                        radius: themeManager.themeMode == .kawaii ? 2 : 1,
                                         x: 0,
-                                        y: 0.5
+                                        y: themeManager.themeMode == .kawaii ? 1 : 0.5
                                     )
                             }
                         }
@@ -451,8 +499,8 @@ struct TaskRowView: View {
             }
             .padding(20)
             .background(
-                // Enhanced URGENT background styling
-                RoundedRectangle(cornerRadius: 16)
+                // Enhanced URGENT background styling with modern rounded corners
+                RoundedRectangle(cornerRadius: 24)
                     .fill(
                         isUrgentTask && !task.isCompleted ?
                         LinearGradient(
@@ -467,8 +515,8 @@ struct TaskRowView: View {
                         theme.surfaceGradient
                     )
                     .overlay(
-                        // Enhanced URGENT border
-                        RoundedRectangle(cornerRadius: 16)
+                        // Modern border styling for seamless blending
+                        RoundedRectangle(cornerRadius: 24)
                             .stroke(
                                 isUrgentTask && !task.isCompleted ?
                                 LinearGradient(
@@ -480,28 +528,36 @@ struct TaskRowView: View {
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
                                 ) :
+                                // Nearly invisible border for seamless integration
+                                (themeManager.themeMode == .kawaii ?
                                 LinearGradient(
-                                    colors: [Color.clear],
+                                    colors: [
+                                        theme.accent.opacity(0.08),
+                                        theme.accent.opacity(0.05)
+                                    ],
                                     startPoint: .top,
                                     endPoint: .bottom
-                                ),
-                                lineWidth: isUrgentTask && !task.isCompleted ? 2 : 0
+                                ) : LinearGradient(colors: [Color.clear], startPoint: .top, endPoint: .bottom)),
+                                lineWidth: isUrgentTask && !task.isCompleted ? 2 : (themeManager.themeMode == .kawaii ? 0.5 : 0)
                             )
                     )
                     .shadow(
                         color: isUrgentTask && !task.isCompleted ? 
-                            Color.red.opacity(0.3) : theme.shadow,
-                        radius: isUrgentTask && !task.isCompleted ? 12 : 8,
+                            Color.red.opacity(0.3) : 
+                            (themeManager.themeMode == .kawaii ? theme.shadow.opacity(0.4) : theme.shadow.opacity(0.6)),
+                        radius: isUrgentTask && !task.isCompleted ? 12 : 
+                            (themeManager.themeMode == .kawaii ? 1.0 : 1.0),
                         x: 0,
-                        y: isUrgentTask && !task.isCompleted ? 4 : 2
+                        y: isUrgentTask && !task.isCompleted ? 4 : 
+                            (themeManager.themeMode == .kawaii ? 0.3 : 0.3)
                     )
             )
             .scaleEffect(isPressed ? 0.99 : (isUrgentTask ? urgentPulseScale : 1.0))
             .opacity(completionOpacity * (isUrgentTask ? urgentPulseOpacity : 1.0))
             .animation(.easeInOut(duration: 0.15), value: isPressed)
             .overlay(
-                // Enhanced URGENT glow effect
-                RoundedRectangle(cornerRadius: 16)
+                // Enhanced URGENT glow effect with modern rounded corners
+                RoundedRectangle(cornerRadius: 24)
                     .stroke(
                         LinearGradient(
                             colors: [
@@ -519,36 +575,34 @@ struct TaskRowView: View {
             )
             .offset(x: dragOffset)
             .scaleEffect(isDragging ? 0.98 : 1.0)
-            .animation(.easeInOut(duration: 0.2), value: isDragging)
+            .animation(.interactiveSpring(response: 0.3, dampingFraction: 0.8, blendDuration: 0), value: isDragging)
             .zIndex(2) // Task card layer - above action buttons
+            .drawingGroup() // Optimize rendering performance for complex animations
         }
         .gesture(
-            DragGesture()
+            // High-performance drag gesture optimized for 120fps
+            DragGesture(minimumDistance: 5, coordinateSpace: .local)
                 .onChanged { value in
-                    handleDragChanged(value)
+                    // Advanced throttling for optimal performance
+                    let translationDelta = abs(value.translation.width - gestureState.lastTranslation)
+                    let velocityThreshold = abs(value.velocity.width) > 500 ? 1.0 : 2.0
+                    
+                    if translationDelta > velocityThreshold {
+                        handleDragChanged(value)
+                    }
                 }
                 .onEnded { value in
                     handleDragEnded(value)
                 }
         )
-        .onTapGesture {
-            // Dismiss confirmations if tapped elsewhere
-            if showBothActionsConfirmation {
-                dismissConfirmations()
-            } else if task.hasQuickList {
-                // Open quick list detail view for tasks with quick lists
-                HapticManager.shared.buttonTap()
-                showingQuickListDetail = true
-            } else {
-                // Subtle tap feedback for tasks without quick lists
-                withAnimation(.easeInOut(duration: 0.1)) {
-                    isPressed = true
+        .simultaneousGesture(
+            // Add tap gesture that doesn't interfere with drag
+            TapGesture()
+                .onEnded { _ in
+                    handleTapGesture()
                 }
-                withAnimation(.easeInOut(duration: 0.1).delay(0.1)) {
-                    isPressed = false
-                }
-            }
-        }
+        )
+        .clipped() // Optimize rendering by clipping overflow content
         .contextMenu {
             contextMenuContent
         }
@@ -658,40 +712,34 @@ struct TaskRowView: View {
         guard !gestureCompleted else { return }
         
         let translation = value.translation.width
+        let velocity = value.velocity.width
+        
+        // Update gesture state for performance tracking
+        gestureState.velocity = velocity
+        gestureState.isActive = true
         
         // If confirmations are showing, handle dismissal gesture
         if showBothActionsConfirmation {
-            // Allow dismissal by swiping right or back to center
             let dismissThreshold: CGFloat = 30
-            
             if translation > dismissThreshold {
-                // Swiping right while both actions confirmation is showing - dismiss
                 dismissConfirmations()
                 return
             }
-            
-            // If swiping in same direction (left), don't do anything
             return
         }
         
         // Only respond to left swipes (negative translation)
         guard translation < 0 else {
-            // Right swipes are ignored, reset to neutral
+            // Right swipes reset to neutral with optimized animation
             if dragOffset != 0 {
-                withAnimation(.interpolatingSpring(stiffness: 300, damping: 55)) {
-                    dragOffset = 0
-                    isDragging = false
-                    dragProgress = 0
-                    showCompletionIcon = false
-                    showDeleteIcon = false
-                }
+                resetToNeutralState()
             }
             return
         }
         
         // Determine initial swipe direction on first significant movement
-        if initialSwipeDirection == nil && abs(translation) > 15 {
-            initialSwipeDirection = .left
+        if gestureState.initialDirection == nil && abs(translation) > 15 {
+            gestureState.initialDirection = .left
         }
         
         // Trigger gesture start haptic on first movement
@@ -700,79 +748,126 @@ struct TaskRowView: View {
             HapticManager.shared.prepareForGestures()
         }
         
-        // ULTIMATE FIX: Once ANY icon is shown, ONLY allow return to neutral
-        if hasShownIcon {
-            // Calculate how close we are to neutral (0)
-            let distanceFromNeutral = abs(translation)
-            
-            // If we're moving away from neutral after showing an icon, BLOCK IT
-            if distanceFromNeutral > abs(dragOffset) {
-                // User is trying to swipe further after showing an icon - BLOCK
-                withAnimation(.interpolatingSpring(stiffness: 300, damping: 55)) {
-                    dragOffset = dragOffset // Keep current position, don't allow further movement
-                    isDragging = true
-                }
-                
-                // Reset all visual indicators
-                dragProgress = 0
-                showCompletionIcon = false
-                showDeleteIcon = false
-                
-                // STOP ALL FURTHER PROCESSING
-                return
-            } else {
-                // User is returning toward neutral - allow this movement only
-                if translation > dragOffset {
-                    withAnimation(.interpolatingSpring(stiffness: 300, damping: 55)) {
-                        dragOffset = dragOffset // Don't allow further left movement
-                    }
-                    return
-                }
-                
-                // Allow movement toward neutral
-                withAnimation(.interpolatingSpring(stiffness: 300, damping: 55)) {
-                    dragOffset = translation
-                    isDragging = abs(translation) > 10
-                }
-                
-                // Reset visual indicators when returning to neutral
-                dragProgress = 0
-                showCompletionIcon = false
-                showDeleteIcon = false
-                
-                // STOP ALL FURTHER PROCESSING
-                return
-            }
+        // Optimized icon state management
+        if gestureState.hasShownIcon {
+            handleIconShownState(translation: translation)
+            return
         }
         
-        // Normal gesture processing for left swipes only
+        // Normal gesture processing with performance optimizations
         let limitedTranslation = max(-maxDragDistance, translation)
         
-        withAnimation(.interpolatingSpring(stiffness: 300, damping: 55)) {
-            dragOffset = limitedTranslation
-            isDragging = abs(limitedTranslation) > 10
+        // Use high-performance animation for 120fps
+        updateDragState(translation: limitedTranslation)
+        
+        // Calculate progress and update visual feedback
+        updateVisualFeedback(translation: limitedTranslation)
+        
+        // Handle haptic feedback efficiently
+        handleHapticFeedback(translation: limitedTranslation)
+        
+        // Store last translation for velocity calculations
+        gestureState.lastTranslation = translation
+    }
+    
+    // MARK: - Optimized Helper Methods for Gesture Handling
+    
+    private func resetToNeutralState() {
+        // High-performance spring animation for 120fps
+        withAnimation(.interactiveSpring(response: 0.3, dampingFraction: 0.8, blendDuration: 0)) {
+            dragOffset = 0
+            isDragging = false
+            dragProgress = 0
+            showCompletionIcon = false
+            showDeleteIcon = false
+        }
+    }
+    
+    private func handleIconShownState(translation: CGFloat) {
+        let distanceFromNeutral = abs(translation)
+        
+        // Block further movement away from neutral
+        if distanceFromNeutral > abs(dragOffset) {
+            // Keep current position with minimal animation overhead
+            dragProgress = 0
+            showCompletionIcon = false
+            showDeleteIcon = false
+            return
         }
         
-        // Calculate progress for visual feedback (only for left swipes)
-        dragProgress = min(1.0, abs(limitedTranslation) / abs(actionThreshold))
-        let shouldShowIcons = abs(limitedTranslation) > 40
-        showDeleteIcon = shouldShowIcons
-        showCompletionIcon = shouldShowIcons
-        if shouldShowIcons {
-            hasShownIcon = true
+        // Allow movement toward neutral only
+        if translation > dragOffset {
+            return
         }
         
-        // Trigger haptic feedback at threshold
-        if !hasTriggeredHaptic {
-            if limitedTranslation < actionThreshold {
-                HapticManager.shared.gestureThreshold()
-                hasTriggeredHaptic = true
+        // Update position with optimized animation
+        withAnimation(.interactiveSpring(response: 0.25, dampingFraction: 0.9, blendDuration: 0)) {
+            dragOffset = translation
+            isDragging = abs(translation) > 10
+        }
+        
+        // Reset visual indicators
+        dragProgress = 0
+        showCompletionIcon = false
+        showDeleteIcon = false
+    }
+    
+    private func updateDragState(translation: CGFloat) {
+        // Use interactive spring for real-time responsiveness
+        withAnimation(.interactiveSpring(response: 0.25, dampingFraction: 0.9, blendDuration: 0)) {
+            dragOffset = translation
+            isDragging = abs(translation) > 10
+        }
+    }
+    
+    private func updateVisualFeedback(translation: CGFloat) {
+        // Calculate progress for visual feedback
+        dragProgress = min(1.0, abs(translation) / abs(actionThreshold))
+        let shouldShowIcons = abs(translation) > 40
+        
+        // Batch state updates to reduce re-renders
+        let newShowDeleteIcon = shouldShowIcons
+        let newShowCompletionIcon = shouldShowIcons
+        
+        if newShowDeleteIcon != showDeleteIcon || newShowCompletionIcon != showCompletionIcon {
+            showDeleteIcon = newShowDeleteIcon
+            showCompletionIcon = newShowCompletionIcon
+            
+            if shouldShowIcons {
+                gestureState.hasShownIcon = true
             }
+        }
+    }
+    
+    private func handleHapticFeedback(translation: CGFloat) {
+        // Trigger haptic feedback at threshold
+        if !hasTriggeredHaptic && translation < actionThreshold {
+            HapticManager.shared.gestureThreshold()
+            hasTriggeredHaptic = true
         }
         
         // Reset haptic flag if user pulls back
-        if abs(limitedTranslation) < abs(actionThreshold * 0.8) {
+        if abs(translation) < abs(actionThreshold * 0.8) {
             hasTriggeredHaptic = false
+        }
+    }
+    
+    private func handleTapGesture() {
+        // Dismiss confirmations if tapped elsewhere
+        if showBothActionsConfirmation {
+            dismissConfirmations()
+        } else if task.hasQuickList {
+            // Open quick list detail view for tasks with quick lists
+            HapticManager.shared.buttonTap()
+            showingQuickListDetail = true
+        } else {
+            // Subtle tap feedback for tasks without quick lists
+            withAnimation(.interactiveSpring(response: 0.2, dampingFraction: 0.8, blendDuration: 0)) {
+                isPressed = true
+            }
+            withAnimation(.interactiveSpring(response: 0.2, dampingFraction: 0.8, blendDuration: 0).delay(0.1)) {
+                isPressed = false
+            }
         }
     }
     
@@ -780,16 +875,18 @@ struct TaskRowView: View {
         let translation = value.translation.width
         let velocity = value.velocity.width
         
+        // Mark gesture as inactive
+        gestureState.isActive = false
+        
         // If confirmations are already showing, handle dismissal
         if showBothActionsConfirmation {
             let dismissThreshold: CGFloat = 30
             
             if translation > dismissThreshold {
-                // Dismiss both actions confirmation by swiping right
                 dismissConfirmations()
             } else {
-                // Not enough movement to dismiss, snap back to confirmation position
-                withAnimation(.interpolatingSpring(stiffness: 300, damping: 50)) {
+                // Snap back to confirmation position with optimized animation
+                withAnimation(.interactiveSpring(response: 0.4, dampingFraction: 0.8, blendDuration: 0)) {
                     dragOffset = -140
                 }
             }
@@ -804,21 +901,21 @@ struct TaskRowView: View {
         }
         
         // If user was swiping right after showing icons, always reset
-        if hasShownIcon && translation > 0 {
+        if gestureState.hasShownIcon && translation > 0 {
             HapticManager.shared.gestureCancelled()
             dismissConfirmations()
             return
         }
         
-        // Check if gesture should trigger confirmation (only for left swipes)
-        let shouldShowBothActionsConfirmation = translation < actionThreshold || (translation < -70 && velocity < -800)
+        // Enhanced gesture recognition with velocity consideration
+        let shouldShowBothActionsConfirmation = shouldTriggerConfirmation(translation: translation, velocity: velocity)
         
         if shouldShowBothActionsConfirmation {
-            // Show both actions confirmation
+            // Show both actions confirmation with optimized animation
             HapticManager.shared.gestureThreshold()
-            withAnimation(.interpolatingSpring(stiffness: 300, damping: 50)) {
+            withAnimation(.interactiveSpring(response: 0.4, dampingFraction: 0.8, blendDuration: 0)) {
                 showBothActionsConfirmation = true
-                dragOffset = -140 // Move card further left to fully reveal action buttons
+                dragOffset = -140
             }
         } else {
             // Snap back to original position with cancel haptic
@@ -827,12 +924,22 @@ struct TaskRowView: View {
         }
     }
     
+    private func shouldTriggerConfirmation(translation: CGFloat, velocity: CGFloat) -> Bool {
+        // Enhanced gesture recognition logic
+        let distanceThreshold = translation < actionThreshold
+        let velocityThreshold = translation < -70 && velocity < -800
+        let combinedThreshold = translation < -60 && velocity < -500
+        
+        return distanceThreshold || velocityThreshold || combinedThreshold
+    }
+    
     private func confirmCompletionAction() {
         // Execute the completion action
         gestureCompleted = true
         HapticManager.shared.swipeToComplete()
         
-        withAnimation(.interpolatingSpring(stiffness: 250, damping: 35)) {
+        // High-performance completion animation
+        withAnimation(.interactiveSpring(response: 0.5, dampingFraction: 0.7, blendDuration: 0)) {
             dragOffset = UIScreen.main.bounds.width
         }
         
@@ -847,7 +954,8 @@ struct TaskRowView: View {
         gestureCompleted = true
         HapticManager.shared.swipeToDelete()
         
-        withAnimation(.interpolatingSpring(stiffness: 250, damping: 35)) {
+        // High-performance delete animation
+        withAnimation(.interactiveSpring(response: 0.5, dampingFraction: 0.7, blendDuration: 0)) {
             dragOffset = -UIScreen.main.bounds.width
             completionOpacity = 0
         }
@@ -868,7 +976,8 @@ struct TaskRowView: View {
         // Prepare haptic feedback for better responsiveness
         HapticManager.shared.prepareForInteraction()
         
-        withAnimation(.interpolatingSpring(stiffness: 400, damping: 25)) {
+        // High-performance completion animation
+        withAnimation(.interactiveSpring(response: 0.4, dampingFraction: 0.6, blendDuration: 0)) {
             if !task.isCompleted {
                 // Animate completion
                 completionScale = 1.3
@@ -900,9 +1009,9 @@ struct TaskRowView: View {
             }
         }
         
-        // Reset animation states
+        // Reset animation states with high-performance animation
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            withAnimation(.easeOut(duration: 0.3)) {
+            withAnimation(.interactiveSpring(response: 0.3, dampingFraction: 0.8, blendDuration: 0)) {
                 completionScale = 1.0
                 showCompletionParticles = false
             }
@@ -910,21 +1019,21 @@ struct TaskRowView: View {
     }
     
     private func resetGestureState() {
-        withAnimation(.interpolatingSpring(stiffness: 300, damping: 60)) {
+        // High-performance reset animation for 120fps
+        withAnimation(.interactiveSpring(response: 0.4, dampingFraction: 0.8, blendDuration: 0)) {
             dragOffset = 0
             isDragging = false
             dragProgress = 0
             showCompletionIcon = false
             showDeleteIcon = false
             showBothActionsConfirmation = false
-            completionOpacity = 1.0 // Ensure task card is fully visible
+            completionOpacity = 1.0
         }
         
+        // Reset all gesture state efficiently
         hasTriggeredHaptic = false
         gestureCompleted = false
-        confirmationProgress = 0
-        initialSwipeDirection = nil
-        hasShownIcon = false
+        gestureState = GestureState() // Reset entire gesture state at once
     }
     
     private func duplicateTask() {
