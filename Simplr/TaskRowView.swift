@@ -499,85 +499,60 @@ struct TaskRowView: View {
             }
             .padding(20)
             .background(
-                // Enhanced URGENT background styling with modern rounded corners
+                // Clean background without confining borders
                 RoundedRectangle(cornerRadius: 24)
                     .fill(
                         isUrgentTask && !task.isCompleted ?
                         LinearGradient(
                             colors: [
-                                Color.red.opacity(0.15),
-                                Color.red.opacity(0.08),
-                                Color.red.opacity(0.12)
+                                Color.red.opacity(0.12),
+                                Color.red.opacity(0.06),
+                                Color.red.opacity(0.08)
                             ],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         ) :
                         theme.surfaceGradient
                     )
-                    .overlay(
-                        // Modern border styling for seamless blending
-                        RoundedRectangle(cornerRadius: 24)
-                            .stroke(
-                                isUrgentTask && !task.isCompleted ?
-                                LinearGradient(
-                                    colors: [
-                                        Color.red.opacity(0.6),
-                                        Color.red.opacity(0.3),
-                                        Color.red.opacity(0.5)
-                                    ],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                ) :
-                                // Nearly invisible border for seamless integration
-                                (themeManager.themeMode == .kawaii ?
-                                LinearGradient(
-                                    colors: [
-                                        theme.accent.opacity(0.08),
-                                        theme.accent.opacity(0.05)
-                                    ],
-                                    startPoint: .top,
-                                    endPoint: .bottom
-                                ) : LinearGradient(colors: [Color.clear], startPoint: .top, endPoint: .bottom)),
-                                lineWidth: isUrgentTask && !task.isCompleted ? 2 : (themeManager.themeMode == .kawaii ? 0.5 : 0)
-                            )
-                    )
                     .shadow(
                         color: isUrgentTask && !task.isCompleted ? 
-                            Color.red.opacity(0.3) : 
+                            Color.red.opacity(0.2) : 
                             (themeManager.themeMode == .kawaii ? theme.shadow.opacity(0.4) : theme.shadow.opacity(0.6)),
-                        radius: isUrgentTask && !task.isCompleted ? 12 : 
+                        radius: isUrgentTask && !task.isCompleted ? 8 : 
                             (themeManager.themeMode == .kawaii ? 1.0 : 1.0),
                         x: 0,
-                        y: isUrgentTask && !task.isCompleted ? 4 : 
+                        y: isUrgentTask && !task.isCompleted ? 2 : 
                             (themeManager.themeMode == .kawaii ? 0.3 : 0.3)
                     )
             )
             .scaleEffect(isPressed ? 0.99 : (isUrgentTask ? urgentPulseScale : 1.0))
             .opacity(completionOpacity * (isUrgentTask ? urgentPulseOpacity : 1.0))
             .animation(.easeInOut(duration: 0.15), value: isPressed)
-            .overlay(
-                // Enhanced URGENT glow effect with modern rounded corners
-                RoundedRectangle(cornerRadius: 24)
-                    .stroke(
-                        LinearGradient(
+            .background(
+                // Unconfined URGENT glow effect that extends freely
+                Circle()
+                    .fill(
+                        RadialGradient(
                             colors: [
-                                Color.red.opacity(urgentGlowOpacity * 0.8),
-                                Color.red.opacity(urgentGlowOpacity * 0.4),
-                                Color.red.opacity(urgentGlowOpacity * 0.6)
+                                Color.red.opacity(urgentGlowOpacity * 0.6),
+                                Color.red.opacity(urgentGlowOpacity * 0.3),
+                                Color.red.opacity(urgentGlowOpacity * 0.1),
+                                Color.clear
                             ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ),
-                        lineWidth: 3
+                            center: .center,
+                            startRadius: 0,
+                            endRadius: 100
+                        )
                     )
-                    .blur(radius: 6)
+                    .scaleEffect(isUrgentTask && !task.isCompleted ? 1.5 : 1.0)
                     .opacity(isUrgentTask && !task.isCompleted ? urgentGlowOpacity : 0)
+                    .blur(radius: 12)
+                    .animation(.easeInOut(duration: 1.8).repeatForever(autoreverses: true).delay(0.2), value: urgentGlowOpacity)
             )
             .offset(x: dragOffset)
             .scaleEffect(isDragging ? 0.98 : 1.0)
             .animation(.interactiveSpring(response: 0.3, dampingFraction: 0.8, blendDuration: 0), value: isDragging)
             .zIndex(2) // Task card layer - above action buttons
-            .drawingGroup() // Optimize rendering performance for complex animations
         }
         .gesture(
             // High-performance drag gesture optimized for 120fps
@@ -602,7 +577,6 @@ struct TaskRowView: View {
                     handleTapGesture()
                 }
         )
-        .clipped() // Optimize rendering by clipping overflow content
         .contextMenu {
             contextMenuContent
         }
@@ -1045,22 +1019,22 @@ struct TaskRowView: View {
         // Only animate if task is not completed and is URGENT
         guard isUrgentTask && !task.isCompleted else { return }
         
-        // Create a more prominent pulsating effect
+        // Create a subtle breathing effect for the card
         withAnimation(
-            Animation.easeInOut(duration: 1.2)
+            Animation.easeInOut(duration: 2.0)
                 .repeatForever(autoreverses: true)
         ) {
-            urgentPulseScale = 1.03
-            urgentPulseOpacity = 0.8
+            urgentPulseScale = 1.015
+            urgentPulseOpacity = 0.9
         }
         
-        // Add a stronger glow effect with different timing
+        // Add a gentle glow effect with different timing
         withAnimation(
             Animation.easeInOut(duration: 1.8)
                 .repeatForever(autoreverses: true)
                 .delay(0.2)
         ) {
-            urgentGlowOpacity = 0.7
+            urgentGlowOpacity = 0.6
         }
     }
     
