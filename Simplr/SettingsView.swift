@@ -232,13 +232,6 @@ struct SettingsView: View {
                     .environmentObject(premiumManager)
                     .navigationTitle("Choose Theme")
                     .navigationBarTitleDisplayMode(.inline)
-                    .toolbar {
-                        ToolbarItem(placement: .navigationBarTrailing) {
-                            Button("Done") {
-                                showingThemeSelector = false
-                            }
-                        }
-                    }
             }
         }
     }

@@ -262,11 +262,13 @@ struct MainTabView: View {
         } label: {
             VStack(spacing: 6) {
                 ZStack {
-                    // Enhanced active background with better dark mode styling
+                    // Enhanced active background with theme-aware styling
                     if selectedTab == tab {
                         RoundedRectangle(cornerRadius: 16)
                             .fill(
-                                themeManager.isDarkMode ?
+                                themeManager.themeMode == .helloKitty ?
+                                theme.accentGradient :
+                                (themeManager.isDarkMode ?
                                 LinearGradient(
                                     colors: [
                                         Color.white.opacity(0.95),
@@ -282,13 +284,15 @@ struct MainTabView: View {
                                     ],
                                     startPoint: .top,
                                     endPoint: .bottom
-                                )
+                                ))
                             )
                             .frame(width: 56, height: 40)
                             .shadow(
-                                color: themeManager.isDarkMode ? 
+                                color: themeManager.themeMode == .helloKitty ?
+                                theme.shadow :
+                                (themeManager.isDarkMode ? 
                                 Color.white.opacity(0.2) : 
-                                Color.black.opacity(0.15),
+                                Color.black.opacity(0.15)),
                                 radius: themeManager.isDarkMode ? 4 : 3,
                                 x: 0,
                                 y: themeManager.isDarkMode ? 1 : 2
@@ -300,8 +304,10 @@ struct MainTabView: View {
                         .font(.system(size: 20, weight: selectedTab == tab ? .semibold : .medium, design: .rounded))
                         .foregroundColor(
                             selectedTab == tab ? 
-                            (themeManager.isDarkMode ? Color.black : Color.white) : 
-                            (themeManager.isDarkMode ? Color.white.opacity(0.7) : Color.black.opacity(0.6))
+                            (themeManager.themeMode == .helloKitty ? Color.white :
+                             (themeManager.isDarkMode ? Color.black : Color.white)) : 
+                            (themeManager.themeMode == .helloKitty ? theme.textSecondary :
+                             (themeManager.isDarkMode ? Color.white.opacity(0.7) : Color.black.opacity(0.6)))
                         )
                         .scaleEffect(selectedTab == tab ? 1.0 : 0.9)
                         .animation(.adaptiveSnappy, value: selectedTab == tab)
@@ -312,8 +318,10 @@ struct MainTabView: View {
                     .font(.system(size: 10, weight: selectedTab == tab ? .semibold : .medium, design: .rounded))
                     .foregroundColor(
                         selectedTab == tab ? 
-                        (themeManager.isDarkMode ? Color.white : Color.black) : 
-                        (themeManager.isDarkMode ? Color.white.opacity(0.7) : Color.black.opacity(0.6))
+                        (themeManager.themeMode == .helloKitty ? theme.text :
+                         (themeManager.isDarkMode ? Color.white : Color.black)) : 
+                        (themeManager.themeMode == .helloKitty ? theme.textSecondary :
+                         (themeManager.isDarkMode ? Color.white.opacity(0.7) : Color.black.opacity(0.6)))
                     )
                     .opacity(selectedTab == tab ? 1.0 : 0.8)
                     .scaleEffect(selectedTab == tab ? 1.0 : 0.95)
