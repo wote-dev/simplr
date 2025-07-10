@@ -10,7 +10,10 @@ import SwiftUI
 struct ThemeSelectorView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var themeManager: ThemeManager
+    @EnvironmentObject var premiumManager: PremiumManager
     @Environment(\.theme) var theme
+    
+    @State private var showingPaywall = false
     
     var body: some View {
         NavigationView {
@@ -39,8 +42,9 @@ struct ThemeSelectorView: View {
                             ThemeOptionCard(
                                 mode: mode,
                                 isSelected: themeManager.themeMode == mode,
+                                canAccess: themeManager.canAccessTheme(mode),
                                 onSelect: {
-                                    themeManager.setThemeMode(mode)
+                                    selectTheme(mode)
                                 }
                             )
                         }
@@ -88,6 +92,25 @@ struct ThemeSelectorView: View {
                     .fontWeight(.semibold)
                 }
             }
+            .sheet(isPresented: $showingPaywall) {
+                PaywallView(targetFeature: .helloKittyTheme)
+                    .environmentObject(premiumManager)
+            }
+            .onChange(of: premiumManager.showingPaywall) { _, newValue in
+                showingPaywall = newValue
+            }
+        }
+    }
+    
+    private func selectTheme(_ mode: ThemeMode) {
+        HapticManager.shared.buttonTap()
+        
+        if mode.isPremium && !themeManager.canAccessTheme(mode) {
+            // Show paywall for premium themes
+            premiumManager.showPaywall(for: .helloKittyTheme)
+        } else {
+            // Set theme directly without premium check since we already verified access
+            themeManager.setThemeMode(mode, checkPremium: false)
         }
     }
 }
@@ -96,6 +119,7 @@ struct ThemeOptionCard: View {
     @Environment(\.theme) var theme
     let mode: ThemeMode
     let isSelected: Bool
+    let canAccess: Bool
     let onSelect: () -> Void
     
     var body: some View {
@@ -121,14 +145,38 @@ struct ThemeOptionCard: View {
                 
                 // Content
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(mode.displayName)
-                        .font(.headline)
-                        .foregroundColor(theme.text)
+                    HStack {
+                        Text(mode.displayName)
+                            .font(.headline)
+                            .foregroundColor(theme.text)
+                        
+                        if mode.isPremium {
+                            if canAccess {
+                                Image(systemName: "crown.fill")
+                                    .font(.caption)
+                                    .foregroundColor(Color(red: 1.0, green: 0.6, blue: 0.0))
+                            } else {
+                                Image(systemName: "lock.fill")
+                                    .font(.caption)
+                                    .foregroundColor(Color(red: 1.0, green: 0.2, blue: 0.6))
+                            }
+                        }
+                        
+                        Spacer()
+                    }
                     
                     Text(description(for: mode))
                         .font(.subheadline)
                         .foregroundColor(theme.textSecondary)
                         .multilineTextAlignment(.leading)
+                    
+                    if mode.isPremium && !canAccess {
+                        Text("Premium Feature")
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .foregroundColor(Color(red: 1.0, green: 0.2, blue: 0.6))
+                            .padding(.top, 2)
+                    }
                 }
                 
                 Spacer()
@@ -164,6 +212,8 @@ struct ThemeOptionCard: View {
             return "Easy on the eyes in low light"
         case .system:
             return "Matches your device settings"
+        case .helloKitty:
+            return "Adorable pink theme with cute aesthetics"
         }
     }
 }
@@ -241,5 +291,6 @@ struct ThemePreviewCard: View {
 #Preview {
     ThemeSelectorView()
         .environmentObject(ThemeManager())
+        .environmentObject(PremiumManager())
         .environment(\.theme, LightTheme())
 }

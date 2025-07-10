@@ -12,12 +12,14 @@ enum ThemeMode: String, CaseIterable {
     case light = "light"
     case dark = "dark"
     case system = "system"
+    case helloKitty = "hello_kitty"
     
     var displayName: String {
         switch self {
         case .light: return "Light"
         case .dark: return "Dark"
         case .system: return "System"
+        case .helloKitty: return "Hello Kitty"
         }
     }
     
@@ -26,6 +28,16 @@ enum ThemeMode: String, CaseIterable {
         case .light: return "sun.max.fill"
         case .dark: return "moon.fill"
         case .system: return "circle.lefthalf.filled"
+        case .helloKitty: return "heart.fill"
+        }
+    }
+    
+    var isPremium: Bool {
+        switch self {
+        case .light, .dark, .system:
+            return false
+        case .helloKitty:
+            return true
         }
     }
 }
@@ -44,6 +56,9 @@ class ThemeManager: ObservableObject {
     
     private let userDefaults = UserDefaults.standard
     private let themeModeKey = "ThemeMode"
+    
+    // Premium manager reference
+    var premiumManager: PremiumManager?
     
     init() {
         // Load saved theme mode or default to system
@@ -66,11 +81,7 @@ class ThemeManager: ObservableObject {
     
     // MARK: - Theme Management
     
-    func setThemeMode(_ mode: ThemeMode) {
-        withAnimation(.easeInOut(duration: 0.3)) {
-            themeMode = mode
-        }
-    }
+    // Removed duplicate setThemeMode method - using the one with checkPremium parameter below
     
     func toggleTheme() {
         withAnimation(.easeInOut(duration: 0.3)) {
@@ -82,24 +93,79 @@ class ThemeManager: ObservableObject {
             case .system:
                 // If in system mode, toggle to opposite of current appearance
                 themeMode = isDarkMode ? .light : .dark
+            case .helloKitty:
+                // Toggle from Hello Kitty to light theme
+                themeMode = .light
             }
         }
     }
     
     func updateTheme() {
-        let shouldUseDarkTheme: Bool
+        let newTheme: Theme
         
         switch themeMode {
         case .light:
-            shouldUseDarkTheme = false
+            newTheme = LightTheme()
         case .dark:
-            shouldUseDarkTheme = true
+            newTheme = DarkTheme()
         case .system:
-            shouldUseDarkTheme = isDarkMode
+            newTheme = isDarkMode ? DarkTheme() : LightTheme()
+        case .helloKitty:
+            // Check if user has access to Hello Kitty theme
+            if let premiumManager = premiumManager,
+               premiumManager.hasAccess(to: .helloKittyTheme) {
+                newTheme = HelloKittyTheme()
+            } else {
+                // Fallback to light theme if no access
+                newTheme = LightTheme()
+                // Reset theme mode to light
+                DispatchQueue.main.async {
+                    self.themeMode = .light
+                }
+            }
         }
         
         withAnimation(.easeInOut(duration: 0.3)) {
-            currentTheme = shouldUseDarkTheme ? DarkTheme() : LightTheme()
+            currentTheme = newTheme
+        }
+    }
+    
+    // MARK: - Premium Theme Management
+    
+    func setPremiumManager(_ manager: PremiumManager) {
+        self.premiumManager = manager
+    }
+    
+    func setThemeMode(_ mode: ThemeMode, checkPremium: Bool = true) {
+        // Check if theme requires premium access
+        if checkPremium && mode.isPremium {
+            guard let premiumManager = premiumManager,
+                  premiumManager.hasAccess(to: .helloKittyTheme) else {
+                // Show paywall for premium theme
+                premiumManager?.showPaywall(for: .helloKittyTheme)
+                return
+            }
+        }
+        
+        withAnimation(.easeInOut(duration: 0.3)) {
+            themeMode = mode
+        }
+    }
+    
+    func canAccessTheme(_ mode: ThemeMode) -> Bool {
+        if !mode.isPremium {
+            return true
+        }
+        
+        guard let premiumManager = premiumManager else {
+            return false
+        }
+        
+        switch mode {
+        case .helloKitty:
+            return premiumManager.hasAccess(to: .helloKittyTheme)
+        default:
+            return true
         }
     }
     

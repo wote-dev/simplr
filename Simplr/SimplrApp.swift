@@ -16,6 +16,7 @@ struct SimplrApp: App {
     @StateObject private var themeManager = ThemeManager()
     @StateObject private var taskManager = TaskManager()
     @StateObject private var categoryManager = CategoryManager()
+    @StateObject private var premiumManager = PremiumManager()
     // Celebration manager removed
     @State private var showOnboarding = !UserDefaults.standard.bool(forKey: "HasCompletedOnboarding")
     @State private var selectedTaskId: UUID? = nil
@@ -76,6 +77,8 @@ struct SimplrApp: App {
                 .onAppear {
                     // Set up Spotlight integration
                     taskManager.setCategoryManager(categoryManager)
+                    // Connect premium manager with theme manager
+                    themeManager.setPremiumManager(premiumManager)
                     // Perform initial cleanup when app starts
                     taskManager.performMaintenanceTasks()
                     
@@ -89,6 +92,7 @@ struct SimplrApp: App {
             .environmentObject(themeManager)
             .environmentObject(taskManager)
             .environmentObject(categoryManager)
+            .environmentObject(premiumManager)
             // Celebration manager environment object removed
         }
     }
@@ -101,6 +105,8 @@ struct SimplrApp: App {
             return .dark
         case .system:
             return nil
+        case .helloKitty:
+            return .light // Hello Kitty theme uses light color scheme
         }
     }
     

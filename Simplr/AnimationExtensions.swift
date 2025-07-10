@@ -399,6 +399,38 @@ struct InteractiveButtonStyle: ViewModifier {
     }
 }
 
+/// Simple animated button style with tap gesture (no long press)
+struct SimpleAnimatedButtonStyle: ViewModifier {
+    @State private var isPressed = false
+    
+    let pressedScale: CGFloat
+    let animation: Animation
+    
+    init(pressedScale: CGFloat = 0.95, animation: Animation = .adaptiveSnappy) {
+        self.pressedScale = pressedScale
+        self.animation = animation
+    }
+    
+    func body(content: Content) -> some View {
+        content
+            .scaleEffect(isPressed ? pressedScale : 1.0)
+            .animation(animation, value: isPressed)
+            .onTapGesture {
+                // Provide immediate visual feedback
+                withAnimation(animation) {
+                    isPressed = true
+                }
+                
+                // Reset after short delay
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    withAnimation(animation) {
+                        isPressed = false
+                    }
+                }
+            }
+    }
+}
+
 /// Enhanced animated button style with multiple effects
 struct AnimatedButtonStyle: ViewModifier {
     @State private var isPressed = false
@@ -761,7 +793,7 @@ struct WiggleAnimation: ViewModifier {
 extension View {
     // Original simple animated button
     func animatedButton(pressedScale: CGFloat = 0.95, animation: Animation = .quickSpring) -> some View {
-        modifier(AnimatedButtonStyle(pressedScale: pressedScale, animation: animation))
+        modifier(SimpleAnimatedButtonStyle(pressedScale: pressedScale, animation: animation))
     }
     
     // Enhanced animated button with multiple effects

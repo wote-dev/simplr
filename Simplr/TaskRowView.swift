@@ -47,9 +47,20 @@ struct TaskRowView: View {
     @State private var completionOpacity: CGFloat = 0.8
     @State private var confirmationProgress: CGFloat = 0
     
+    // URGENT category pulsating animation states
+    @State private var urgentPulseScale: CGFloat = 1.0
+    @State private var urgentPulseOpacity: CGFloat = 1.0
+    @State private var urgentGlowOpacity: CGFloat = 0.0
+    
     // Constants for gesture thresholds
     private let actionThreshold: CGFloat = -120 // Only left swipe triggers actions
     private let maxDragDistance: CGFloat = 150
+    
+    // Computed property to check if task has URGENT category
+    private var isUrgentTask: Bool {
+        guard let category = categoryManager.category(for: task) else { return false }
+        return category.name == "URGENT"
+    }
     
     var body: some View {
         ZStack {
@@ -186,47 +197,107 @@ struct TaskRowView: View {
                 .animation(.interpolatingSpring(stiffness: 600, damping: 30), value: isPressed)
                 
                 VStack(alignment: .leading, spacing: 8) {
-                    // Task title 
+                    // Enhanced Task title with URGENT styling
                     HStack(spacing: 8) {
                         Text(task.title)
-                            .font(.headline)
-                            .fontWeight(.semibold)
+                            .font(isUrgentTask && !task.isCompleted ? .title3 : .headline)
+                            .fontWeight(isUrgentTask && !task.isCompleted ? .bold : .semibold)
                             .strikethrough(task.isCompleted)
-                            .foregroundColor(task.isCompleted ? theme.textSecondary : theme.text)
+                            .foregroundColor(
+                                task.isCompleted ? theme.textSecondary :
+                                (isUrgentTask && !task.isCompleted ? Color.red.opacity(0.9) : theme.text)
+                            )
                             .opacity(task.isCompleted ? 0.7 : 1.0)
                             .scaleEffect(task.isCompleted ? 0.99 : 1.0, anchor: .leading)
+                            .shadow(
+                                color: isUrgentTask && !task.isCompleted ?
+                                Color.red.opacity(0.2) : Color.clear,
+                                radius: 1,
+                                x: 0,
+                                y: 0.5
+                            )
                             .animation(.easeInOut(duration: 0.2), value: task.isCompleted)
                             .matchedGeometryEffect(id: "\(task.id)-title", in: namespace)
+                        
+
                         
                         Spacer()
                     }
                     
-                    // Category indicator - now on its own row for better spacing
+                    // Enhanced Category indicator with special URGENT styling
                     if let category = categoryManager.category(for: task) {
                         HStack {
                             HStack(spacing: 4) {
-                                Circle()
-                                    .fill(category.color.gradient)
-                                    .frame(width: 8, height: 8)
-                                    .overlay(
-                                        Circle()
-                                            .stroke(category.color.darkColor, lineWidth: 0.5)
-                                            .opacity(0.3)
-                                    )
+                                if isUrgentTask && !task.isCompleted {
+                                    // Warning triangle for urgent category
+                                    Image(systemName: "exclamationmark.triangle.fill")
+                                        .font(.system(size: 10, weight: .bold))
+                                        .foregroundColor(Color.red)
+                                        .shadow(
+                                            color: Color.red.opacity(0.4),
+                                            radius: 3,
+                                            x: 0,
+                                            y: 1
+                                        )
+                                } else {
+                                    // Regular circle for other categories
+                                    Circle()
+                                        .fill(category.color.gradient)
+                                        .frame(width: 8, height: 8)
+                                        .overlay(
+                                            Circle()
+                                                .stroke(
+                                                    category.color.darkColor,
+                                                    lineWidth: 0.5
+                                                )
+                                                .opacity(0.3)
+                                        )
+                                }
                                 
                                 Text(category.name)
-                                    .font(.caption2)
-                                    .fontWeight(.medium)
-                                    .foregroundColor(category.color.darkColor)
+                                    .font(isUrgentTask && !task.isCompleted ? .caption : .caption2)
+                                    .fontWeight(isUrgentTask && !task.isCompleted ? .bold : .medium)
+                                    .foregroundColor(
+                                        isUrgentTask && !task.isCompleted ?
+                                        Color.red :
+                                        category.color.darkColor
+                                    )
+                                    .shadow(
+                                        color: isUrgentTask && !task.isCompleted ?
+                                        Color.red.opacity(0.3) : Color.clear,
+                                        radius: 1,
+                                        x: 0,
+                                        y: 0.5
+                                    )
                             }
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
+                            .padding(.horizontal, isUrgentTask && !task.isCompleted ? 8 : 6)
+                            .padding(.vertical, isUrgentTask && !task.isCompleted ? 4 : 2)
                             .background(
                                 Capsule()
-                                    .fill(category.color.lightColor)
+                                    .fill(
+                                        isUrgentTask && !task.isCompleted ?
+                                        LinearGradient(
+                                            colors: [
+                                                Color.red.opacity(0.2),
+                                                Color.red.opacity(0.1)
+                                            ],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        ) :
+                                        LinearGradient(
+                                            colors: [category.color.lightColor],
+                                            startPoint: .top,
+                                            endPoint: .bottom
+                                        )
+                                    )
                                     .overlay(
                                         Capsule()
-                                            .stroke(category.color.color.opacity(0.2), lineWidth: 0.5)
+                                            .stroke(
+                                                isUrgentTask && !task.isCompleted ?
+                                                Color.red.opacity(0.4) :
+                                                category.color.color.opacity(0.2),
+                                                lineWidth: isUrgentTask && !task.isCompleted ? 1 : 0.5
+                                            )
                                     )
                             )
                             .scaleEffect(task.isCompleted ? 0.98 : 1.0)
@@ -379,10 +450,73 @@ struct TaskRowView: View {
                 }
             }
             .padding(20)
-            .neumorphicCard(theme, cornerRadius: 16)
-            .scaleEffect(isPressed ? 0.99 : 1.0)
-            .opacity(completionOpacity)
+            .background(
+                // Enhanced URGENT background styling
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(
+                        isUrgentTask && !task.isCompleted ?
+                        LinearGradient(
+                            colors: [
+                                Color.red.opacity(0.15),
+                                Color.red.opacity(0.08),
+                                Color.red.opacity(0.12)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ) :
+                        theme.surfaceGradient
+                    )
+                    .overlay(
+                        // Enhanced URGENT border
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(
+                                isUrgentTask && !task.isCompleted ?
+                                LinearGradient(
+                                    colors: [
+                                        Color.red.opacity(0.6),
+                                        Color.red.opacity(0.3),
+                                        Color.red.opacity(0.5)
+                                    ],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ) :
+                                LinearGradient(
+                                    colors: [Color.clear],
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                ),
+                                lineWidth: isUrgentTask && !task.isCompleted ? 2 : 0
+                            )
+                    )
+                    .shadow(
+                        color: isUrgentTask && !task.isCompleted ? 
+                            Color.red.opacity(0.3) : theme.shadow,
+                        radius: isUrgentTask && !task.isCompleted ? 12 : 8,
+                        x: 0,
+                        y: isUrgentTask && !task.isCompleted ? 4 : 2
+                    )
+            )
+            .scaleEffect(isPressed ? 0.99 : (isUrgentTask ? urgentPulseScale : 1.0))
+            .opacity(completionOpacity * (isUrgentTask ? urgentPulseOpacity : 1.0))
             .animation(.easeInOut(duration: 0.15), value: isPressed)
+            .overlay(
+                // Enhanced URGENT glow effect
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(
+                        LinearGradient(
+                            colors: [
+                                Color.red.opacity(urgentGlowOpacity * 0.8),
+                                Color.red.opacity(urgentGlowOpacity * 0.4),
+                                Color.red.opacity(urgentGlowOpacity * 0.6)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 3
+                    )
+                    .blur(radius: 6)
+                    .opacity(isUrgentTask && !task.isCompleted ? urgentGlowOpacity : 0)
+            )
             .offset(x: dragOffset)
             .scaleEffect(isDragging ? 0.98 : 1.0)
             .animation(.easeInOut(duration: 0.2), value: isDragging)
@@ -423,12 +557,43 @@ struct TaskRowView: View {
             withAnimation(.easeInOut(duration: 0.3).delay(0.1)) {
                 completionOpacity = 1.0
             }
+            
+            // Start URGENT pulsating animation
+            if isUrgentTask && !task.isCompleted {
+                startUrgentPulsatingAnimation()
+            }
         }
         .sheet(isPresented: $showingQuickListDetail) {
             QuickListDetailView(taskId: task.id)
                 .environmentObject(taskManager)
                 .environmentObject(categoryManager)
                 .environment(\.theme, theme)
+        }
+        .onChange(of: task.isCompleted) { _, newValue in
+            // Handle URGENT animation based on completion state
+            if isUrgentTask {
+                if newValue {
+                    // Task completed - stop animation
+                    stopUrgentPulsatingAnimation()
+                } else {
+                    // Task uncompleted - start animation
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                        startUrgentPulsatingAnimation()
+                    }
+                }
+            }
+        }
+        .onChange(of: task.categoryId) { _, _ in
+            // Handle URGENT animation when category changes
+            if isUrgentTask && !task.isCompleted {
+                // Task became URGENT - start animation
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    startUrgentPulsatingAnimation()
+                }
+            } else {
+                // Task is no longer URGENT - stop animation
+                stopUrgentPulsatingAnimation()
+            }
         }
     }
     
@@ -722,6 +887,17 @@ struct TaskRowView: View {
         // Trigger the actual completion toggle after a brief delay
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             onToggleCompletion()
+            
+            // Stop URGENT pulsating animation if task is being completed
+            if isUrgentTask && !task.isCompleted {
+                stopUrgentPulsatingAnimation()
+            }
+            // Restart URGENT pulsating animation if task is being uncompleted
+            else if isUrgentTask && task.isCompleted {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    startUrgentPulsatingAnimation()
+                }
+            }
         }
         
         // Reset animation states
@@ -753,6 +929,39 @@ struct TaskRowView: View {
     
     private func duplicateTask() {
         taskManager.duplicateTask(task)
+    }
+    
+    /// Starts the enhanced pulsating animation for URGENT category tasks
+    private func startUrgentPulsatingAnimation() {
+        // Only animate if task is not completed and is URGENT
+        guard isUrgentTask && !task.isCompleted else { return }
+        
+        // Create a more prominent pulsating effect
+        withAnimation(
+            Animation.easeInOut(duration: 1.2)
+                .repeatForever(autoreverses: true)
+        ) {
+            urgentPulseScale = 1.03
+            urgentPulseOpacity = 0.8
+        }
+        
+        // Add a stronger glow effect with different timing
+        withAnimation(
+            Animation.easeInOut(duration: 1.8)
+                .repeatForever(autoreverses: true)
+                .delay(0.2)
+        ) {
+            urgentGlowOpacity = 0.7
+        }
+    }
+    
+    /// Stops the URGENT pulsating animation
+    private func stopUrgentPulsatingAnimation() {
+        withAnimation(.easeOut(duration: 0.5)) {
+            urgentPulseScale = 1.0
+            urgentPulseOpacity = 1.0
+            urgentGlowOpacity = 0.0
+        }
     }
     
     private func dueDatePill(_ date: Date) -> some View {

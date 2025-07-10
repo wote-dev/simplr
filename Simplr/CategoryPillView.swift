@@ -14,6 +14,8 @@ struct CategoryPillView: View {
     let taskCount: Int?
     let action: () -> Void
     @State private var isPressed = false
+    @State private var pulsateScale: CGFloat = 1.0
+    @State private var pulsateOpacity: Double = 1.0
     
     private var displayName: String {
         category?.name ?? "All"
@@ -21,6 +23,10 @@ struct CategoryPillView: View {
     
     private var categoryColor: Color {
         category?.color.color ?? theme.textSecondary
+    }
+    
+    private var isUrgentCategory: Bool {
+        category?.name == "URGENT"
     }
     
     private var backgroundColor: Color {
@@ -49,16 +55,32 @@ struct CategoryPillView: View {
             HStack(spacing: 8) {
                 // Category color indicator
                 if let category = category {
-                    Circle()
-                        .fill(category.color.gradient)
-                        .frame(width: 12, height: 12)
-                        .overlay(
-                            Circle()
-                                .stroke(category.color.darkColor, lineWidth: 1)
-                                .opacity(0.3)
-                        )
-                        .scaleEffect(isSelected ? 1.1 : 1.0)
-                        .animation(.smoothSpring, value: isSelected)
+                    if isUrgentCategory {
+                        // Warning triangle for urgent category
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(category.color.color)
+                            .scaleEffect(isSelected ? 1.1 : 1.0)
+                            .scaleEffect(pulsateScale)
+                            .opacity(pulsateOpacity)
+                            .animation(.smoothSpring, value: isSelected)
+                            .animation(
+                                Animation.easeInOut(duration: 1.5).repeatForever(autoreverses: true),
+                                value: pulsateScale
+                            )
+                    } else {
+                        // Regular circle for other categories
+                        Circle()
+                            .fill(category.color.gradient)
+                            .frame(width: 12, height: 12)
+                            .overlay(
+                                Circle()
+                                    .stroke(category.color.darkColor, lineWidth: 1)
+                                    .opacity(0.3)
+                            )
+                            .scaleEffect(isSelected ? 1.1 : 1.0)
+                            .animation(.smoothSpring, value: isSelected)
+                    }
                 } else {
                     // "All" category icon
                     Image(systemName: "list.bullet")
@@ -103,6 +125,7 @@ struct CategoryPillView: View {
                     )
             )
             .scaleEffect(isPressed ? 0.95 : 1.0)
+            .scaleEffect(isUrgentCategory ? pulsateScale : 1.0)
             .animation(.interpolatingSpring(stiffness: 600, damping: 30), value: isPressed)
         }
         .buttonStyle(PlainButtonStyle())
@@ -112,6 +135,17 @@ struct CategoryPillView: View {
             }
         } perform: {
             // Long press action could be used for category editing
+        }
+        .onAppear {
+            if isUrgentCategory {
+                withAnimation(
+                    Animation.easeInOut(duration: 1.5)
+                        .repeatForever(autoreverses: true)
+                ) {
+                    pulsateScale = 1.05
+                    pulsateOpacity = 0.8
+                }
+            }
         }
     }
 }

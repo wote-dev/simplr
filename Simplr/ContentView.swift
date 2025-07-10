@@ -19,6 +19,8 @@ extension Image {
             isDarkMode = false
         case .system:
             isDarkMode = themeManager.isDarkMode
+        case .helloKitty:
+            isDarkMode = false
         }
         
         self.init(isDarkMode ? "\(name)-dark" : "\(name)-light")
@@ -48,6 +50,8 @@ struct ContentView: View {
             return false
         case .system:
             return themeManager.isDarkMode
+        case .helloKitty:
+            return false
         }
     }
     
@@ -194,31 +198,34 @@ struct ContentView: View {
                 }
             }
             
-                    Button {
-            HapticManager.shared.buttonTap()
-            withAnimation(.interpolatingSpring(stiffness: 300, damping: 30)) {
-                showingThemeSelector = true
-            }
-        } label: {
-                ZStack {
-                    Circle()
-                        .fill(theme.surfaceGradient)
-                        .frame(width: 36, height: 36)
-                        .applyNeumorphicShadow(theme.neumorphicButtonStyle)
-                    
-                    Image(systemName: themeManager.themeMode.icon)
-                        .foregroundColor(theme.primary)
-                        .font(.system(size: 16, weight: .medium))
-                        .shadow(
-                            color: theme.background == .black ? Color.white.opacity(0.1) : Color.clear,
-                            radius: 1,
-                            x: 0,
-                            y: 0.5
-                        )
-                }
+                    ZStack {
+                Circle()
+                    .fill(theme.surfaceGradient)
+                    .frame(width: 36, height: 36)
+                    .applyNeumorphicShadow(theme.neumorphicButtonStyle)
+                
+                Image(systemName: themeManager.themeMode.icon)
+                    .foregroundColor(theme.primary)
+                    .font(.system(size: 16, weight: .medium))
+                    .shadow(
+                        color: theme.background == .black ? Color.white.opacity(0.1) : Color.clear,
+                        radius: 1,
+                        x: 0,
+                        y: 0.5
+                    )
             }
             .scaleEffect(showingThemeSelector ? 1.1 : 1.0)
             .animation(.easeInOut(duration: 0.2), value: showingThemeSelector)
+            .contentShape(Circle())
+            .highPriorityGesture(
+                TapGesture()
+                    .onEnded { _ in
+                        HapticManager.shared.buttonTap()
+                        withAnimation(.interpolatingSpring(stiffness: 300, damping: 30)) {
+                            showingThemeSelector = true
+                        }
+                    }
+            )
         }
     }
     

@@ -139,14 +139,20 @@ struct TaskDetailPreviewView: View {
             }
             
             HStack(spacing: 8) {
-                Circle()
-                    .fill(category.color.gradient)
-                    .frame(width: 12, height: 12)
-                    .overlay(
-                        Circle()
-                            .stroke(category.color.darkColor, lineWidth: 0.5)
-                            .opacity(0.3)
-                    )
+                if category.name.uppercased() == "URGENT" {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(.red)
+                } else {
+                    Circle()
+                        .fill(category.color.gradient)
+                        .frame(width: 12, height: 12)
+                        .overlay(
+                            Circle()
+                                .stroke(category.color.darkColor, lineWidth: 0.5)
+                                .opacity(0.3)
+                        )
+                }
                 
                 Text(category.name)
                     .font(.subheadline)
@@ -369,4 +375,4 @@ struct TaskDetailPreviewView: View {
     .padding()
     .background(LightTheme().backgroundGradient)
     .environment(\.theme, LightTheme())
-} 
+}

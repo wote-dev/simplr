@@ -296,6 +296,125 @@ struct DarkTheme: Theme {
     }
 }
 
+// MARK: - Hello Kitty Theme (Premium)
+struct HelloKittyTheme: Theme {
+    let primary = Color(red: 1.0, green: 0.4, blue: 0.7) // Hot pink
+    let secondary = Color(red: 1.0, green: 0.7, blue: 0.8) // Light pink
+    let accent = Color(red: 1.0, green: 0.2, blue: 0.6) // Vibrant pink
+    let background = Color(red: 1.0, green: 0.95, blue: 0.97) // Very light pink
+    let surface = Color(red: 1.0, green: 0.98, blue: 0.99) // Almost white pink
+    let surfaceSecondary = Color(red: 1.0, green: 0.92, blue: 0.95) // Soft pink
+    let text = Color(red: 0.4, green: 0.2, blue: 0.3) // Dark pink-brown
+    let textSecondary = Color(red: 0.6, green: 0.4, blue: 0.5) // Medium pink-brown
+    let textTertiary = Color(red: 0.7, green: 0.5, blue: 0.6) // Light pink-brown
+    let success = Color(red: 1.0, green: 0.6, blue: 0.8) // Pink success
+    let warning = Color(red: 1.0, green: 0.8, blue: 0.4) // Peachy warning
+    let error = Color(red: 1.0, green: 0.5, blue: 0.6) // Soft pink error
+    let shadow = Color(red: 1.0, green: 0.4, blue: 0.7).opacity(0.15) // Pink shadow
+    
+    var backgroundGradient: LinearGradient {
+        LinearGradient(
+            colors: [
+                Color(red: 1.0, green: 0.95, blue: 0.97),
+                Color(red: 1.0, green: 0.92, blue: 0.95),
+                Color(red: 1.0, green: 0.88, blue: 0.93)
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+    
+    var surfaceGradient: LinearGradient {
+        LinearGradient(
+            colors: [
+                Color(red: 1.0, green: 0.98, blue: 0.99),
+                Color(red: 1.0, green: 0.95, blue: 0.97)
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+    
+    var accentGradient: LinearGradient {
+        LinearGradient(
+            colors: [
+                Color(red: 1.0, green: 0.2, blue: 0.6),
+                Color(red: 1.0, green: 0.4, blue: 0.7),
+                Color(red: 1.0, green: 0.6, blue: 0.8)
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+    
+    var shadowStyle: ShadowStyle {
+        ShadowStyle(
+            color: Color(red: 1.0, green: 0.4, blue: 0.7).opacity(0.12),
+            radius: 10,
+            y: 3
+        )
+    }
+    
+    var cardShadowStyle: ShadowStyle {
+        ShadowStyle(
+            color: Color(red: 1.0, green: 0.4, blue: 0.7).opacity(0.18),
+            radius: 15,
+            y: 5
+        )
+    }
+    
+    var neumorphicStyle: NeumorphicShadowStyle {
+        NeumorphicShadowStyle(
+            lightShadow: ShadowStyle(
+                color: Color.white.opacity(0.9),
+                radius: 10,
+                x: -5,
+                y: -5
+            ),
+            darkShadow: ShadowStyle(
+                color: Color(red: 1.0, green: 0.4, blue: 0.7).opacity(0.2),
+                radius: 10,
+                x: 5,
+                y: 5
+            )
+        )
+    }
+    
+    var neumorphicButtonStyle: NeumorphicShadowStyle {
+        NeumorphicShadowStyle(
+            lightShadow: ShadowStyle(
+                color: Color.white.opacity(0.95),
+                radius: 8,
+                x: -4,
+                y: -4
+            ),
+            darkShadow: ShadowStyle(
+                color: Color(red: 1.0, green: 0.4, blue: 0.7).opacity(0.15),
+                radius: 8,
+                x: 4,
+                y: 4
+            )
+        )
+    }
+    
+    var neumorphicPressedStyle: NeumorphicShadowStyle {
+        NeumorphicShadowStyle(
+            lightShadow: ShadowStyle(
+                color: Color(red: 1.0, green: 0.4, blue: 0.7).opacity(0.1),
+                radius: 6,
+                x: 3,
+                y: 3
+            ),
+            darkShadow: ShadowStyle(
+                color: Color.white.opacity(0.7),
+                radius: 6,
+                x: -3,
+                y: -3
+            )
+        )
+    }
+}
+
 // MARK: - Theme Extensions
 extension View {
     func applyShadow(_ shadowStyle: ShadowStyle) -> some View {

@@ -27,6 +27,10 @@ class CategoryManager: ObservableObject {
         loadCategories()
         loadSelectedFilter()
         rebuildCache()
+        
+        // Ensure all current predefined categories are available
+        // This handles cases where new predefined categories are added
+        refreshPredefinedCategories()
     }
     
     // MARK: - Cache Management
@@ -50,6 +54,21 @@ class CategoryManager: ObservableObject {
         categoryLookupCache[category.id] = category
         saveCategories()
         HapticManager.shared.selectionChange()
+    }
+    
+    /// Force refresh categories to ensure all predefined categories are loaded
+    /// This is useful when new predefined categories are added to the app
+    func refreshPredefinedCategories() {
+        // Preserve custom categories
+        let customCategories = categories.filter { $0.isCustom }
+        
+        // Reload with all current predefined categories
+        categories = TaskCategory.predefined
+        categories.append(contentsOf: customCategories)
+        
+        // Save and rebuild cache
+        saveCategories()
+        rebuildCache()
     }
     
     func updateCategory(_ category: TaskCategory) {
@@ -124,6 +143,14 @@ class CategoryManager: ObservableObject {
     
     func suggestCategory(for taskTitle: String) -> TaskCategory? {
         let title = taskTitle.lowercased()
+        
+        // Urgent-related keywords (highest priority)
+        if title.contains("urgent") || title.contains("asap") || title.contains("emergency") ||
+           title.contains("critical") || title.contains("immediate") || title.contains("priority") ||
+           title.contains("rush") || title.contains("now") || title.contains("today") ||
+           title.contains("overdue") || title.contains("late") || title.contains("important") {
+            return categories.first { $0.name == "URGENT" }
+        }
         
         // Work-related keywords
         if title.contains("meeting") || title.contains("project") || title.contains("work") || 

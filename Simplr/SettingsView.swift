@@ -15,6 +15,7 @@ import SafariServices
 struct SettingsView: View {
     @EnvironmentObject var themeManager: ThemeManager
     @EnvironmentObject var categoryManager: CategoryManager
+    @EnvironmentObject var premiumManager: PremiumManager
     @Environment(\.theme) var theme
     @Environment(\.dismiss) var dismiss
     @State private var notificationsEnabled = true
@@ -24,6 +25,7 @@ struct SettingsView: View {
     @State private var showingCreateCategory = false
     @State private var showingPrivacyPolicy = false
     @State private var showingTermsOfService = false
+    @State private var showingThemeSelector = false
     
     var body: some View {
         NavigationView {
@@ -37,7 +39,17 @@ struct SettingsView: View {
                         // Theme Section
                         settingsSection(title: "Appearance", icon: "paintbrush") {
                             VStack(spacing: 16) {
-                                themeModeSelector
+                                Button {
+                                    showingThemeSelector = true
+                                } label: {
+                                    settingsRow(
+                                        title: "Theme",
+                                        value: themeManager.themeMode.displayName,
+                                        icon: themeManager.themeMode.icon,
+                                        showChevron: true
+                                    )
+                                }
+                                .buttonStyle(PlainButtonStyle())
                                 
                                 if themeManager.themeMode == .system {
                                     systemThemeNote
@@ -133,7 +145,7 @@ struct SettingsView: View {
                             VStack(spacing: 16) {
                                 settingsRow(
                                     title: "Version",
-                                    value: "1.4",
+                                    value: "1.5",
                                     icon: "app.badge"
                                 )
                                 
@@ -213,6 +225,22 @@ struct SettingsView: View {
             SafariView(url: URL(string: "https://www.blackcubesolutions.com/simplr")!)
             #endif
         }
+        .sheet(isPresented: $showingThemeSelector) {
+            NavigationView {
+                ThemeSelectorView()
+                    .environmentObject(themeManager)
+                    .environmentObject(premiumManager)
+                    .navigationTitle("Choose Theme")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .navigationBarTrailing) {
+                            Button("Done") {
+                                showingThemeSelector = false
+                            }
+                        }
+                    }
+            }
+        }
     }
     
     private func settingsSection<Content: View>(
@@ -262,7 +290,7 @@ struct SettingsView: View {
     private func themeModeButton(_ mode: ThemeMode) -> some View {
         Button {
             withAnimation(.smoothSpring) {
-                themeManager.setThemeMode(mode)
+                themeManager.setThemeMode(mode, checkPremium: true)
                 HapticManager.shared.buttonTap()
             }
         } label: {
@@ -398,9 +426,6 @@ struct SettingsView: View {
             }
         }
         .contentShape(Rectangle())
-        .onTapGesture {
-            HapticManager.shared.buttonTap()
-        }
     }
     
     private var footerView: some View {
@@ -545,4 +570,5 @@ struct SafariView: UIViewControllerRepresentable {
     SettingsView()
         .environmentObject(ThemeManager())
         .environmentObject(CategoryManager())
+        .environmentObject(PremiumManager())
 }
