@@ -19,7 +19,7 @@ extension Image {
             isDarkMode = false
         case .system:
             isDarkMode = themeManager.isDarkMode
-        case .helloKitty:
+        case .kawaii:
             isDarkMode = false
         }
         
@@ -50,7 +50,7 @@ struct ContentView: View {
             return false
         case .system:
             return themeManager.isDarkMode
-        case .helloKitty:
+        case .kawaii:
             return false
         }
     }

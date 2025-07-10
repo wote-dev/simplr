@@ -296,8 +296,8 @@ struct DarkTheme: Theme {
     }
 }
 
-// MARK: - Hello Kitty Theme (Premium)
-struct HelloKittyTheme: Theme {
+// MARK: - Kawaii Theme (Premium)
+struct KawaiiTheme: Theme {
     let primary = Color(red: 1.0, green: 0.4, blue: 0.7) // Hot pink
     let secondary = Color(red: 1.0, green: 0.7, blue: 0.8) // Light pink
     let accent = Color(red: 1.0, green: 0.2, blue: 0.6) // Vibrant pink

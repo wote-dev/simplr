@@ -93,7 +93,7 @@ struct ThemeSelectorView: View {
                 }
             }
             .sheet(isPresented: $showingPaywall) {
-                PaywallView(targetFeature: .helloKittyTheme)
+                PaywallView(targetFeature: .kawaiiTheme)
                     .environmentObject(premiumManager)
             }
             .onChange(of: premiumManager.showingPaywall) { _, newValue in
@@ -107,7 +107,7 @@ struct ThemeSelectorView: View {
         
         if mode.isPremium && !themeManager.canAccessTheme(mode) {
             // Show paywall for premium themes
-            premiumManager.showPaywall(for: .helloKittyTheme)
+            premiumManager.showPaywall(for: .kawaiiTheme)
         } else {
             // Set theme directly without premium check since we already verified access
             themeManager.setThemeMode(mode, checkPremium: false)
@@ -212,7 +212,7 @@ struct ThemeOptionCard: View {
             return "Easy on the eyes in low light"
         case .system:
             return "Matches your device settings"
-        case .helloKitty:
+        case .kawaii:
             return "Adorable pink theme with cute aesthetics"
         }
     }

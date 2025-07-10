@@ -12,14 +12,14 @@ enum ThemeMode: String, CaseIterable {
     case light = "light"
     case dark = "dark"
     case system = "system"
-    case helloKitty = "hello_kitty"
+    case kawaii = "kawaii"
     
     var displayName: String {
         switch self {
         case .light: return "Light"
         case .dark: return "Dark"
         case .system: return "System"
-        case .helloKitty: return "Hello Kitty"
+        case .kawaii: return "Kawaii"
         }
     }
     
@@ -28,7 +28,7 @@ enum ThemeMode: String, CaseIterable {
         case .light: return "sun.max.fill"
         case .dark: return "moon.fill"
         case .system: return "circle.lefthalf.filled"
-        case .helloKitty: return "heart.fill"
+        case .kawaii: return "heart.fill"
         }
     }
     
@@ -36,7 +36,7 @@ enum ThemeMode: String, CaseIterable {
         switch self {
         case .light, .dark, .system:
             return false
-        case .helloKitty:
+        case .kawaii:
             return true
         }
     }
@@ -93,8 +93,8 @@ class ThemeManager: ObservableObject {
             case .system:
                 // If in system mode, toggle to opposite of current appearance
                 themeMode = isDarkMode ? .light : .dark
-            case .helloKitty:
-                // Toggle from Hello Kitty to light theme
+            case .kawaii:
+                // Toggle from Kawaii to light theme
                 themeMode = .light
             }
         }
@@ -110,11 +110,11 @@ class ThemeManager: ObservableObject {
             newTheme = DarkTheme()
         case .system:
             newTheme = isDarkMode ? DarkTheme() : LightTheme()
-        case .helloKitty:
-            // Check if user has access to Hello Kitty theme
+        case .kawaii:
+            // Check if user has access to Kawaii theme
             if let premiumManager = premiumManager,
-               premiumManager.hasAccess(to: .helloKittyTheme) {
-                newTheme = HelloKittyTheme()
+               premiumManager.hasAccess(to: .kawaiiTheme) {
+                newTheme = KawaiiTheme()
             } else {
                 // Fallback to light theme if no access
                 newTheme = LightTheme()
@@ -140,9 +140,9 @@ class ThemeManager: ObservableObject {
         // Check if theme requires premium access
         if checkPremium && mode.isPremium {
             guard let premiumManager = premiumManager,
-                  premiumManager.hasAccess(to: .helloKittyTheme) else {
+                  premiumManager.hasAccess(to: .kawaiiTheme) else {
                 // Show paywall for premium theme
-                premiumManager?.showPaywall(for: .helloKittyTheme)
+                premiumManager?.showPaywall(for: .kawaiiTheme)
                 return
             }
         }
@@ -162,8 +162,8 @@ class ThemeManager: ObservableObject {
         }
         
         switch mode {
-        case .helloKitty:
-            return premiumManager.hasAccess(to: .helloKittyTheme)
+        case .kawaii:
+            return premiumManager.hasAccess(to: .kawaiiTheme)
         default:
             return true
         }

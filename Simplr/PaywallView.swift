@@ -14,7 +14,7 @@ struct PaywallView: View {
     
     let targetFeature: PremiumFeature?
     
-    @State private var selectedPlan: PurchasePlan = .helloKittyTheme
+    @State private var selectedPlan: PurchasePlan = .kawaiiTheme
     @State private var showingFeatureDetail = false
     
     init(targetFeature: PremiumFeature? = nil) {
@@ -24,7 +24,7 @@ struct PaywallView: View {
     var body: some View {
         NavigationView {
             ZStack {
-                // Hello Kitty inspired gradient background
+                // Kawaii inspired gradient background
                 LinearGradient(
                     colors: [
                         Color(red: 1.0, green: 0.95, blue: 0.97),
@@ -75,8 +75,8 @@ struct PaywallView: View {
             }
         }
         .onAppear {
-            if let feature = targetFeature, feature == .helloKittyTheme {
-                selectedPlan = .helloKittyTheme
+            if let feature = targetFeature, feature == .kawaiiTheme {
+                selectedPlan = .kawaiiTheme
             }
         }
     }
@@ -137,7 +137,7 @@ struct PaywallView: View {
             VStack(spacing: 16) {
                 HStack {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Hello Kitty Theme")
+                        Text("Kawaii Theme")
                             .font(.headline)
                             .fontWeight(.semibold)
                             .foregroundColor(Color(red: 0.4, green: 0.2, blue: 0.3))
@@ -246,7 +246,7 @@ struct PaywallView: View {
                 .foregroundColor(Color(red: 0.4, green: 0.2, blue: 0.3))
             
             VStack(spacing: 12) {
-                pricingCard(.helloKittyTheme)
+                pricingCard(.kawaiiTheme)
                 pricingCard(.premiumMonthly)
             }
         }
@@ -419,8 +419,8 @@ struct PaywallView: View {
         HapticManager.shared.buttonTap()
         
         switch selectedPlan {
-        case .helloKittyTheme:
-            premiumManager.purchaseFeature(.helloKittyTheme)
+        case .kawaiiTheme:
+            premiumManager.purchaseFeature(.kawaiiTheme)
         case .premiumMonthly:
             premiumManager.purchasePremium()
         }
@@ -429,13 +429,13 @@ struct PaywallView: View {
 
 // MARK: - Purchase Plans
 enum PurchasePlan: CaseIterable {
-    case helloKittyTheme
+    case kawaiiTheme
     case premiumMonthly
     
     var title: String {
         switch self {
-        case .helloKittyTheme:
-            return "Hello Kitty Theme"
+        case .kawaiiTheme:
+            return "Kawaii Theme"
         case .premiumMonthly:
             return "Premium Monthly"
         }
@@ -443,8 +443,8 @@ enum PurchasePlan: CaseIterable {
     
     var description: String {
         switch self {
-        case .helloKittyTheme:
-            return "Unlock the adorable Hello Kitty theme with pink gradients"
+        case .kawaiiTheme:
+            return "Unlock the adorable kawaii theme with pink gradients"
         case .premiumMonthly:
             return "All premium themes and features included"
         }
@@ -452,7 +452,7 @@ enum PurchasePlan: CaseIterable {
     
     var price: String {
         switch self {
-        case .helloKittyTheme:
+        case .kawaiiTheme:
             return "$2.99"
         case .premiumMonthly:
             return "$4.99"
@@ -461,7 +461,7 @@ enum PurchasePlan: CaseIterable {
     
     var period: String {
         switch self {
-        case .helloKittyTheme:
+        case .kawaiiTheme:
             return "one-time"
         case .premiumMonthly:
             return "per month"
@@ -470,7 +470,7 @@ enum PurchasePlan: CaseIterable {
     
     var isPopular: Bool {
         switch self {
-        case .helloKittyTheme:
+        case .kawaiiTheme:
             return true
         case .premiumMonthly:
             return false
@@ -481,7 +481,7 @@ enum PurchasePlan: CaseIterable {
 // MARK: - Preview
 struct PaywallView_Previews: PreviewProvider {
     static var previews: some View {
-        PaywallView(targetFeature: .helloKittyTheme)
+        PaywallView(targetFeature: .kawaiiTheme)
             .environmentObject(PremiumManager())
             .environment(\.theme, LightTheme())
     }

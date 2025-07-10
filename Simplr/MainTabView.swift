@@ -266,7 +266,7 @@ struct MainTabView: View {
                     if selectedTab == tab {
                         RoundedRectangle(cornerRadius: 16)
                             .fill(
-                                themeManager.themeMode == .helloKitty ?
+                                themeManager.themeMode == .kawaii ?
                                 theme.accentGradient :
                                 (themeManager.isDarkMode ?
                                 LinearGradient(
@@ -288,7 +288,7 @@ struct MainTabView: View {
                             )
                             .frame(width: 56, height: 40)
                             .shadow(
-                                color: themeManager.themeMode == .helloKitty ?
+                                color: themeManager.themeMode == .kawaii ?
                                 theme.shadow :
                                 (themeManager.isDarkMode ? 
                                 Color.white.opacity(0.2) : 
@@ -304,9 +304,9 @@ struct MainTabView: View {
                         .font(.system(size: 20, weight: selectedTab == tab ? .semibold : .medium, design: .rounded))
                         .foregroundColor(
                             selectedTab == tab ? 
-                            (themeManager.themeMode == .helloKitty ? Color.white :
+                            (themeManager.themeMode == .kawaii ? Color.white :
                              (themeManager.isDarkMode ? Color.black : Color.white)) : 
-                            (themeManager.themeMode == .helloKitty ? theme.textSecondary :
+                            (themeManager.themeMode == .kawaii ? theme.textSecondary :
                              (themeManager.isDarkMode ? Color.white.opacity(0.7) : Color.black.opacity(0.6)))
                         )
                         .scaleEffect(selectedTab == tab ? 1.0 : 0.9)
@@ -318,9 +318,9 @@ struct MainTabView: View {
                     .font(.system(size: 10, weight: selectedTab == tab ? .semibold : .medium, design: .rounded))
                     .foregroundColor(
                         selectedTab == tab ? 
-                        (themeManager.themeMode == .helloKitty ? theme.text :
+                        (themeManager.themeMode == .kawaii ? theme.text :
                          (themeManager.isDarkMode ? Color.white : Color.black)) : 
-                        (themeManager.themeMode == .helloKitty ? theme.textSecondary :
+                        (themeManager.themeMode == .kawaii ? theme.textSecondary :
                          (themeManager.isDarkMode ? Color.white.opacity(0.7) : Color.black.opacity(0.6)))
                     )
                     .opacity(selectedTab == tab ? 1.0 : 0.8)

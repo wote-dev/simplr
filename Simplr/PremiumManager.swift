@@ -10,14 +10,14 @@ import StoreKit
 
 // MARK: - Premium Features
 enum PremiumFeature: String, CaseIterable {
-    case helloKittyTheme = "hello_kitty_theme"
+    case kawaiiTheme = "kawaii_theme"
     case additionalThemes = "additional_themes"
     case advancedFeatures = "advanced_features"
     
     var displayName: String {
         switch self {
-        case .helloKittyTheme:
-            return "Hello Kitty Theme"
+        case .kawaiiTheme:
+            return "Kawaii Theme"
         case .additionalThemes:
             return "Premium Themes"
         case .advancedFeatures:
@@ -27,8 +27,8 @@ enum PremiumFeature: String, CaseIterable {
     
     var description: String {
         switch self {
-        case .helloKittyTheme:
-            return "Adorable Hello Kitty inspired theme with pink gradients and cute aesthetics"
+        case .kawaiiTheme:
+            return "Adorable kawaii inspired theme with pink gradients and cute aesthetics"
         case .additionalThemes:
             return "Access to exclusive premium themes"
         case .advancedFeatures:
@@ -38,7 +38,7 @@ enum PremiumFeature: String, CaseIterable {
     
     var icon: String {
         switch self {
-        case .helloKittyTheme:
+        case .kawaiiTheme:
             return "heart.fill"
         case .additionalThemes:
             return "paintbrush.pointed.fill"
@@ -61,7 +61,7 @@ class PremiumManager: ObservableObject {
     
     // Product IDs for App Store
     private let productIDs: [String] = [
-        "com.danielzverev.simplr.hello_kitty_theme",
+        "com.danielzverev.simplr.kawaii_theme",
         "com.danielzverev.simplr.premium_themes",
         "com.danielzverev.simplr.premium_monthly"
     ]
@@ -116,7 +116,7 @@ class PremiumManager: ObservableObject {
             // In production, integrate with StoreKit
             self.purchasedFeatures.insert(feature)
             
-            if feature == .helloKittyTheme || self.purchasedFeatures.count >= 2 {
+            if feature == .kawaiiTheme || self.purchasedFeatures.count >= 2 {
                 self.isPremium = true
             }
             
@@ -153,7 +153,7 @@ class PremiumManager: ObservableObject {
             
             // For demo purposes, restore some features
             // In production, query StoreKit for actual purchases
-            self.purchasedFeatures.insert(.helloKittyTheme)
+            self.purchasedFeatures.insert(.kawaiiTheme)
             self.savePremiumStatus()
             
             HapticManager.shared.buttonTap()
