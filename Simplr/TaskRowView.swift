@@ -214,15 +214,16 @@ struct TaskRowView: View {
                             .strikethrough(task.isCompleted)
                             .foregroundColor(
                                 task.isCompleted ? theme.textSecondary :
-                                (isUrgentTask && !task.isCompleted ? Color.red.opacity(0.9) : 
+                                (isUrgentTask && !task.isCompleted ? 
+                                    (theme.background == .black ? Color(red: 1.0, green: 0.4, blue: 0.4) : Color(red: 0.8, green: 0.1, blue: 0.1)) : 
                                  (theme is KawaiiTheme ? theme.accent : theme.text))
                             )
                             .opacity(task.isCompleted ? 0.7 : 1.0)
                             .scaleEffect(task.isCompleted ? 0.99 : 1.0, anchor: .leading)
                             .shadow(
                                 color: isUrgentTask && !task.isCompleted ?
-                                Color.red.opacity(0.2) : Color.clear,
-                                radius: 1,
+                                (theme.background == .black ? Color(red: 1.0, green: 0.4, blue: 0.4).opacity(0.3) : Color(red: 0.8, green: 0.1, blue: 0.1).opacity(0.4)) : Color.clear,
+                                radius: theme.background == .black ? 1 : 2,
                                 x: 0,
                                 y: 0.5
                             )
@@ -233,10 +234,10 @@ struct TaskRowView: View {
                         if let category = categoryManager.category(for: task), isUrgentTask && !task.isCompleted {
                             Image(systemName: "exclamationmark.triangle.fill")
                                 .font(.system(size: 12, weight: .bold))
-                                .foregroundColor(Color.red)
+                                .foregroundColor(theme.background == .black ? Color(red: 1.0, green: 0.4, blue: 0.4) : Color(red: 0.8, green: 0.1, blue: 0.1))
                                 .shadow(
-                                    color: Color.red.opacity(0.4),
-                                    radius: 2,
+                                    color: (theme.background == .black ? Color(red: 1.0, green: 0.4, blue: 0.4).opacity(0.5) : Color(red: 0.8, green: 0.1, blue: 0.1).opacity(0.6)),
+                                    radius: theme.background == .black ? 2 : 3,
                                     x: 0,
                                     y: 1
                                 )
@@ -507,10 +508,14 @@ struct TaskRowView: View {
                     .fill(
                         isUrgentTask && !task.isCompleted ?
                         LinearGradient(
-                            colors: [
-                                Color.red.opacity(0.12),
-                                Color.red.opacity(0.06),
-                                Color.red.opacity(0.08)
+                            colors: theme.background == .black ? [
+                                Color(red: 1.0, green: 0.4, blue: 0.4).opacity(0.15),
+                                Color(red: 1.0, green: 0.4, blue: 0.4).opacity(0.08),
+                                Color(red: 1.0, green: 0.4, blue: 0.4).opacity(0.12)
+                            ] : [
+                                Color(red: 0.8, green: 0.1, blue: 0.1).opacity(0.18),
+                                Color(red: 0.8, green: 0.1, blue: 0.1).opacity(0.10),
+                                Color(red: 0.8, green: 0.1, blue: 0.1).opacity(0.14)
                             ],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
@@ -519,12 +524,12 @@ struct TaskRowView: View {
                     )
                     .shadow(
                         color: isUrgentTask && !task.isCompleted ? 
-                            Color.red.opacity(0.2) : 
+                            (theme.background == .black ? Color(red: 1.0, green: 0.4, blue: 0.4).opacity(0.25) : Color(red: 0.8, green: 0.1, blue: 0.1).opacity(0.35)) : 
                             (themeManager.themeMode == .kawaii ? theme.shadow.opacity(0.4) : theme.shadow.opacity(0.6)),
-                        radius: isUrgentTask && !task.isCompleted ? 8 : 
+                        radius: isUrgentTask && !task.isCompleted ? (theme.background == .black ? 8 : 12) : 
                             (themeManager.themeMode == .kawaii ? 1.0 : 1.0),
                         x: 0,
-                        y: isUrgentTask && !task.isCompleted ? 2 : 
+                        y: isUrgentTask && !task.isCompleted ? (theme.background == .black ? 2 : 3) : 
                             (themeManager.themeMode == .kawaii ? 0.3 : 0.3)
                     )
             )
@@ -533,15 +538,19 @@ struct TaskRowView: View {
                 RoundedRectangle(cornerRadius: 24)
                     .stroke(
                         LinearGradient(
-                            colors: [
-                                Color(red: 0.898, green: 0.353, blue: 0.353).opacity(urgentBorderOpacity * 0.9), // #E55A5A (darker red)
-                                Color(red: 0.898, green: 0.353, blue: 0.353).opacity(urgentBorderOpacity * 0.7), // #E55A5A
-                                Color(red: 0.898, green: 0.353, blue: 0.353).opacity(urgentBorderOpacity * 0.5)  // #E55A5A
+                            colors: theme.background == .black ? [
+                                Color(red: 1.0, green: 0.4, blue: 0.4).opacity(urgentBorderOpacity * 0.9),
+                                Color(red: 1.0, green: 0.4, blue: 0.4).opacity(urgentBorderOpacity * 0.7),
+                                Color(red: 1.0, green: 0.4, blue: 0.4).opacity(urgentBorderOpacity * 0.5)
+                            ] : [
+                                Color(red: 0.7, green: 0.05, blue: 0.05).opacity(urgentBorderOpacity * 1.0), // Darker red for light mode
+                                Color(red: 0.8, green: 0.1, blue: 0.1).opacity(urgentBorderOpacity * 0.8),
+                                Color(red: 0.7, green: 0.05, blue: 0.05).opacity(urgentBorderOpacity * 0.6)
                             ],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         ),
-                        lineWidth: 1.5
+                        lineWidth: theme.background == .black ? 1.5 : 2.0
                     )
                     .scaleEffect(isUrgentTask && !task.isCompleted ? urgentBorderScale : 1.0)
                     .opacity(isUrgentTask && !task.isCompleted ? urgentBorderOpacity : 0)
@@ -1025,20 +1034,20 @@ struct TaskRowView: View {
         // Create border pulse animation with improved timing
         // Using ease-in-out curves for smooth, polished breathing motion
         withAnimation(
-            Animation.easeInOut(duration: 1.2)
+            Animation.easeInOut(duration: 1.0)
                 .repeatForever(autoreverses: true)
         ) {
-            urgentPulseOpacity = 0.95
-            urgentBorderOpacity = 0.6 // Enable coordinated border animation
+            urgentPulseOpacity = theme.background == .black ? 0.95 : 0.92
+            urgentBorderOpacity = theme.background == .black ? 0.6 : 0.8 // More prominent border in light mode
         }
         
-        // Add very subtle card scale for gentle breathing motion (0.998 to 1.002)
+        // Add more noticeable card scale for breathing motion
         withAnimation(
-            Animation.easeInOut(duration: 1.2)
+            Animation.easeInOut(duration: 1.0)
                 .repeatForever(autoreverses: true)
                 .delay(0.1)
         ) {
-            urgentPulseScale = 1.002  // Subtle breathing scale
+            urgentPulseScale = theme.background == .black ? 1.002 : 1.004  // More prominent scale in light mode
         }
         
         // Reset border scale for clean appearance
@@ -1048,8 +1057,8 @@ struct TaskRowView: View {
     /// Stops the URGENT pulsating animation
     private func stopUrgentPulsatingAnimation() {
         withAnimation(.easeOut(duration: 0.5)) {
-            urgentPulseScale = 0.998  // Reset to minimum scale
-            urgentPulseOpacity = 0.95  // Reset to minimum opacity
+            urgentPulseScale = theme.background == .black ? 0.998 : 0.996  // Reset to minimum scale
+            urgentPulseOpacity = theme.background == .black ? 0.95 : 0.92  // Reset to minimum opacity
             urgentBorderOpacity = 0.0
             urgentBorderScale = 1.0
         }
