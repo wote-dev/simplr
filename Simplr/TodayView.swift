@@ -45,13 +45,21 @@ struct TodayView: View {
             // Exclude completed tasks from today view - they should only appear in completed section
             guard !task.isCompleted else { return false }
             
-            // Include tasks due today, overdue incomplete tasks, and tasks without due dates
+            // Check if task has a due date
             if let dueDate = task.dueDate {
+                // Include tasks due today or overdue incomplete tasks
                 return calendar.isDate(dueDate, inSameDayAs: today) || 
                        (dueDate < today && !task.isCompleted)
             }
-            // Also include tasks without due dates that aren't completed
-            return !task.isCompleted
+            
+            // For tasks without due dates, check if they have reminder dates
+            if let reminderDate = task.reminderDate {
+                // Only include if reminder is today or in the past
+                return calendar.isDate(reminderDate, inSameDayAs: today) || reminderDate < today
+            }
+            
+            // Include tasks without due dates or reminder dates (truly undated tasks)
+            return true
         }
         .filter { task in
             // Search filter
@@ -108,11 +116,23 @@ struct TodayView: View {
         let today = Date()
         
         return taskManager.tasks.filter { task in
+            // Exclude completed tasks
+            guard !task.isCompleted else { return false }
+            
+            // Check if task has a due date
             if let dueDate = task.dueDate {
                 return calendar.isDate(dueDate, inSameDayAs: today) || 
                        (dueDate < today && !task.isCompleted)
             }
-            return !task.isCompleted
+            
+            // For tasks without due dates, check if they have reminder dates
+            if let reminderDate = task.reminderDate {
+                // Only include if reminder is today or in the past
+                return calendar.isDate(reminderDate, inSameDayAs: today) || reminderDate < today
+            }
+            
+            // Include tasks without due dates or reminder dates (truly undated tasks)
+            return true
         }
     }
     

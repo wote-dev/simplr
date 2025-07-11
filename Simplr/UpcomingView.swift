@@ -23,9 +23,26 @@ struct UpcomingView: View {
     @Binding var selectedTaskId: UUID?
     
     private var upcomingTasks: [Task] {
+        let calendar = Calendar.current
+        let today = Date()
+        
         return taskManager.tasks.filter { task in
-            // Include only truly pending tasks (future due dates, not completed)
-            return task.isPending && task.isDueFuture
+            // Exclude completed tasks
+            guard !task.isCompleted else { return false }
+            
+            // Check if task has a due date in the future
+            if let dueDate = task.dueDate {
+                return task.isPending && task.isDueFuture
+            }
+            
+            // For tasks without due dates, check if they have future reminder dates
+            if let reminderDate = task.reminderDate {
+                let tomorrow = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: today))!
+                return reminderDate >= tomorrow
+            }
+            
+            // Exclude tasks without due dates or reminder dates from upcoming view
+            return false
         }
         .filter { task in
             // Search filter
@@ -36,10 +53,20 @@ struct UpcomingView: View {
             return true
         }
         .sorted { task1, task2 in
-            // Sort by due date
-            if let date1 = task1.dueDate, let date2 = task2.dueDate {
-                return date1 < date2
+            // Get the relevant date for sorting (due date or reminder date)
+            let date1 = task1.dueDate ?? task1.reminderDate
+            let date2 = task2.dueDate ?? task2.reminderDate
+            
+            // Sort by the relevant date
+            if let d1 = date1, let d2 = date2 {
+                return d1 < d2
+            } else if date1 != nil {
+                return true
+            } else if date2 != nil {
+                return false
             }
+            
+            // Fall back to creation date
             return task1.createdAt > task2.createdAt
         }
     }
@@ -47,7 +74,9 @@ struct UpcomingView: View {
     private var groupedTasks: [(String, [Task])] {
         let calendar = Calendar.current
         let grouped = Dictionary(grouping: upcomingTasks) { task in
-            guard let dueDate = task.dueDate else { return "No Date" }
+            // Use due date if available, otherwise use reminder date
+            let relevantDate = task.dueDate ?? task.reminderDate
+            guard let date = relevantDate else { return "No Date" }
             
             let today = Date()
             guard let tomorrow = calendar.date(byAdding: .day, value: 1, to: today),
@@ -55,16 +84,16 @@ struct UpcomingView: View {
                 return "Unknown Date"
             }
             
-            if calendar.isDate(dueDate, inSameDayAs: tomorrow) {
+            if calendar.isDate(date, inSameDayAs: tomorrow) {
                 return "Tomorrow"
-            } else if dueDate < nextWeek {
+            } else if date < nextWeek {
                 let formatter = DateFormatter()
                 formatter.dateFormat = "EEEE"
-                return formatter.string(from: dueDate)
+                return formatter.string(from: date)
             } else {
                 let formatter = DateFormatter()
                 formatter.dateFormat = "MMMM d"
-                return formatter.string(from: dueDate)
+                return formatter.string(from: date)
             }
         }
         

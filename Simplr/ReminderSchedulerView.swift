@@ -187,7 +187,7 @@ struct ReminderSchedulerView: View {
                                          .font(.headline)
                                          .fontWeight(.semibold)
                                  }
-                                 .foregroundColor(.white)
+                                 .foregroundColor(isValidReminderTime ? theme.background : .white)
                                  .frame(maxWidth: .infinity)
                                  .padding(.vertical, 16)
                                  .background(
