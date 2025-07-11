@@ -205,11 +205,26 @@ struct TaskRowView: View {
                 
                 VStack(alignment: .leading, spacing: 8) {
                     // Enhanced Task title with URGENT styling
-                    HStack(spacing: 8) {
+                    HStack(alignment: .top, spacing: 8) {
+                        // Urgent category icon as bullet point - positioned to the left
+                        if let category = categoryManager.category(for: task), isUrgentTask && !task.isCompleted {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .font(.system(size: 14, weight: .bold))
+                                .foregroundColor(theme.background == .black ? Color(red: 1.0, green: 0.4, blue: 0.4) : Color(red: 0.8, green: 0.1, blue: 0.1))
+                                .shadow(
+                                    color: (theme.background == .black ? Color(red: 1.0, green: 0.4, blue: 0.4).opacity(0.5) : Color(red: 0.8, green: 0.1, blue: 0.1).opacity(0.6)),
+                                    radius: theme.background == .black ? 2 : 3,
+                                    x: 0,
+                                    y: 1
+                                )
+                                .padding(.top, 1) // Align with first line of text
+                                .frame(width: 16) // Fixed width for consistent alignment
+                        }
+                        
                         Text(task.title)
-                            .font(isUrgentTask && !task.isCompleted ? .body : .headline)
+                            .font(isUrgentTask && !task.isCompleted ? .headline : .headline)
                             .fontWeight(isUrgentTask && !task.isCompleted ? .bold : .semibold)
-                            .lineLimit(isUrgentTask && !task.isCompleted ? 5 : 3)
+                            .lineLimit(isUrgentTask && !task.isCompleted ? 4 : 2)
                             .multilineTextAlignment(.leading)
                             .strikethrough(task.isCompleted)
                             .foregroundColor(
@@ -229,21 +244,7 @@ struct TaskRowView: View {
                             )
                             .animation(.easeInOut(duration: 0.2), value: task.isCompleted)
                             .matchedGeometryEffect(id: "\(task.id)-title", in: namespace)
-                        
-                        // Inline urgent category icon
-                        if let category = categoryManager.category(for: task), isUrgentTask && !task.isCompleted {
-                            Image(systemName: "exclamationmark.triangle.fill")
-                                .font(.system(size: 12, weight: .bold))
-                                .foregroundColor(theme.background == .black ? Color(red: 1.0, green: 0.4, blue: 0.4) : Color(red: 0.8, green: 0.1, blue: 0.1))
-                                .shadow(
-                                    color: (theme.background == .black ? Color(red: 1.0, green: 0.4, blue: 0.4).opacity(0.5) : Color(red: 0.8, green: 0.1, blue: 0.1).opacity(0.6)),
-                                    radius: theme.background == .black ? 2 : 3,
-                                    x: 0,
-                                    y: 1
-                                )
-                        }
-                        
-                        Spacer()
+                            .frame(maxWidth: .infinity, alignment: .leading)
                     }
                     .contentShape(Rectangle())
                     .onTapGesture {
