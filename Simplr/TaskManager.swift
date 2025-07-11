@@ -286,7 +286,23 @@ class TaskManager: ObservableObject {
         if let cached = _overdueTasks, Date().timeIntervalSince(lastTasksUpdate) < cacheValidityDuration {
             return cached
         }
-        let result = tasks.filter { $0.isOverdue }
+        let result = tasks.filter { $0.isOverdue }.sorted { task1, task2 in
+            // URGENT category priority
+            let task1IsUrgent = task1.categoryId == TaskCategory.urgent.id
+            let task2IsUrgent = task2.categoryId == TaskCategory.urgent.id
+            
+            if task1IsUrgent != task2IsUrgent {
+                return task1IsUrgent && !task2IsUrgent
+            }
+            
+            // Then sort by due date
+            if let date1 = task1.dueDate, let date2 = task2.dueDate {
+                return date1 < date2
+            }
+            
+            // Finally by creation date
+            return task1.createdAt > task2.createdAt
+        }
         _overdueTasks = result
         return result
     }
@@ -296,7 +312,23 @@ class TaskManager: ObservableObject {
         if let cached = _pendingTasks, Date().timeIntervalSince(lastTasksUpdate) < cacheValidityDuration {
             return cached
         }
-        let result = tasks.filter { $0.isPending }
+        let result = tasks.filter { $0.isPending }.sorted { task1, task2 in
+            // URGENT category priority
+            let task1IsUrgent = task1.categoryId == TaskCategory.urgent.id
+            let task2IsUrgent = task2.categoryId == TaskCategory.urgent.id
+            
+            if task1IsUrgent != task2IsUrgent {
+                return task1IsUrgent && !task2IsUrgent
+            }
+            
+            // Then sort by due date
+            if let date1 = task1.dueDate, let date2 = task2.dueDate {
+                return date1 < date2
+            }
+            
+            // Finally by creation date
+            return task1.createdAt > task2.createdAt
+        }
         _pendingTasks = result
         return result
     }
@@ -306,7 +338,25 @@ class TaskManager: ObservableObject {
         if let cached = _todayTasks, Date().timeIntervalSince(lastTasksUpdate) < cacheValidityDuration {
             return cached
         }
-        let result = tasks.filter { $0.isDueToday }
+        let result = tasks.filter { $0.isDueToday }.sorted { task1, task2 in
+            // Completion status first
+            if task1.isCompleted != task2.isCompleted {
+                return !task1.isCompleted && task2.isCompleted
+            }
+            
+            // URGENT category priority for incomplete tasks
+            if !task1.isCompleted && !task2.isCompleted {
+                let task1IsUrgent = task1.categoryId == TaskCategory.urgent.id
+                let task2IsUrgent = task2.categoryId == TaskCategory.urgent.id
+                
+                if task1IsUrgent != task2IsUrgent {
+                    return task1IsUrgent && !task2IsUrgent
+                }
+            }
+            
+            // Finally by creation date
+            return task1.createdAt > task2.createdAt
+        }
         _todayTasks = result
         return result
     }
@@ -316,7 +366,23 @@ class TaskManager: ObservableObject {
         if let cached = _futureTasks, Date().timeIntervalSince(lastTasksUpdate) < cacheValidityDuration {
             return cached
         }
-        let result = tasks.filter { $0.isDueFuture && !$0.isCompleted }
+        let result = tasks.filter { $0.isDueFuture && !$0.isCompleted }.sorted { task1, task2 in
+            // URGENT category priority
+            let task1IsUrgent = task1.categoryId == TaskCategory.urgent.id
+            let task2IsUrgent = task2.categoryId == TaskCategory.urgent.id
+            
+            if task1IsUrgent != task2IsUrgent {
+                return task1IsUrgent && !task2IsUrgent
+            }
+            
+            // Then sort by due date
+            if let date1 = task1.dueDate, let date2 = task2.dueDate {
+                return date1 < date2
+            }
+            
+            // Finally by creation date
+            return task1.createdAt > task2.createdAt
+        }
         _futureTasks = result
         return result
     }
@@ -336,7 +402,18 @@ class TaskManager: ObservableObject {
         if let cached = _noDueDateTasks, Date().timeIntervalSince(lastTasksUpdate) < cacheValidityDuration {
             return cached
         }
-        let result = tasks.filter { $0.dueDate == nil && !$0.isCompleted }
+        let result = tasks.filter { $0.dueDate == nil && !$0.isCompleted }.sorted { task1, task2 in
+            // URGENT category priority
+            let task1IsUrgent = task1.categoryId == TaskCategory.urgent.id
+            let task2IsUrgent = task2.categoryId == TaskCategory.urgent.id
+            
+            if task1IsUrgent != task2IsUrgent {
+                return task1IsUrgent && !task2IsUrgent
+            }
+            
+            // Sort by creation date (newer first)
+            return task1.createdAt > task2.createdAt
+        }
         _noDueDateTasks = result
         return result
     }
@@ -345,10 +422,40 @@ class TaskManager: ObservableObject {
     
     /// Returns tasks filtered by category
     func tasks(for categoryId: UUID?) -> [Task] {
+        let filtered: [Task]
         if let categoryId = categoryId {
-            return tasks.filter { $0.categoryId == categoryId }
+            filtered = tasks.filter { $0.categoryId == categoryId }
         } else {
-            return tasks.filter { $0.categoryId == nil } // Uncategorized tasks
+            filtered = tasks.filter { $0.categoryId == nil } // Uncategorized tasks
+        }
+        
+        // Sort with URGENT category priority
+        return filtered.sorted { task1, task2 in
+            // Primary sort: completion status
+            if task1.isCompleted != task2.isCompleted {
+                return !task1.isCompleted && task2.isCompleted
+            }
+            
+            // Secondary sort: URGENT category priority (URGENT tasks always come first)
+            let task1IsUrgent = task1.categoryId == TaskCategory.urgent.id
+            let task2IsUrgent = task2.categoryId == TaskCategory.urgent.id
+            
+            if task1IsUrgent != task2IsUrgent {
+                return task1IsUrgent && !task2IsUrgent
+            }
+            
+            // Tertiary sort: due date
+            switch (task1.dueDate, task2.dueDate) {
+            case let (date1?, date2?):
+                return date1 < date2
+            case (_?, nil):
+                return true
+            case (nil, _?):
+                return false
+            case (nil, nil):
+                // Quaternary sort: creation date (newer first)
+                return task1.createdAt > task2.createdAt
+            }
         }
     }
     
@@ -402,14 +509,22 @@ class TaskManager: ObservableObject {
             }
         }
         
-        // Optimized sorting - reduce comparison operations
+        // Optimized sorting with URGENT category priority
         let result = filtered.sorted { task1, task2 in
             // Primary sort: completion status
             if task1.isCompleted != task2.isCompleted {
                 return !task1.isCompleted && task2.isCompleted
             }
             
-            // Secondary sort: due date
+            // Secondary sort: URGENT category priority (URGENT tasks always come first)
+            let task1IsUrgent = task1.categoryId == TaskCategory.urgent.id
+            let task2IsUrgent = task2.categoryId == TaskCategory.urgent.id
+            
+            if task1IsUrgent != task2IsUrgent {
+                return task1IsUrgent && !task2IsUrgent
+            }
+            
+            // Tertiary sort: due date
             switch (task1.dueDate, task2.dueDate) {
             case let (date1?, date2?):
                 return date1 < date2
@@ -418,7 +533,7 @@ class TaskManager: ObservableObject {
             case (nil, _?):
                 return false
             case (nil, nil):
-                // Tertiary sort: creation date (newer first)
+                // Quaternary sort: creation date (newer first)
                 return task1.createdAt > task2.createdAt
             }
         }

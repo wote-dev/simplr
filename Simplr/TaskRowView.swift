@@ -54,9 +54,10 @@ struct TaskRowView: View {
     }
     
     // URGENT category pulsating animation states
-    @State private var urgentPulseScale: CGFloat = 1.0
-    @State private var urgentPulseOpacity: CGFloat = 1.0
-    @State private var urgentGlowOpacity: CGFloat = 0.0
+    @State private var urgentPulseScale: CGFloat = 0.998  // Start at minimum scale for breathing motion
+    @State private var urgentPulseOpacity: CGFloat = 0.95  // Start at minimum opacity for breathing motion
+    @State private var urgentBorderOpacity: CGFloat = 0.0
+    @State private var urgentBorderScale: CGFloat = 1.0
     
     // Constants for gesture thresholds
     private let actionThreshold: CGFloat = -120 // Only left swipe triggers actions
@@ -208,6 +209,8 @@ struct TaskRowView: View {
                         Text(task.title)
                             .font(isUrgentTask && !task.isCompleted ? .title3 : .headline)
                             .fontWeight(isUrgentTask && !task.isCompleted ? .bold : .semibold)
+                            .lineLimit(3)
+                            .multilineTextAlignment(.leading)
                             .strikethrough(task.isCompleted)
                             .foregroundColor(
                                 task.isCompleted ? theme.textSecondary :
@@ -229,6 +232,14 @@ struct TaskRowView: View {
 
                         
                         Spacer()
+                    }
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        // Only open quick list detail when tapping on the main content area
+                        if task.hasQuickList {
+                            HapticManager.shared.buttonTap()
+                            showingQuickListDetail = true
+                        }
                     }
                     
                     // Enhanced Category indicator with special URGENT styling
@@ -325,6 +336,14 @@ struct TaskRowView: View {
                             .scaleEffect(task.isCompleted ? 0.99 : 1.0, anchor: .leading)
                             .animation(.easeInOut(duration: 0.2), value: task.isCompleted)
                             .matchedGeometryEffect(id: "\(task.id)-description", in: namespace)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                // Only open quick list detail when tapping on the description area
+                                if task.hasQuickList {
+                                    HapticManager.shared.buttonTap()
+                                    showingQuickListDetail = true
+                                }
+                            }
                     }
                     
                     // Quick List indicator
@@ -387,6 +406,12 @@ struct TaskRowView: View {
                         .opacity(task.isCompleted ? 0.6 : 1.0)
                         .scaleEffect(task.isCompleted ? 0.99 : 1.0, anchor: .leading)
                         .animation(.easeInOut(duration: 0.2), value: task.isCompleted)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            // Open quick list detail when tapping on the quick list indicator
+                            HapticManager.shared.buttonTap()
+                            showingQuickListDetail = true
+                        }
                     }
                     
                     // Due date and reminder info with improved spacing - vertical layout when both present
@@ -525,30 +550,30 @@ struct TaskRowView: View {
                             (themeManager.themeMode == .kawaii ? 0.3 : 0.3)
                     )
             )
+            .overlay(
+                // Urgent border pulsation effect coordinated with glow
+                RoundedRectangle(cornerRadius: 24)
+                    .stroke(
+                        LinearGradient(
+                            colors: [
+                                Color(red: 0.898, green: 0.353, blue: 0.353).opacity(urgentBorderOpacity * 0.9), // #E55A5A (darker red)
+                                Color(red: 0.898, green: 0.353, blue: 0.353).opacity(urgentBorderOpacity * 0.7), // #E55A5A
+                                Color(red: 0.898, green: 0.353, blue: 0.353).opacity(urgentBorderOpacity * 0.5)  // #E55A5A
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 1.5
+                    )
+                    .scaleEffect(isUrgentTask && !task.isCompleted ? urgentBorderScale : 1.0)
+                    .opacity(isUrgentTask && !task.isCompleted ? urgentBorderOpacity : 0)
+                    .animation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true), value: urgentBorderOpacity)
+                    .animation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true), value: urgentBorderScale)
+            )
             .scaleEffect(isPressed ? 0.99 : (isUrgentTask ? urgentPulseScale : 1.0))
             .opacity(completionOpacity * (isUrgentTask ? urgentPulseOpacity : 1.0))
             .animation(.easeInOut(duration: 0.15), value: isPressed)
-            .background(
-                // Unconfined URGENT glow effect that extends freely
-                Circle()
-                    .fill(
-                        RadialGradient(
-                            colors: [
-                                Color.red.opacity(urgentGlowOpacity * 0.6),
-                                Color.red.opacity(urgentGlowOpacity * 0.3),
-                                Color.red.opacity(urgentGlowOpacity * 0.1),
-                                Color.clear
-                            ],
-                            center: .center,
-                            startRadius: 0,
-                            endRadius: 100
-                        )
-                    )
-                    .scaleEffect(isUrgentTask && !task.isCompleted ? 1.5 : 1.0)
-                    .opacity(isUrgentTask && !task.isCompleted ? urgentGlowOpacity : 0)
-                    .blur(radius: 12)
-                    .animation(.easeInOut(duration: 1.8).repeatForever(autoreverses: true).delay(0.2), value: urgentGlowOpacity)
-            )
+
             .offset(x: dragOffset)
             .scaleEffect(isDragging ? 0.98 : 1.0)
             .animation(.interactiveSpring(response: 0.3, dampingFraction: 0.8, blendDuration: 0), value: isDragging)
@@ -830,17 +855,17 @@ struct TaskRowView: View {
         // Dismiss confirmations if tapped elsewhere
         if showBothActionsConfirmation {
             dismissConfirmations()
-        } else if task.hasQuickList {
-            // Open quick list detail view for tasks with quick lists
-            HapticManager.shared.buttonTap()
-            showingQuickListDetail = true
         } else {
-            // Subtle tap feedback for tasks without quick lists
-            withAnimation(.interactiveSpring(response: 0.2, dampingFraction: 0.8, blendDuration: 0)) {
-                isPressed = true
-            }
-            withAnimation(.interactiveSpring(response: 0.2, dampingFraction: 0.8, blendDuration: 0).delay(0.1)) {
-                isPressed = false
+            // Only provide subtle tap feedback for tasks without quick lists
+            // Quick list tasks should only open detail view when tapped on the main content area
+            // This prevents interference with the edit button
+            if !task.hasQuickList {
+                withAnimation(.interactiveSpring(response: 0.2, dampingFraction: 0.8, blendDuration: 0)) {
+                    isPressed = true
+                }
+                withAnimation(.interactiveSpring(response: 0.2, dampingFraction: 0.8, blendDuration: 0).delay(0.1)) {
+                    isPressed = false
+                }
             }
         }
     }
@@ -1019,31 +1044,36 @@ struct TaskRowView: View {
         // Only animate if task is not completed and is URGENT
         guard isUrgentTask && !task.isCompleted else { return }
         
-        // Create a subtle breathing effect for the card
+        // Create border pulse animation with improved timing
+        // Using ease-in-out curves for smooth, polished breathing motion
         withAnimation(
-            Animation.easeInOut(duration: 2.0)
+            Animation.easeInOut(duration: 1.2)
                 .repeatForever(autoreverses: true)
         ) {
-            urgentPulseScale = 1.015
-            urgentPulseOpacity = 0.9
+            urgentPulseOpacity = 0.95
+            urgentBorderOpacity = 0.6 // Enable coordinated border animation
         }
         
-        // Add a gentle glow effect with different timing
+        // Add very subtle card scale for gentle breathing motion (0.998 to 1.002)
         withAnimation(
-            Animation.easeInOut(duration: 1.8)
+            Animation.easeInOut(duration: 1.2)
                 .repeatForever(autoreverses: true)
-                .delay(0.2)
+                .delay(0.1)
         ) {
-            urgentGlowOpacity = 0.6
+            urgentPulseScale = 1.002  // Subtle breathing scale
         }
+        
+        // Reset border scale for clean appearance
+        urgentBorderScale = 1.0
     }
     
     /// Stops the URGENT pulsating animation
     private func stopUrgentPulsatingAnimation() {
         withAnimation(.easeOut(duration: 0.5)) {
-            urgentPulseScale = 1.0
-            urgentPulseOpacity = 1.0
-            urgentGlowOpacity = 0.0
+            urgentPulseScale = 0.998  // Reset to minimum scale
+            urgentPulseOpacity = 0.95  // Reset to minimum opacity
+            urgentBorderOpacity = 0.0
+            urgentBorderScale = 1.0
         }
     }
     

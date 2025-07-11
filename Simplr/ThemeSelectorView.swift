@@ -88,7 +88,7 @@ struct ThemeSelectorView: View {
                     Button("Done") {
                         dismiss()
                     }
-                    .foregroundColor(theme.primary)
+                    .foregroundColor(theme.accent)
                     .fontWeight(.semibold)
                 }
             }

@@ -75,11 +75,20 @@ struct TodayView: View {
         }
         
         return filteredTasks.sorted { task1, task2 in
-            // Sort by overdue/pending status, then by due date
+            // First priority: URGENT category tasks always come first
+            let task1IsUrgent = task1.categoryId == TaskCategory.urgent.id
+            let task2IsUrgent = task2.categoryId == TaskCategory.urgent.id
+            
+            if task1IsUrgent != task2IsUrgent {
+                return task1IsUrgent && !task2IsUrgent
+            }
+            
+            // Second priority: Sort by overdue/pending status
             if task1.isOverdue != task2.isOverdue {
                 return task1.isOverdue && !task2.isOverdue
             }
             
+            // Third priority: Sort by due date
             if let date1 = task1.dueDate, let date2 = task2.dueDate {
                 return date1 < date2
             } else if task1.dueDate != nil {
@@ -88,6 +97,7 @@ struct TodayView: View {
                 return false
             }
             
+            // Final priority: Sort by creation date (newest first)
             return task1.createdAt > task2.createdAt
         }
     }
@@ -202,16 +212,10 @@ struct TodayView: View {
                         showingSettings = true
                         HapticManager.shared.buttonTap()
                     } label: {
-                        ZStack {
-                            Circle()
-                                .fill(theme.surfaceGradient)
-                                .frame(width: 44, height: 44)
-                                .applyNeumorphicShadow(theme.neumorphicButtonStyle)
-                            
-                            Image(systemName: "gear")
-                                .font(.system(size: 18, weight: .medium))
-                                .foregroundColor(theme.accent)
-                        }
+                        Image(systemName: "gear")
+                            .font(.system(size: 18, weight: .medium))
+                            .foregroundColor(theme.accent)
+                            .frame(width: 44, height: 44)
                     }
                     .animatedButton()
                     

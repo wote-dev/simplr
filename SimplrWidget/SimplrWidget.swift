@@ -76,8 +76,8 @@ struct TaskProvider: AppIntentTimelineProvider {
             }
         }
         
-        // Sort tasks: incomplete first (by due date, then creation), then completed (by completion date)
-        filteredTasks.sort { task1, task2 in
+        // Sort tasks: incomplete first (with URGENT priority), then completed (by completion date)
+        filteredTasks.sort { (task1: Task, task2: Task) in
             // Prioritize incomplete tasks
             if task1.isCompleted != task2.isCompleted {
                 return !task1.isCompleted && task2.isCompleted
@@ -90,7 +90,15 @@ struct TaskProvider: AppIntentTimelineProvider {
                 let date2 = task2.completedAt ?? task2.createdAt
                 return date1 > date2
             } else {
-                // Sort incomplete tasks by due date, then by creation date
+                // For incomplete tasks, prioritize URGENT category first
+                let task1IsUrgent = task1.categoryId == TaskCategory.urgent.id
+                let task2IsUrgent = task2.categoryId == TaskCategory.urgent.id
+                
+                if task1IsUrgent != task2IsUrgent {
+                    return task1IsUrgent && !task2IsUrgent
+                }
+                
+                // Then sort by due date, then by creation date
                 switch (task1.dueDate, task2.dueDate) {
                 case (let date1?, let date2?):
                     return date1 < date2

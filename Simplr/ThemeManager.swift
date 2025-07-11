@@ -38,7 +38,7 @@ enum ThemeMode: String, CaseIterable {
         case .light, .dark, .system:
             return false
         case .kawaii:
-            return true
+            return false // Temporarily disabled premium requirement - can be changed back to true later
         }
     }
 }
@@ -122,6 +122,11 @@ class ThemeManager: ObservableObject {
         case .system:
             newTheme = isDarkMode ? DarkTheme() : LightTheme()
         case .kawaii:
+            // Kawaii theme is now available to all users
+            newTheme = KawaiiTheme()
+            
+            // Premium check code preserved for future use:
+            /*
             // Check if user has access to Kawaii theme
             if let premiumManager = premiumManager,
                premiumManager.hasAccess(to: .kawaiiTheme) {
@@ -132,6 +137,7 @@ class ThemeManager: ObservableObject {
                 newTheme = LightTheme()
                 // Don't reset the theme mode - keep it as kawaii so it persists
             }
+            */
         }
         
         withAnimation(.easeInOut(duration: 0.3)) {
@@ -188,13 +194,20 @@ class ThemeManager: ObservableObject {
             return true
         }
         
+        // Kawaii theme is now free for all users
+        if mode == .kawaii {
+            return true
+        }
+        
         guard let premiumManager = premiumManager else {
             return false
         }
         
         switch mode {
         case .kawaii:
-            return premiumManager.hasAccess(to: .kawaiiTheme)
+            return true // Always allow kawaii theme access
+            // Premium check preserved for future use:
+            // return premiumManager.hasAccess(to: .kawaiiTheme)
         default:
             return true
         }
