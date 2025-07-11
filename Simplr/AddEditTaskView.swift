@@ -225,7 +225,7 @@ struct AddEditTaskView: View {
                     .fill(theme.surfaceGradient)
                     .overlay(
                         RoundedRectangle(cornerRadius: 16)
-                            .stroke(theme.textTertiary.opacity(0.1), lineWidth: 1)
+                            .stroke(theme.border, lineWidth: 0.5)
                     )
                     .applyNeumorphicShadow(theme.neumorphicStyle)
             )
@@ -326,7 +326,7 @@ struct AddEditTaskView: View {
                     .fill(theme.surfaceGradient)
                     .overlay(
                         RoundedRectangle(cornerRadius: 16)
-                            .stroke(theme.textTertiary.opacity(0.1), lineWidth: 1)
+                            .stroke(theme.border, lineWidth: 0.5)
                     )
                     .applyNeumorphicShadow(theme.neumorphicStyle)
             )

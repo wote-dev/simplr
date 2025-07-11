@@ -522,18 +522,41 @@ struct TaskRowView: View {
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         ) :
-                        theme.surfaceGradient
+                        // Enhanced dark mode task card gradient for sleeker look
+                        (theme.background == Color(red: 0.02, green: 0.02, blue: 0.02) ?
+                        LinearGradient(
+                            colors: [
+                                Color(red: 0.04, green: 0.04, blue: 0.04),
+                                Color(red: 0.02, green: 0.02, blue: 0.02),
+                                Color(red: 0.03, green: 0.03, blue: 0.03)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ) : theme.surfaceGradient)
                     )
                     .shadow(
                         color: isUrgentTask && !task.isCompleted ? 
                             (theme.background == .black ? Color(red: 1.0, green: 0.4, blue: 0.4).opacity(0.25) : Color(red: 0.8, green: 0.1, blue: 0.1).opacity(0.35)) : 
-                            (themeManager.themeMode == .kawaii ? theme.shadow.opacity(0.4) : theme.shadow.opacity(0.6)),
+                            // Enhanced shadow for dark mode sleek cards
+                            (theme.background == Color(red: 0.02, green: 0.02, blue: 0.02) ? 
+                                Color.black.opacity(0.8) :
+                                (themeManager.themeMode == .kawaii ? theme.shadow.opacity(0.4) : theme.shadow.opacity(0.6))),
                         radius: isUrgentTask && !task.isCompleted ? (theme.background == .black ? 8 : 12) : 
-                            (themeManager.themeMode == .kawaii ? 1.0 : 1.0),
+                            // Larger shadow radius for dark mode sleek look
+                            (theme.background == Color(red: 0.02, green: 0.02, blue: 0.02) ? 15 :
+                                (themeManager.themeMode == .kawaii ? 1.0 : 1.0)),
                         x: 0,
                         y: isUrgentTask && !task.isCompleted ? (theme.background == .black ? 2 : 3) : 
-                            (themeManager.themeMode == .kawaii ? 0.3 : 0.3)
+                            // Enhanced shadow offset for dark mode depth
+                            (theme.background == Color(red: 0.02, green: 0.02, blue: 0.02) ? 8 :
+                                (themeManager.themeMode == .kawaii ? 0.3 : 0.3))
                     )
+            )
+            .overlay(
+                // Subtle border for definition
+                RoundedRectangle(cornerRadius: 24)
+                    .stroke(theme.border, lineWidth: 0.5)
+                    .opacity(isUrgentTask && !task.isCompleted ? 0 : 1)
             )
             .overlay(
                 // Urgent border pulsation effect coordinated with glow

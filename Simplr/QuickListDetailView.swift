@@ -246,7 +246,7 @@ struct QuickListDetailView: View {
                                 .fill(theme.surface)
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 16)
-                                        .stroke(theme.textTertiary, lineWidth: 1)
+                                        .stroke(theme.border, lineWidth: 0.5)
                                 )
                         )
                         

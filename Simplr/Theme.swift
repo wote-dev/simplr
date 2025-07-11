@@ -22,6 +22,8 @@ protocol Theme {
     var warning: Color { get }
     var error: Color { get }
     var shadow: Color { get }
+    var border: Color { get }
+    var borderSecondary: Color { get }
     
     var backgroundGradient: LinearGradient { get }
     var surfaceGradient: LinearGradient { get }
@@ -78,6 +80,8 @@ struct LightTheme: Theme {
     let warning = Color(red: 1.0, green: 0.7, blue: 0.0) // Orange for warnings
     let error = Color(red: 0.9, green: 0.2, blue: 0.2) // Red for error actions
     let shadow = Color.black.opacity(0.15) // Stronger shadow for better definition
+    let border = Color(red: 0.9, green: 0.9, blue: 0.9) // Subtle light gray border
+    let borderSecondary = Color(red: 0.85, green: 0.85, blue: 0.85) // Slightly darker secondary border
     
     var backgroundGradient: LinearGradient {
         LinearGradient(
@@ -190,15 +194,17 @@ struct DarkTheme: Theme {
     let secondary = Color(red: 0.85, green: 0.85, blue: 0.85)
     let accent = Color.white
     let background = Color(red: 0.02, green: 0.02, blue: 0.02) // Slightly lighter than pure black
-    let surface = Color(red: 0.08, green: 0.08, blue: 0.08) // Better contrast against background
-    let surfaceSecondary = Color(red: 0.12, green: 0.12, blue: 0.12) // More visible secondary surface
+    let surface = Color(red: 0.04, green: 0.04, blue: 0.04) // Much darker and sleeker surface
+    let surfaceSecondary = Color(red: 0.06, green: 0.06, blue: 0.06) // Darker secondary surface for better depth
     let text = Color.white
     let textSecondary = Color(red: 0.75, green: 0.75, blue: 0.75) // Better contrast for secondary text
     let textTertiary = Color(red: 0.6, green: 0.6, blue: 0.6)
     let success = Color(red: 0.3, green: 0.9, blue: 0.3) // Bright green for success actions
     let warning = Color(red: 1.0, green: 0.8, blue: 0.2) // Bright orange for warnings  
     let error = Color(red: 1.0, green: 0.3, blue: 0.3) // Bright red for error actions
-    let shadow = Color.black.opacity(0.3)
+    let shadow = Color.black.opacity(0.4)
+    let border = Color(red: 0.15, green: 0.15, blue: 0.15) // Subtle dark gray border for definition
+    let borderSecondary = Color(red: 0.12, green: 0.12, blue: 0.12) // Darker secondary border
     
     var backgroundGradient: LinearGradient {
         LinearGradient(
@@ -214,8 +220,8 @@ struct DarkTheme: Theme {
     var surfaceGradient: LinearGradient {
         LinearGradient(
             colors: [
-                Color(red: 0.08, green: 0.08, blue: 0.08),
-                Color(red: 0.06, green: 0.06, blue: 0.06)
+                Color(red: 0.04, green: 0.04, blue: 0.04),
+                Color(red: 0.02, green: 0.02, blue: 0.02)
             ],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
@@ -247,9 +253,9 @@ struct DarkTheme: Theme {
     
     var cardShadowStyle: ShadowStyle {
         ShadowStyle(
-            color: Color.black.opacity(0.35),
-            radius: 15,
-            y: 5
+            color: Color.black.opacity(0.6),
+            radius: 20,
+            y: 8
         )
     }
     
@@ -320,6 +326,8 @@ struct KawaiiTheme: Theme {
     let warning = Color(red: 1.0, green: 0.85, blue: 0.6) // Soft peach warning
     let error = Color(red: 1.0, green: 0.71, blue: 0.76) // Hello Kitty pink error
     let shadow = Color(red: 0.98, green: 0.85, blue: 0.88).opacity(0.2) // Stronger shadow for better definition
+    let border = Color(red: 0.92, green: 0.88, blue: 0.85) // Soft pink-tinted border
+    let borderSecondary = Color(red: 0.88, green: 0.82, blue: 0.78) // Slightly darker kawaii border
     
     var backgroundGradient: LinearGradient {
         LinearGradient(

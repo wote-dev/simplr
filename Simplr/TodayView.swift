@@ -428,23 +428,43 @@ struct TaskStatCard: View {
                     .fill(isSelected ? color : Color.clear)
                     .background(
                         RoundedRectangle(cornerRadius: 16)
-                            .fill(theme.surfaceGradient)
+                            .fill(
+                                // Make status cards darker and more sleek in dark mode
+                                theme.background == Color(red: 0.02, green: 0.02, blue: 0.02) ?
+                                LinearGradient(
+                                    colors: [
+                                        Color(red: 0.03, green: 0.03, blue: 0.03),
+                                        Color(red: 0.01, green: 0.01, blue: 0.01)
+                                    ],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ) : theme.surfaceGradient
+                            )
                             .overlay(
                                 RoundedRectangle(cornerRadius: 16)
-                                    .stroke(
-                                        LinearGradient(
-                                            colors: [
-                                                theme.accent.opacity(0.3),
-                                                theme.accent.opacity(0.2)
-                                            ],
-                                            startPoint: .top,
-                                            endPoint: .bottom
-                                        ),
-                                        lineWidth: 0
-                                    )
+                                    .stroke(theme.border, lineWidth: 0.5)
+                                    .opacity(isSelected ? 0 : 1)
                             )
                     )
-                    .applyNeumorphicShadow(isSelected ? theme.neumorphicButtonStyle : theme.neumorphicStyle)
+                    .applyNeumorphicShadow(
+                        // Enhanced shadow for dark mode sleek look
+                        theme.background == Color(red: 0.02, green: 0.02, blue: 0.02) ?
+                        NeumorphicShadowStyle(
+                            lightShadow: ShadowStyle(
+                                color: Color.white.opacity(0.02),
+                                radius: 8,
+                                x: -4,
+                                y: -4
+                            ),
+                            darkShadow: ShadowStyle(
+                                color: Color.black.opacity(0.8),
+                                radius: 12,
+                                x: 4,
+                                y: 6
+                            )
+                        ) :
+                        (isSelected ? theme.neumorphicButtonStyle : theme.neumorphicStyle)
+                    )
             )
             .scaleEffect(isSelected ? 1.02 : 1.0)
             .animation(.smoothSpring, value: isSelected)
