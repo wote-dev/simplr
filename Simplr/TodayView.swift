@@ -195,25 +195,10 @@ struct TodayView: View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    HStack(alignment: .center, spacing: 8) {
-                        Text("Today")
-                            .font(.largeTitle)
-                            .fontWeight(.bold)
-                            .foregroundStyle(theme.accentGradient)
-                        
-                        if !allTodayTasks.isEmpty {
-                             Text("\(allTodayTasks.count)")
-                                 .font(.caption)
-                                 .fontWeight(.medium)
-                                 .foregroundColor(theme.textSecondary)
-                                 .frame(width: 20, height: 20)
-                                 .background(
-                                     Circle()
-                                         .fill(theme.textSecondary.opacity(0.15))
-                                 )
-                                 .transition(.scale.combined(with: .opacity))
-                         }
-                    }
+                    Text("Today")
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
+                        .foregroundStyle(theme.accentGradient)
                     
                     Text(todayDateString)
                         .font(.subheadline)
@@ -291,7 +276,7 @@ struct TodayView: View {
                     
                     TaskStatCard(
                         title: "Completed",
-                        count: allTodayTasks.filter { $0.isCompleted }.count,
+                        count: taskManager.tasks.filter { $0.isCompleted }.count,
                         color: theme.success,
                         icon: "checkmark.circle",
                         isSelected: false,
