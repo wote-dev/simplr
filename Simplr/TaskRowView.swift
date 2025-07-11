@@ -223,7 +223,8 @@ struct TaskRowView: View {
                         
                         Text(task.title)
                             .font(isUrgentTask && !task.isCompleted ? .headline : .headline)
-                            .fontWeight(isUrgentTask && !task.isCompleted ? .bold : .semibold)
+                            .fontWeight(isUrgentTask && !task.isCompleted ? 
+                                (theme.background == .black ? .bold : .medium) : .semibold)
                             .lineLimit(isUrgentTask && !task.isCompleted ? 4 : 2)
                             .multilineTextAlignment(.leading)
                             .strikethrough(task.isCompleted)
@@ -1084,7 +1085,8 @@ struct TaskRowView: View {
         .foregroundColor(
             task.isOverdue ? theme.error : 
             task.isPending ? theme.warning : 
-            theme.textSecondary
+            // Maximum contrast for urgent tasks in light and kawaii themes
+            (isUrgentTask && (theme.background != .black)) ? Color.white : theme.textSecondary
         )
         .padding(.horizontal, 6)
         .padding(.vertical, 3)
@@ -1093,7 +1095,10 @@ struct TaskRowView: View {
                 .fill(
                     task.isOverdue ? theme.error.opacity(0.15) :
                     task.isPending ? theme.warning.opacity(0.1) :
-                    theme.surfaceSecondary
+                    // Maximum contrast background for urgent tasks in light and kawaii themes
+                    (isUrgentTask && (theme.background != .black)) ? 
+                        (theme is KawaiiTheme ? Color(red: 0.05, green: 0.05, blue: 0.05) : Color.black.opacity(0.85)) : 
+                        theme.surfaceSecondary
                 )
         )
         .overlay(
@@ -1101,8 +1106,11 @@ struct TaskRowView: View {
                 .stroke(
                     task.isOverdue ? theme.error.opacity(0.3) :
                     task.isPending ? theme.warning.opacity(0.2) :
-                    Color.clear,
-                    lineWidth: 1
+                    // Maximum contrast border for urgent tasks in light and kawaii themes
+                    (isUrgentTask && (theme.background != .black)) ? 
+                        (theme is KawaiiTheme ? Color.black : Color.black.opacity(0.9)) : Color.clear,
+                    lineWidth: (isUrgentTask && (theme.background != .black)) ? 
+                        (theme is KawaiiTheme ? 2.0 : 1.5) : 1
                 )
         )
         .scaleEffect(task.isCompleted ? 0.95 : 1.0)
@@ -1127,12 +1135,31 @@ struct TaskRowView: View {
                     .fontWeight(.medium)
             }
         }
-        .foregroundColor(theme.warning)
+        .foregroundColor(
+            // Maximum contrast for urgent tasks in light and kawaii themes
+            (isUrgentTask && (theme.background != .black)) ? 
+                Color.white : // White text for maximum contrast
+                theme.warning
+        )
         .padding(.horizontal, 6)
         .padding(.vertical, 3)
         .background(
             Capsule()
-                .fill(theme.warning.opacity(0.1))
+                .fill(
+                    // Maximum contrast background for urgent tasks in light and kawaii themes
+                    (isUrgentTask && (theme.background != .black)) ? 
+                        (theme is KawaiiTheme ? Color(red: 0.7, green: 0.3, blue: 0.0) : Color(red: 0.9, green: 0.5, blue: 0.0)) : // Darker orange for kawaii
+                        theme.warning.opacity(0.1)
+                )
+        )
+        .overlay(
+            // Maximum contrast border for urgent tasks in light and kawaii themes
+            (isUrgentTask && (theme.background != .black)) ?
+                Capsule()
+                    .stroke(
+                        (theme is KawaiiTheme ? Color(red: 0.5, green: 0.2, blue: 0.0) : Color(red: 0.7, green: 0.4, blue: 0.0)),
+                        lineWidth: (theme is KawaiiTheme ? 2.0 : 1.5)
+                    ) : nil
         )
         .scaleEffect(task.isCompleted ? 0.95 : 1.0)
         .opacity(task.isCompleted ? 0.6 : 1.0)
