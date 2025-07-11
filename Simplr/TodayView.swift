@@ -195,10 +195,25 @@ struct TodayView: View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Today")
-                        .font(.largeTitle)
-                        .fontWeight(.bold)
-                        .foregroundStyle(theme.accentGradient)
+                    HStack(alignment: .center, spacing: 8) {
+                        Text("Today")
+                            .font(.largeTitle)
+                            .fontWeight(.bold)
+                            .foregroundStyle(theme.accentGradient)
+                        
+                        if !allTodayTasks.isEmpty {
+                             Text("\(allTodayTasks.count)")
+                                 .font(.caption)
+                                 .fontWeight(.medium)
+                                 .foregroundColor(theme.textSecondary)
+                                 .frame(width: 20, height: 20)
+                                 .background(
+                                     Circle()
+                                         .fill(theme.textSecondary.opacity(0.15))
+                                 )
+                                 .transition(.scale.combined(with: .opacity))
+                         }
+                    }
                     
                     Text(todayDateString)
                         .font(.subheadline)

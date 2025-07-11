@@ -207,9 +207,9 @@ struct TaskRowView: View {
                     // Enhanced Task title with URGENT styling
                     HStack(spacing: 8) {
                         Text(task.title)
-                            .font(isUrgentTask && !task.isCompleted ? .title3 : .headline)
+                            .font(isUrgentTask && !task.isCompleted ? .body : .headline)
                             .fontWeight(isUrgentTask && !task.isCompleted ? .bold : .semibold)
-                            .lineLimit(3)
+                            .lineLimit(isUrgentTask && !task.isCompleted ? 5 : 3)
                             .multilineTextAlignment(.leading)
                             .strikethrough(task.isCompleted)
                             .foregroundColor(
@@ -229,7 +229,18 @@ struct TaskRowView: View {
                             .animation(.easeInOut(duration: 0.2), value: task.isCompleted)
                             .matchedGeometryEffect(id: "\(task.id)-title", in: namespace)
                         
-
+                        // Inline urgent category icon
+                        if let category = categoryManager.category(for: task), isUrgentTask && !task.isCompleted {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .font(.system(size: 12, weight: .bold))
+                                .foregroundColor(Color.red)
+                                .shadow(
+                                    color: Color.red.opacity(0.4),
+                                    radius: 2,
+                                    x: 0,
+                                    y: 1
+                                )
+                        }
                         
                         Spacer()
                     }
@@ -242,66 +253,35 @@ struct TaskRowView: View {
                         }
                     }
                     
-                    // Enhanced Category indicator with special URGENT styling
-                    if let category = categoryManager.category(for: task) {
+                    // Enhanced Category indicator (only for non-urgent categories)
+                    if let category = categoryManager.category(for: task), !isUrgentTask {
                         HStack {
                             HStack(spacing: 4) {
-                                if isUrgentTask && !task.isCompleted {
-                                    // Warning triangle for urgent category
-                                    Image(systemName: "exclamationmark.triangle.fill")
-                                        .font(.system(size: 10, weight: .bold))
-                                        .foregroundColor(Color.red)
-                                        .shadow(
-                                            color: Color.red.opacity(0.4),
-                                            radius: 3,
-                                            x: 0,
-                                            y: 1
-                                        )
-                                } else {
-                                    // Regular circle for other categories
-                                    Circle()
-                                        .fill(themeManager.themeMode == .kawaii ? category.color.kawaiiGradient : category.color.gradient)
-                                        .frame(width: 8, height: 8)
-                                        .overlay(
-                                            Circle()
-                                                .stroke(
-                                                    themeManager.themeMode == .kawaii ? category.color.kawaiiDarkColor : category.color.darkColor,
-                                                    lineWidth: 0.5
-                                                )
-                                                .opacity(0.3)
-                                        )
-                                }
+                                // Regular circle for other categories
+                                Circle()
+                                    .fill(themeManager.themeMode == .kawaii ? category.color.kawaiiGradient : category.color.gradient)
+                                    .frame(width: 8, height: 8)
+                                    .overlay(
+                                        Circle()
+                                            .stroke(
+                                                themeManager.themeMode == .kawaii ? category.color.kawaiiDarkColor : category.color.darkColor,
+                                                lineWidth: 0.5
+                                            )
+                                            .opacity(0.3)
+                                    )
                                 
                                 Text(category.name)
-                                    .font(isUrgentTask && !task.isCompleted ? .caption : .caption2)
-                                    .fontWeight(isUrgentTask && !task.isCompleted ? .bold : .medium)
+                                    .font(.caption2)
+                                    .fontWeight(.medium)
                                     .foregroundColor(
-                                        isUrgentTask && !task.isCompleted ?
-                                        Color.red :
-                                        (themeManager.themeMode == .kawaii ? category.color.kawaiiDarkColor : category.color.darkColor)
-                                    )
-                                    .shadow(
-                                        color: isUrgentTask && !task.isCompleted ?
-                                        Color.red.opacity(0.3) : Color.clear,
-                                        radius: 1,
-                                        x: 0,
-                                        y: 0.5
+                                        themeManager.themeMode == .kawaii ? category.color.kawaiiDarkColor : category.color.darkColor
                                     )
                             }
-                            .padding(.horizontal, isUrgentTask && !task.isCompleted ? 8 : 6)
-                            .padding(.vertical, isUrgentTask && !task.isCompleted ? 4 : 2)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
                             .background(
                                 Capsule()
                                     .fill(
-                                        isUrgentTask && !task.isCompleted ?
-                                        LinearGradient(
-                                            colors: [
-                                                Color.red.opacity(0.2),
-                                                Color.red.opacity(0.1)
-                                            ],
-                                            startPoint: .topLeading,
-                                            endPoint: .bottomTrailing
-                                        ) :
                                         LinearGradient(
                                             colors: [themeManager.themeMode == .kawaii ? category.color.kawaiiLightColor : category.color.lightColor],
                                             startPoint: .top,
@@ -311,10 +291,8 @@ struct TaskRowView: View {
                                     .overlay(
                                         Capsule()
                                             .stroke(
-                                                isUrgentTask && !task.isCompleted ?
-                                                Color.red.opacity(0.4) :
                                                 (themeManager.themeMode == .kawaii ? category.color.kawaiiColor.opacity(0.2) : category.color.color.opacity(0.2)),
-                                                lineWidth: isUrgentTask && !task.isCompleted ? 1 : 0.5
+                                                lineWidth: 0.5
                                             )
                                     )
                             )

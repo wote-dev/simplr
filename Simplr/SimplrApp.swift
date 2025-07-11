@@ -67,6 +67,11 @@ struct SimplrApp: App {
                 .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
                     // Perform maintenance tasks when app becomes active
                     taskManager.performMaintenanceTasks()
+                    
+                    // App became active
+                }
+                .onReceive(NotificationCenter.default.publisher(for: UIApplication.willResignActiveNotification)) { _ in
+                    // App going to background
                 }
                 .onReceive(NotificationCenter.default.publisher(for: .quickActionTriggered)) { notification in
                     // Handle quick action triggered from AppDelegate
@@ -162,6 +167,8 @@ struct SimplrApp: App {
         print("Quick action triggered: \(action.rawValue)")
     }
     
+
+    
     // MARK: - Spotlight Search Result Handling
     
     private func handleSpotlightSearchResult(_ userActivity: NSUserActivity) {
@@ -205,7 +212,7 @@ struct SystemAwareWrapper<Content: View>: View {
     
     var body: some View {
         content()
-            .onChange(of: systemColorScheme) { _, newColorScheme in
+            .onChange(of: systemColorScheme) { oldColorScheme, newColorScheme in
                 // Update theme manager when system appearance changes
                 let newIsDarkMode = newColorScheme == .dark
                 if themeManager.isDarkMode != newIsDarkMode {

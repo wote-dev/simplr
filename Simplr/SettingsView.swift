@@ -16,6 +16,7 @@ struct SettingsView: View {
     @EnvironmentObject var themeManager: ThemeManager
     @EnvironmentObject var categoryManager: CategoryManager
     @EnvironmentObject var premiumManager: PremiumManager
+
     @Environment(\.theme) var theme
     @Environment(\.dismiss) var dismiss
     @State private var notificationsEnabled = true
@@ -26,6 +27,7 @@ struct SettingsView: View {
     @State private var showingPrivacyPolicy = false
     @State private var showingTermsOfService = false
     @State private var showingThemeSelector = false
+
     
     var body: some View {
         NavigationView {
@@ -56,6 +58,8 @@ struct SettingsView: View {
                                 }
                             }
                         }
+                        
+
                         
                         // Notifications Section
                         settingsSection(title: "Notifications", icon: "bell") {
@@ -234,6 +238,7 @@ struct SettingsView: View {
                     .navigationBarTitleDisplayMode(.inline)
             }
         }
+
     }
     
     private func settingsSection<Content: View>(
@@ -497,6 +502,8 @@ struct SettingsView: View {
         }
         .padding(.top, 20)
     }
+    
+
     
     private func categoryInfoCard(_ category: TaskCategory) -> some View {
         VStack(alignment: .leading, spacing: 8) {

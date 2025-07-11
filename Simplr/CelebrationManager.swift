@@ -494,7 +494,7 @@ extension HapticManager {
     }
     
     private func celebrationSharp() {
-        let impact = UIImpactFeedbackGenerator(style: .rigid)
+        let impact = UIImpactFeedbackGenerator(style: .heavy)
         impact.impactOccurred()
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
@@ -553,4 +553,4 @@ extension HapticManager {
             notification.notificationOccurred(.success)
         }
     }
-} 
+}

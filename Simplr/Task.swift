@@ -33,15 +33,16 @@ struct TaskCategory: Identifiable, Codable, Hashable {
     // Predefined categories with fixed UUIDs to maintain consistency across app launches
     static let work = TaskCategory(id: UUID(uuidString: "550e8400-e29b-41d4-a716-446655440001")!, name: "Work", color: .blue)
     static let personal = TaskCategory(id: UUID(uuidString: "550e8400-e29b-41d4-a716-446655440002")!, name: "Personal", color: .green)
-    static let shopping = TaskCategory(id: UUID(uuidString: "550e8400-e29b-41d4-a716-446655440003")!, name: "Shopping", color: .orange)
+    static let shopping = TaskCategory(id: UUID(uuidString: "550e8400-e29b-41d4-a716-446655440003")!, name: "Shopping", color: .teal)
     static let health = TaskCategory(id: UUID(uuidString: "550e8400-e29b-41d4-a716-446655440004")!, name: "Health", color: .red)
     static let learning = TaskCategory(id: UUID(uuidString: "550e8400-e29b-41d4-a716-446655440005")!, name: "Learning", color: .purple)
     static let travel = TaskCategory(id: UUID(uuidString: "550e8400-e29b-41d4-a716-446655440006")!, name: "Travel", color: .indigo)
+    static let important = TaskCategory(id: UUID(uuidString: "550e8400-e29b-41d4-a716-446655440009")!, name: "IMPORTANT", color: .orange)
     static let urgent = TaskCategory(id: UUID(uuidString: "550e8400-e29b-41d4-a716-446655440008")!, name: "URGENT", color: .red)
     static let uncategorized = TaskCategory(id: UUID(uuidString: "550e8400-e29b-41d4-a716-446655440007")!, name: "Uncategorized", color: .gray)
     
     static let predefined: [TaskCategory] = [
-        .work, .personal, .shopping, .health, .learning, .travel, .urgent
+        .work, .personal, .shopping, .health, .learning, .travel, .important, .urgent
     ]
     
     static func == (lhs: TaskCategory, rhs: TaskCategory) -> Bool {

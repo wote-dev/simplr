@@ -146,10 +146,16 @@ class CategoryManager: ObservableObject {
         
         // Urgent-related keywords (highest priority)
         if title.contains("urgent") || title.contains("asap") || title.contains("emergency") ||
-           title.contains("critical") || title.contains("immediate") || title.contains("priority") ||
-           title.contains("rush") || title.contains("now") || title.contains("today") ||
-           title.contains("overdue") || title.contains("late") || title.contains("important") {
+           title.contains("critical") || title.contains("immediate") || title.contains("rush") ||
+           title.contains("now") || title.contains("overdue") || title.contains("late") {
             return categories.first { $0.name == "URGENT" }
+        }
+        
+        // Important-related keywords (high priority)
+        if title.contains("important") || title.contains("priority") || title.contains("significant") ||
+           title.contains("key") || title.contains("essential") || title.contains("vital") ||
+           title.contains("crucial") || title.contains("major") {
+            return categories.first { $0.name == "IMPORTANT" }
         }
         
         // Work-related keywords

@@ -139,9 +139,6 @@ struct SimplrWidgetEntryView: View {
                     .fontWeight(.semibold)
                     .foregroundColor(.primary)
                 Spacer()
-                Text(entry.date, style: .time)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
             }
             
             if entry.tasks.isEmpty {

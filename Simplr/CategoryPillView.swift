@@ -37,6 +37,14 @@ struct CategoryPillView: View {
         category?.name == "URGENT"
     }
     
+    private var isImportantCategory: Bool {
+        category?.name == "IMPORTANT"
+    }
+    
+    private var isSpecialCategory: Bool {
+        isUrgentCategory || isImportantCategory
+    }
+    
     private var backgroundColor: Color {
         if isSelected {
             guard let category = category else { return theme.surface }
@@ -92,6 +100,21 @@ struct CategoryPillView: View {
                                 Animation.easeInOut(duration: 1.5).repeatForever(autoreverses: true),
                                 value: pulsateScale
                             )
+                    } else if isImportantCategory {
+                        // Exclamation point for important category
+                        Image(systemName: "exclamationmark.circle.fill")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(
+                                themeManager.themeMode == .kawaii ? category.color.kawaiiColor : category.color.color
+                            )
+                            .scaleEffect(isSelected ? 1.1 : 1.0)
+                            .scaleEffect(pulsateScale)
+                            .opacity(pulsateOpacity)
+                            .animation(.smoothSpring, value: isSelected)
+                            .animation(
+                                Animation.easeInOut(duration: 1.8).repeatForever(autoreverses: true),
+                                value: pulsateScale
+                            )
                     } else {
                         // Regular circle for other categories
                         Circle()
@@ -117,11 +140,13 @@ struct CategoryPillView: View {
                         .animation(.smoothSpring, value: isSelected)
                 }
                 
-                // Category name
-                Text(displayName)
-                    .font(.system(size: 14, weight: isSelected ? .semibold : .medium))
-                    .foregroundColor(textColor)
-                    .animation(.easeOut(duration: 0.2), value: isSelected)
+                // Category name (hide for urgent category)
+                if !isUrgentCategory {
+                    Text(displayName)
+                        .font(.system(size: 14, weight: isSelected ? .semibold : .medium))
+                        .foregroundColor(textColor)
+                        .animation(.easeOut(duration: 0.2), value: isSelected)
+                }
                 
                 // Task count badge
                 if let taskCount = taskCount, taskCount > 0 {
@@ -152,7 +177,7 @@ struct CategoryPillView: View {
                     )
             )
             .scaleEffect(isPressed ? 0.95 : 1.0)
-            .scaleEffect(isUrgentCategory ? pulsateScale : 1.0)
+            .scaleEffect(isSpecialCategory ? pulsateScale : 1.0)
             .animation(.interpolatingSpring(stiffness: 600, damping: 30), value: isPressed)
         }
         .buttonStyle(PlainButtonStyle())
@@ -171,6 +196,14 @@ struct CategoryPillView: View {
                 ) {
                     pulsateScale = 1.05
                     pulsateOpacity = 0.8
+                }
+            } else if isImportantCategory {
+                withAnimation(
+                    Animation.easeInOut(duration: 1.8)
+                        .repeatForever(autoreverses: true)
+                ) {
+                    pulsateScale = 1.03
+                    pulsateOpacity = 0.85
                 }
             }
         }
