@@ -293,7 +293,8 @@ struct CompletedView: View {
             onDeleteCanceled: {
                 // Reset gesture state when deletion is canceled via swipe dismissal
                 taskToDelete = nil
-            }
+            },
+            isInCompletedView: true
         )
         .environmentObject(taskManager)
         .padding(.horizontal, 20)

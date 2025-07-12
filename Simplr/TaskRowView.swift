@@ -18,6 +18,7 @@ struct TaskRowView: View {
     let onEdit: () -> Void
     let onDelete: () -> Void
     let onDeleteCanceled: (() -> Void)? // New callback for when deletion is canceled
+    let isInCompletedView: Bool // New parameter to determine if we're in the completed view
     @State private var isPressed = false
     @State private var showCompletionParticles = false
     @State private var completionScale: CGFloat = 1.0
@@ -29,7 +30,7 @@ struct TaskRowView: View {
     @State private var dragOffset: CGFloat = 0
     @State private var isDragging = false
     @State private var dragProgress: CGFloat = 0
-    @State private var showCompletionIcon = false
+    @State private var showEditIcon = false
     @State private var showDeleteIcon = false
     @State private var hasTriggeredHaptic = false
     @State private var gestureCompleted = false
@@ -72,6 +73,7 @@ struct TaskRowView: View {
     var body: some View {
         ZStack {
             // Background action indicators - positioned absolutely behind the task card
+            // Left swipe shows: Delete (left) and Edit (right)
             if dragOffset < 0 {
                 HStack {
                     Spacer()
@@ -113,32 +115,38 @@ struct TaskRowView: View {
                         .opacity(showBothActionsConfirmation ? 1.0 : abs(dragProgress))
                         .animation(.easeOut(duration: 0.2), value: dragProgress)
                         
-                        // Complete action (on the right)
+                        // Second action (Edit or Mark as Incomplete based on context)
                         ZStack {
                             Circle()
-                                .fill(showBothActionsConfirmation ? theme.success : theme.success.opacity(0.3))
+                                .fill(showBothActionsConfirmation ? 
+                                    (isInCompletedView ? theme.warning : theme.primary) : 
+                                    (isInCompletedView ? theme.warning.opacity(0.3) : theme.primary.opacity(0.3)))
                                 .frame(width: showBothActionsConfirmation ? 50 : 40, height: showBothActionsConfirmation ? 50 : 40)
-                                .scaleEffect(showCompletionIcon ? 1.1 : 0.9)
-                                .animation(.interactiveSpring(response: 0.3, dampingFraction: 0.7, blendDuration: 0), value: showCompletionIcon)
+                                .scaleEffect(showEditIcon ? 1.1 : 0.9)
+                                .animation(.interactiveSpring(response: 0.3, dampingFraction: 0.7, blendDuration: 0), value: showEditIcon)
                                 .animation(.interactiveSpring(response: 0.35, dampingFraction: 0.8, blendDuration: 0), value: showBothActionsConfirmation)
                             
                             if showBothActionsConfirmation {
-                                // Confirmation button - execute completion immediately
+                                // Confirmation button - execute appropriate action
                                 Button(action: {
-                                    confirmCompletionAction()
+                                    if isInCompletedView {
+                                        confirmMarkIncompleteAction()
+                                    } else {
+                                        confirmEditAction()
+                                    }
                                 }) {
-                                    Image(systemName: task.isCompleted ? "arrow.uturn.backward" : "checkmark")
+                                    Image(systemName: isInCompletedView ? "arrow.uturn.backward" : "pencil")
                                         .font(.system(size: 18, weight: .bold))
-                                        .foregroundColor(getIconColor(for: theme.success))
+                                        .foregroundColor(getIconColor(for: isInCompletedView ? theme.warning : theme.primary))
                                 }
                                 .buttonStyle(PlainButtonStyle())
                             } else {
                                 // Preview icon
-                                Image(systemName: task.isCompleted ? "arrow.uturn.backward" : "checkmark")
+                                Image(systemName: isInCompletedView ? "arrow.uturn.backward" : "pencil")
                                     .font(.system(size: 18, weight: .bold))
-                                    .foregroundColor(getIconColor(for: theme.success))
-                                    .scaleEffect(showCompletionIcon ? 1.0 : 0.5)
-                                    .animation(Animation.adaptiveSnappy, value: showCompletionIcon)
+                                    .foregroundColor(getIconColor(for: isInCompletedView ? theme.warning : theme.primary))
+                                    .scaleEffect(showEditIcon ? 1.0 : 0.5)
+                                    .animation(Animation.adaptiveSnappy, value: showEditIcon)
                             }
                         }
                         .opacity(showBothActionsConfirmation ? 1.0 : abs(dragProgress))
@@ -150,7 +158,7 @@ struct TaskRowView: View {
             }
             
             // Main task content
-            HStack(spacing: 16) {
+            HStack(spacing: 12) {
                 // Completion toggle with enhanced animations
                 Button(action: {
                     performCompletionToggle()
@@ -203,62 +211,155 @@ struct TaskRowView: View {
                 .scaleEffect(isPressed ? 0.95 : 1.0)
                 .animation(.interpolatingSpring(stiffness: 600, damping: 30), value: isPressed)
                 
-                VStack(alignment: .leading, spacing: 8) {
-                    // Enhanced Task title with URGENT styling
-                    HStack(alignment: .top, spacing: 8) {
-                        // Urgent category icon as bullet point - positioned to the left
-                        if let category = categoryManager.category(for: task), isUrgentTask && !task.isCompleted {
-                            Image(systemName: "exclamationmark.triangle.fill")
-                                .font(.system(size: 14, weight: .bold))
-                                .foregroundColor(theme.background == .black ? Color(red: 1.0, green: 0.4, blue: 0.4) : Color(red: 0.8, green: 0.1, blue: 0.1))
-                                .shadow(
-                                    color: (theme.background == .black ? Color(red: 1.0, green: 0.4, blue: 0.4).opacity(0.5) : Color(red: 0.8, green: 0.1, blue: 0.1).opacity(0.6)),
-                                    radius: theme.background == .black ? 2 : 3,
-                                    x: 0,
-                                    y: 1
+                // Main content area with text on left and pills on right
+                HStack(alignment: .top, spacing: 12) {
+                    // Left side: Text content
+                    VStack(alignment: .leading, spacing: 8) {
+                        // Enhanced Task title with URGENT styling
+                        HStack(alignment: .top, spacing: 8) {
+                            // Urgent category icon as bullet point - positioned to the left
+                            if let category = categoryManager.category(for: task), isUrgentTask && !task.isCompleted {
+                                Image(systemName: "exclamationmark.triangle.fill")
+                                    .font(.system(size: 14, weight: .bold))
+                                    .foregroundColor(theme.background == .black ? Color(red: 1.0, green: 0.4, blue: 0.4) : Color(red: 0.8, green: 0.1, blue: 0.1))
+                                    .shadow(
+                                        color: (theme.background == .black ? Color(red: 1.0, green: 0.4, blue: 0.4).opacity(0.5) : Color(red: 0.8, green: 0.1, blue: 0.1).opacity(0.6)),
+                                        radius: theme.background == .black ? 2 : 3,
+                                        x: 0,
+                                        y: 1
+                                    )
+                                    .padding(.top, 1) // Align with first line of text
+                                    .frame(width: 16) // Fixed width for consistent alignment
+                            }
+                            
+                            Text(task.title)
+                                .font(isUrgentTask && !task.isCompleted ? .headline : .headline)
+                                .fontWeight(isUrgentTask && !task.isCompleted ? 
+                                    (theme.background == .black ? .bold : .medium) : .semibold)
+                                .lineLimit(isUrgentTask && !task.isCompleted ? 4 : 2)
+                                .multilineTextAlignment(.leading)
+                                .strikethrough(task.isCompleted)
+                                .foregroundColor(
+                                    task.isCompleted ? theme.textSecondary :
+                                    (isUrgentTask && !task.isCompleted ? 
+                                        (theme.background == .black ? Color(red: 1.0, green: 0.4, blue: 0.4) : Color(red: 0.8, green: 0.1, blue: 0.1)) : 
+                                     (theme is KawaiiTheme ? theme.accent : theme.text))
                                 )
-                                .padding(.top, 1) // Align with first line of text
-                                .frame(width: 16) // Fixed width for consistent alignment
+                                .opacity(task.isCompleted ? 0.7 : 1.0)
+                                .scaleEffect(task.isCompleted ? 0.99 : 1.0, anchor: .leading)
+                                .shadow(
+                                    color: isUrgentTask && !task.isCompleted ?
+                                    (theme.background == .black ? Color(red: 1.0, green: 0.4, blue: 0.4).opacity(0.3) : Color(red: 0.8, green: 0.1, blue: 0.1).opacity(0.4)) : Color.clear,
+                                    radius: theme.background == .black ? 1 : 2,
+                                    x: 0,
+                                    y: 0.5
+                                )
+                                .animation(.easeInOut(duration: 0.2), value: task.isCompleted)
+                                .matchedGeometryEffect(id: "\(task.id)-title", in: namespace)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            // Only open quick list detail when tapping on the main content area
+                            if task.hasQuickList {
+                                HapticManager.shared.buttonTap()
+                                showingQuickListDetail = true
+                            }
                         }
                         
-                        Text(task.title)
-                            .font(isUrgentTask && !task.isCompleted ? .headline : .headline)
-                            .fontWeight(isUrgentTask && !task.isCompleted ? 
-                                (theme.background == .black ? .bold : .medium) : .semibold)
-                            .lineLimit(isUrgentTask && !task.isCompleted ? 4 : 2)
-                            .multilineTextAlignment(.leading)
-                            .strikethrough(task.isCompleted)
-                            .foregroundColor(
-                                task.isCompleted ? theme.textSecondary :
-                                (isUrgentTask && !task.isCompleted ? 
-                                    (theme.background == .black ? Color(red: 1.0, green: 0.4, blue: 0.4) : Color(red: 0.8, green: 0.1, blue: 0.1)) : 
-                                 (theme is KawaiiTheme ? theme.accent : theme.text))
-                            )
-                            .opacity(task.isCompleted ? 0.7 : 1.0)
-                            .scaleEffect(task.isCompleted ? 0.99 : 1.0, anchor: .leading)
-                            .shadow(
-                                color: isUrgentTask && !task.isCompleted ?
-                                (theme.background == .black ? Color(red: 1.0, green: 0.4, blue: 0.4).opacity(0.3) : Color(red: 0.8, green: 0.1, blue: 0.1).opacity(0.4)) : Color.clear,
-                                radius: theme.background == .black ? 1 : 2,
-                                x: 0,
-                                y: 0.5
-                            )
-                            .animation(.easeInOut(duration: 0.2), value: task.isCompleted)
-                            .matchedGeometryEffect(id: "\(task.id)-title", in: namespace)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        // Only open quick list detail when tapping on the main content area
+                        // Task description with fade animation
+                        if !task.description.isEmpty {
+                            Text(task.description)
+                                .font(.subheadline)
+                                .foregroundColor(theme.textSecondary)
+                                .lineLimit(2)
+                                .opacity(task.isCompleted ? 0.5 : 0.8)
+                                .scaleEffect(task.isCompleted ? 0.99 : 1.0, anchor: .leading)
+                                .animation(.easeInOut(duration: 0.2), value: task.isCompleted)
+                                .matchedGeometryEffect(id: "\(task.id)-description", in: namespace)
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    // Only open quick list detail when tapping on the description area
+                                    if task.hasQuickList {
+                                        HapticManager.shared.buttonTap()
+                                        showingQuickListDetail = true
+                                    }
+                                }
+                        }
+                        
+                        // Quick List indicator
                         if task.hasQuickList {
-                            HapticManager.shared.buttonTap()
-                            showingQuickListDetail = true
+                            HStack(spacing: 8) {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "list.bullet")
+                                        .font(.caption2)
+                                        .fontWeight(.medium)
+                                        .foregroundColor(theme.primary)
+                                    
+                                    Text("\(task.completedQuickListItemsCount)/\(task.totalQuickListItemsCount)")
+                                        .font(.caption2)
+                                        .fontWeight(.medium)
+                                        .foregroundColor(theme.textSecondary)
+                                }
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .background(
+                                    Capsule()
+                                        .fill(theme.surface)
+                                        .overlay(
+                                            Capsule()
+                                                .stroke(theme.primary.opacity(0.2), lineWidth: 0.5)
+                                        )
+                                )
+                                
+                                // Progress bar
+                                GeometryReader { geometry in
+                                    ZStack(alignment: .leading) {
+                                        // Background track with border
+                                        Capsule()
+                                            .fill(theme.surface)
+                                            .overlay(
+                                                Capsule()
+                                                    .stroke(theme.textTertiary.opacity(0.3), lineWidth: 0.5)
+                                            )
+                                            .frame(height: 5)
+                                        
+                                        // Progress fill with clear end indicator
+                                        if task.quickListCompletionPercentage > 0 {
+                                            Capsule()
+                                                .fill(task.allQuickListItemsCompleted ? Color.green.gradient : theme.primary.gradient)
+                                                .frame(width: max(5, geometry.size.width * task.quickListCompletionPercentage), height: 5)
+                                                .overlay(
+                                                    // End cap indicator
+                                                    Capsule()
+                                                        .stroke(task.allQuickListItemsCompleted ? Color.green : theme.primary, lineWidth: 1)
+                                                        .frame(width: max(5, geometry.size.width * task.quickListCompletionPercentage), height: 5)
+                                                )
+                                                .animation(.easeInOut(duration: 0.3), value: task.quickListCompletionPercentage)
+                                        }
+                                    }
+                                }
+                                .frame(height: 5)
+                                .frame(maxWidth: 60)
+                                
+                                Spacer()
+                            }
+                            .opacity(task.isCompleted ? 0.6 : 1.0)
+                            .scaleEffect(task.isCompleted ? 0.99 : 1.0, anchor: .leading)
+                            .animation(.easeInOut(duration: 0.2), value: task.isCompleted)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                // Open quick list detail when tapping on the quick list indicator
+                                HapticManager.shared.buttonTap()
+                                showingQuickListDetail = true
+                            }
                         }
                     }
                     
-                    // Enhanced Category indicator (only for non-urgent categories)
-                    if let category = categoryManager.category(for: task), !isUrgentTask {
-                        HStack {
+                    // Right side: Pills (category, due date, reminder)
+                    VStack(alignment: .trailing, spacing: 6) {
+                        // Enhanced Category indicator (only for non-urgent categories)
+                        if let category = categoryManager.category(for: task), !isUrgentTask {
                             HStack(spacing: 4) {
                                 // Regular circle for other categories
                                 Circle()
@@ -302,208 +403,24 @@ struct TaskRowView: View {
                             .scaleEffect(task.isCompleted ? 0.98 : 1.0)
                             .opacity(task.isCompleted ? 0.6 : 1.0)
                             .animation(.easeInOut(duration: 0.2), value: task.isCompleted)
-                            
-                            Spacer()
                         }
-                    }
-                    
-                    // Task description with fade animation
-                    if !task.description.isEmpty {
-                        Text(task.description)
-                            .font(.subheadline)
-                            .foregroundColor(theme.textSecondary)
-                            .lineLimit(2)
-                            .opacity(task.isCompleted ? 0.5 : 0.8)
-                            .scaleEffect(task.isCompleted ? 0.99 : 1.0, anchor: .leading)
-                            .animation(.easeInOut(duration: 0.2), value: task.isCompleted)
-                            .matchedGeometryEffect(id: "\(task.id)-description", in: namespace)
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                // Only open quick list detail when tapping on the description area
-                                if task.hasQuickList {
-                                    HapticManager.shared.buttonTap()
-                                    showingQuickListDetail = true
-                                }
-                            }
-                    }
-                    
-                    // Quick List indicator
-                    if task.hasQuickList {
-                        HStack(spacing: 8) {
-                            HStack(spacing: 4) {
-                                Image(systemName: "list.bullet")
-                                    .font(.caption2)
-                                    .fontWeight(.medium)
-                                    .foregroundColor(theme.primary)
-                                
-                                Text("\(task.completedQuickListItemsCount)/\(task.totalQuickListItemsCount)")
-                                    .font(.caption2)
-                                    .fontWeight(.medium)
-                                    .foregroundColor(theme.textSecondary)
-                            }
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
-                            .background(
-                                Capsule()
-                                    .fill(theme.surface)
-                                    .overlay(
-                                        Capsule()
-                                            .stroke(theme.primary.opacity(0.2), lineWidth: 0.5)
-                                    )
-                            )
-                            
-                            // Progress bar
-                            GeometryReader { geometry in
-                                ZStack(alignment: .leading) {
-                                    // Background track with border
-                                    Capsule()
-                                        .fill(theme.surface)
-                                        .overlay(
-                                            Capsule()
-                                                .stroke(theme.textTertiary.opacity(0.3), lineWidth: 0.5)
-                                        )
-                                        .frame(height: 5)
-                                    
-                                    // Progress fill with clear end indicator
-                                    if task.quickListCompletionPercentage > 0 {
-                                        Capsule()
-                                            .fill(task.allQuickListItemsCompleted ? Color.green.gradient : theme.primary.gradient)
-                                            .frame(width: max(5, geometry.size.width * task.quickListCompletionPercentage), height: 5)
-                                            .overlay(
-                                                // End cap indicator
-                                                Capsule()
-                                                    .stroke(task.allQuickListItemsCompleted ? Color.green : theme.primary, lineWidth: 1)
-                                                    .frame(width: max(5, geometry.size.width * task.quickListCompletionPercentage), height: 5)
-                                            )
-                                            .animation(.easeInOut(duration: 0.3), value: task.quickListCompletionPercentage)
-                                    }
-                                }
-                            }
-                            .frame(height: 5)
-                            .frame(maxWidth: 60)
-                            
-                            Spacer()
-                        }
-                        .opacity(task.isCompleted ? 0.6 : 1.0)
-                        .scaleEffect(task.isCompleted ? 0.99 : 1.0, anchor: .leading)
-                        .animation(.easeInOut(duration: 0.2), value: task.isCompleted)
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            // Open quick list detail when tapping on the quick list indicator
-                            HapticManager.shared.buttonTap()
-                            showingQuickListDetail = true
-                        }
-                    }
-                    
-                    // Due date and reminder info with improved spacing - vertical layout when both present
-                    if task.dueDate != nil || (task.hasReminder && !task.isCompleted) {
-                        let hasBothDateAndReminder = task.dueDate != nil && task.hasReminder && !task.isCompleted
                         
-                        if hasBothDateAndReminder {
-                            // Vertical layout when both are present for better spacing
-                            VStack(alignment: .leading, spacing: 6) {
-                                if let dueDate = task.dueDate {
-                                    dueDatePill(dueDate)
-                                }
-                                
-                                if task.hasReminder && !task.isCompleted {
-                                    reminderPill()
-                                }
-                            }
-                        } else {
-                            // Horizontal layout when only one is present
-                            HStack(spacing: 8) {
-                                if let dueDate = task.dueDate {
-                                    dueDatePill(dueDate)
-                                }
-                                
-                                if task.hasReminder && !task.isCompleted {
-                                    reminderPill()
-                                }
-                                
-                                Spacer()
-                            }
+                        // Due date pill
+                        if let dueDate = task.dueDate {
+                            dueDatePill(dueDate)
+                        }
+                        
+                        // Reminder pill
+                        if task.hasReminder && !task.isCompleted {
+                            reminderPill()
                         }
                     }
                 }
                 
-                Spacer()
-                
-                // Action buttons with enhanced interactions (hidden during drag)
-                if !isDragging && !showBothActionsConfirmation {
-                    HStack(spacing: 12) {
-                        Button(action: {
-                            HapticManager.shared.buttonTap()
-                            onEdit()
-                        }) {
-                            ZStack {
-                                Circle()
-                                    .fill(
-                                        themeManager.themeMode == .kawaii ? 
-                                        LinearGradient(
-                                            colors: [
-                                                theme.accent.opacity(0.8),
-                                                theme.accent.opacity(0.6)
-                                            ],
-                                            startPoint: .topLeading,
-                                            endPoint: .bottomTrailing
-                                        ) :
-                                        theme.surfaceGradient
-                                    )
-                                    .frame(width: 36, height: 36)
-                                    .overlay(
-                                        Circle()
-                                            .stroke(
-                                                themeManager.themeMode == .kawaii ? 
-                                                theme.accent.opacity(0.4) : Color.clear,
-                                                lineWidth: themeManager.themeMode == .kawaii ? 1.5 : 0
-                                            )
-                                    )
-                                    .applyNeumorphicShadow(
-                                        themeManager.themeMode == .kawaii ? 
-                                        NeumorphicShadowStyle(
-                                            lightShadow: ShadowStyle(
-                                                color: Color.white.opacity(0.8),
-                                                radius: 6,
-                                                x: -3,
-                                                y: -3
-                                            ),
-                                            darkShadow: ShadowStyle(
-                                                color: theme.accent.opacity(0.3),
-                                                radius: 6,
-                                                x: 3,
-                                                y: 3
-                                            )
-                                        ) :
-                                        theme.neumorphicButtonStyle
-                                    )
-                                
-                                Image(systemName: "pencil")
-                                    .font(.system(size: 14, weight: .bold))
-                                    .foregroundColor(
-                                        themeManager.themeMode == .kawaii ? 
-                                        Color.white : theme.primary
-                                    )
-                                    .shadow(
-                                        color: themeManager.themeMode == .kawaii ? 
-                                        theme.accent.opacity(0.5) : 
-                                        (theme.background == .black ? Color.white.opacity(0.1) : Color.clear),
-                                        radius: themeManager.themeMode == .kawaii ? 2 : 1,
-                                        x: 0,
-                                        y: themeManager.themeMode == .kawaii ? 1 : 0.5
-                                    )
-                            }
-                        }
-                        .buttonStyle(PlainButtonStyle())
-                        .scaleEffect(task.isCompleted ? 0.9 : 1.0)
-                        .opacity(task.isCompleted ? 0.6 : 1.0)
-                        .animation(.easeInOut(duration: 0.3).delay(0.1), value: task.isCompleted)
-                    }
-                    .opacity(isDragging ? 0 : 1.0)
-                    .animation(.easeInOut(duration: 0.2), value: isDragging)
-                }
+                // Action buttons removed - edit functionality moved to swipe gesture
             }
-            .padding(20)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 20)
             .background(
                 // Clean background without confining borders
                 RoundedRectangle(cornerRadius: 24)
@@ -679,14 +596,6 @@ struct TaskRowView: View {
                 )
             }
             
-            // Edit action
-            Button(action: {
-                HapticManager.shared.contextMenuAction()
-                onEdit()
-            }) {
-                Label("Edit Task", systemImage: "pencil")
-            }
-            
             // Duplicate action
             Button(action: {
                 HapticManager.shared.contextMenuAction()
@@ -709,13 +618,20 @@ struct TaskRowView: View {
     
     // MARK: - Helper Methods
     
-    /// Returns the appropriate icon color based on the theme background
+    /// Returns the appropriate icon color based on the background color for maximum contrast
     private func getIconColor(for baseColor: Color) -> Color {
-        // In dark theme, use contrasting color for better visibility
-        if theme.background == .black {
-            return Color.black // Black icons on colored backgrounds in dark mode
+        // In dark theme, primary is white, so we need black icons for contrast
+        // In light theme, primary is black, so we need white icons for contrast
+        if theme is DarkTheme {
+            // Dark theme: primary is white, error is bright red - use black icons
+            if baseColor == theme.primary {
+                return Color.black // Black icon on white background
+            } else {
+                return Color.white // White icon on colored backgrounds (error, success)
+            }
         } else {
-            return Color.white // White icons on colored backgrounds in light mode
+            // Light theme and Kawaii: primary is dark, use white icons
+            return Color.white
         }
     }
     
@@ -789,7 +705,7 @@ struct TaskRowView: View {
             dragOffset = 0
             isDragging = false
             dragProgress = 0
-            showCompletionIcon = false
+            showEditIcon = false
             showDeleteIcon = false
         }
     }
@@ -801,7 +717,7 @@ struct TaskRowView: View {
         if distanceFromNeutral > abs(dragOffset) {
             // Keep current position with minimal animation overhead
             dragProgress = 0
-            showCompletionIcon = false
+            showEditIcon = false
             showDeleteIcon = false
             return
         }
@@ -819,7 +735,7 @@ struct TaskRowView: View {
         
         // Reset visual indicators
         dragProgress = 0
-        showCompletionIcon = false
+        showEditIcon = false
         showDeleteIcon = false
     }
     
@@ -838,11 +754,11 @@ struct TaskRowView: View {
         
         // Batch state updates to reduce re-renders
         let newShowDeleteIcon = shouldShowIcons
-        let newShowCompletionIcon = shouldShowIcons
+        let newShowEditIcon = shouldShowIcons
         
-        if newShowDeleteIcon != showDeleteIcon || newShowCompletionIcon != showCompletionIcon {
+        if newShowDeleteIcon != showDeleteIcon || newShowEditIcon != showEditIcon {
             showDeleteIcon = newShowDeleteIcon
-            showCompletionIcon = newShowCompletionIcon
+            showEditIcon = newShowEditIcon
             
             if shouldShowIcons {
                 gestureState.hasShownIcon = true
@@ -944,19 +860,31 @@ struct TaskRowView: View {
         return distanceThreshold || velocityThreshold || combinedThreshold
     }
     
-    private func confirmCompletionAction() {
-        // Execute the completion action
+    private func confirmEditAction() {
+        // Execute the edit action
         gestureCompleted = true
-        HapticManager.shared.swipeToComplete()
+        HapticManager.shared.buttonTap()
         
-        // High-performance completion animation
-        withAnimation(.interactiveSpring(response: 0.5, dampingFraction: 0.7, blendDuration: 0)) {
-            dragOffset = UIScreen.main.bounds.width
-        }
+        // Reset gesture state and trigger edit
+        resetGestureState()
         
+        // Trigger edit action
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            performCompletionToggle()
-            resetGestureState()
+            onEdit()
+        }
+    }
+    
+    private func confirmMarkIncompleteAction() {
+        // Execute the mark as incomplete action
+        gestureCompleted = true
+        HapticManager.shared.buttonTap()
+        
+        // Reset gesture state and trigger completion toggle
+        resetGestureState()
+        
+        // Trigger completion toggle to mark as incomplete
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            onToggleCompletion()
         }
     }
     
@@ -1035,7 +963,7 @@ struct TaskRowView: View {
             dragOffset = 0
             isDragging = false
             dragProgress = 0
-            showCompletionIcon = false
+            showEditIcon = false
             showDeleteIcon = false
             showBothActionsConfirmation = false
             completionOpacity = 1.0
@@ -1237,7 +1165,8 @@ struct TaskRowView: View {
             onToggleCompletion: {},
             onEdit: {},
             onDelete: {},
-            onDeleteCanceled: nil
+            onDeleteCanceled: nil,
+            isInCompletedView: false
         )
         
         TaskRowView(
@@ -1250,7 +1179,8 @@ struct TaskRowView: View {
             onToggleCompletion: {},
             onEdit: {},
             onDelete: {},
-            onDeleteCanceled: nil
+            onDeleteCanceled: nil,
+            isInCompletedView: true
         )
         
         TaskRowView(
@@ -1262,7 +1192,8 @@ struct TaskRowView: View {
             onToggleCompletion: {},
             onEdit: {},
             onDelete: {},
-            onDeleteCanceled: nil
+            onDeleteCanceled: nil,
+            isInCompletedView: false
         )
     }
     .padding()

@@ -157,7 +157,8 @@ struct ContentView: View {
             onDeleteCanceled: {
                 // Reset gesture state when deletion is canceled via swipe dismissal
                 taskToDelete = nil
-            }
+            },
+            isInCompletedView: false
         )
         .environmentObject(taskManager)
         .padding(.horizontal, 20)
