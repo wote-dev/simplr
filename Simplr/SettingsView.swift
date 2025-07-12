@@ -149,7 +149,7 @@ struct SettingsView: View {
                             VStack(spacing: 16) {
                                 settingsRow(
                                     title: "Version",
-                                    value: "1.6",
+                                    value: "1.7",
                                     icon: "app.badge"
                                 )
                                 
