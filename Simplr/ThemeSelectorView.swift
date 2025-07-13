@@ -222,59 +222,104 @@ struct ThemePreviewCard: View {
     @Environment(\.theme) var theme
     
     var body: some View {
-        VStack(spacing: 12) {
-            // Mock task row
+        VStack(spacing: 16) {
+            // Modern task card preview matching current TaskRowView design
             HStack(spacing: 12) {
+                // Completion toggle (left side)
                 Circle()
                     .fill(theme.success)
-                    .frame(width: 24, height: 24)
+                    .frame(width: 32, height: 32)
+                    .overlay(
+                        Circle()
+                            .stroke(theme.success, lineWidth: 2)
+                    )
                     .overlay(
                         Image(systemName: "checkmark")
-                            .font(.system(size: 12, weight: .bold))
+                            .font(.system(size: 14, weight: .bold))
                             .foregroundColor(.white)
                     )
+                    .applyNeumorphicShadow(theme.neumorphicPressedStyle)
                 
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Sample Task")
-                        .font(.headline)
-                        .foregroundColor(theme.text)
-                    
-                    Text("This is how your tasks will look")
-                        .font(.subheadline)
-                        .foregroundColor(theme.textSecondary)
-                }
-                
-                Spacer()
-                
-                ZStack {
-                    if theme is KawaiiTheme {
-                        Circle()
-                            .fill(theme.accent.opacity(0.8))
-                            .frame(width: 28, height: 28)
-                            .overlay(
-                                Circle()
-                                    .stroke(theme.accent.opacity(0.4), lineWidth: 1)
-                            )
+                // Main content area with text on left and pills on right
+                HStack(alignment: .top, spacing: 12) {
+                    // Left side: Text content
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Sample Task")
+                            .font(.headline)
+                            .fontWeight(.semibold)
+                            .foregroundColor(theme is KawaiiTheme ? theme.accent : theme.text)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        
+                        Text("This is how your tasks will look")
+                            .font(.subheadline)
+                            .foregroundColor(theme.textSecondary)
+                            .opacity(0.8)
+                        
+                        // Due date display under task text
+                        HStack(spacing: 6) {
+                            Image(systemName: "calendar")
+                                .font(.caption2)
+                                .foregroundColor(theme.textSecondary)
+                            
+                            Text("Today 2:00 PM")
+                                .font(.caption2)
+                                .fontWeight(.medium)
+                                .foregroundColor(theme.textSecondary)
+                            
+                            Spacer()
+                        }
                     }
                     
-                    Image(systemName: "pencil")
-                        .foregroundColor(
-                            theme is KawaiiTheme ? Color.white : theme.primary
+                    // Right side: Pills (reminder)
+                    VStack(alignment: .trailing, spacing: 6) {
+                        // Reminder pill
+                        HStack(spacing: 3) {
+                            Image(systemName: "bell.fill")
+                                .font(.caption2)
+                            
+                            Text("1:45 PM")
+                                .font(.caption2)
+                                .fontWeight(.medium)
+                        }
+                        .foregroundColor(theme.warning)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 3)
+                        .background(
+                            Capsule()
+                                .fill(theme.warning.opacity(0.1))
                         )
-                        .font(.system(size: 14, weight: theme is KawaiiTheme ? .bold : .medium))
-                        .shadow(
-                            color: theme is KawaiiTheme ? theme.accent.opacity(0.5) : Color.clear,
-                            radius: theme is KawaiiTheme ? 1 : 0,
-                            x: 0,
-                            y: theme is KawaiiTheme ? 0.5 : 0
-                        )
+                    }
                 }
             }
-            .padding(16)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 20)
             .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(theme.surfaceGradient)
-                    .applyShadow(theme.shadowStyle)
+                RoundedRectangle(cornerRadius: 24)
+                    .fill(
+                        // Enhanced dark mode task card gradient for sleeker look
+                        theme.background == Color(red: 0.02, green: 0.02, blue: 0.02) ?
+                        LinearGradient(
+                            colors: [
+                                Color(red: 0.04, green: 0.04, blue: 0.04),
+                                Color(red: 0.02, green: 0.02, blue: 0.02),
+                                Color(red: 0.03, green: 0.03, blue: 0.03)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ) : theme.surfaceGradient
+                    )
+                    .shadow(
+                        color: theme.background == Color(red: 0.02, green: 0.02, blue: 0.02) ? 
+                            Color.black.opacity(0.8) : theme.shadow.opacity(0.6),
+                        radius: theme.background == Color(red: 0.02, green: 0.02, blue: 0.02) ? 15 : 1.0,
+                        x: 0,
+                        y: theme.background == Color(red: 0.02, green: 0.02, blue: 0.02) ? 8 : 0.3
+                    )
+            )
+            .overlay(
+                // Subtle border for definition
+                RoundedRectangle(cornerRadius: 24)
+                    .stroke(theme.border, lineWidth: 0.5)
             )
             
             // Mock add button
