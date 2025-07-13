@@ -139,10 +139,14 @@ struct UpcomingView: View {
         }
         .searchable(text: $searchText, prompt: "Search upcoming tasks...")
         .sheet(isPresented: $showingAddTask) {
-            AddEditTaskView(taskManager: taskManager)
+            NavigationView {
+                AddTaskView(taskManager: taskManager)
+            }
         }
         .sheet(item: $taskToEdit) { task in
-            AddEditTaskView(taskManager: taskManager, taskToEdit: task)
+            NavigationView {
+                AddTaskView(taskManager: taskManager, taskToEdit: task)
+            }
         }
         .confirmationDialog("Delete Task", isPresented: $showingDeleteAlert, presenting: taskToDelete) { task in
             Button("Delete", role: .destructive) {

@@ -112,12 +112,12 @@ struct PaywallView: View {
             
             VStack(spacing: 8) {
                 Text("Unlock Premium Themes")
-                    .font(.title)
-                    .fontWeight(.bold)
+                    .font(.system(size: 34, weight: .bold, design: .rounded))
+                    .tracking(-0.5)
                     .foregroundColor(Color(red: 0.4, green: 0.2, blue: 0.3))
                 
                 Text("Transform your Simplr experience with adorable themes and exclusive features")
-                    .font(.subheadline)
+                    .font(.system(size: 16, weight: .medium, design: .rounded))
                     .foregroundColor(Color(red: 0.6, green: 0.4, blue: 0.5))
                     .multilineTextAlignment(.center)
                     .lineLimit(nil)
@@ -129,8 +129,8 @@ struct PaywallView: View {
     private func featuredThemeSection(_ feature: PremiumFeature) -> some View {
         VStack(spacing: 20) {
             Text("✨ " + feature.displayName)
-                .font(.title2)
-                .fontWeight(.bold)
+                .font(.system(size: 22, weight: .bold, design: .rounded))
+                .tracking(-0.3)
                 .foregroundColor(Color(red: 1.0, green: 0.2, blue: 0.6))
             
             // Theme preview card
@@ -138,20 +138,19 @@ struct PaywallView: View {
                 HStack {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Kawaii Theme")
-                            .font(.headline)
-                            .fontWeight(.semibold)
+                            .font(.system(size: 18, weight: .semibold, design: .rounded))
                             .foregroundColor(Color(red: 0.4, green: 0.2, blue: 0.3))
                         
                         Text("Adorable pink gradients with cute aesthetics")
-                            .font(.caption)
+                            .font(.system(size: 12, weight: .medium, design: .rounded))
                             .foregroundColor(Color(red: 0.6, green: 0.4, blue: 0.5))
                     }
                     
                     Spacer()
                     
                     Image(systemName: "heart.fill")
-                        .font(.title2)
-                        .foregroundColor(Color(red: 1.0, green: 0.4, blue: 0.7))
+                            .font(.system(size: 22, weight: .medium, design: .rounded))
+                            .foregroundColor(Color(red: 1.0, green: 0.4, blue: 0.7))
                 }
                 
                 // Mini preview
@@ -193,8 +192,8 @@ struct PaywallView: View {
     private var allFeaturesSection: some View {
         VStack(spacing: 16) {
             Text("Premium Features")
-                .font(.title2)
-                .fontWeight(.bold)
+                .font(.system(size: 22, weight: .bold, design: .rounded))
+                .tracking(-0.3)
                 .foregroundColor(Color(red: 0.4, green: 0.2, blue: 0.3))
             
             VStack(spacing: 12) {
@@ -214,12 +213,11 @@ struct PaywallView: View {
             
             VStack(alignment: .leading, spacing: 4) {
                 Text(feature.displayName)
-                    .font(.subheadline)
-                    .fontWeight(.semibold)
+                    .font(.system(size: 16, weight: .semibold, design: .rounded))
                     .foregroundColor(Color(red: 0.4, green: 0.2, blue: 0.3))
                 
                 Text(feature.description)
-                    .font(.caption)
+                    .font(.system(size: 12, weight: .medium, design: .rounded))
                     .foregroundColor(Color(red: 0.6, green: 0.4, blue: 0.5))
                     .lineLimit(2)
             }
@@ -241,8 +239,8 @@ struct PaywallView: View {
     private var pricingSection: some View {
         VStack(spacing: 16) {
             Text("Choose Your Plan")
-                .font(.title2)
-                .fontWeight(.bold)
+                .font(.system(size: 22, weight: .bold, design: .rounded))
+                .tracking(-0.3)
                 .foregroundColor(Color(red: 0.4, green: 0.2, blue: 0.3))
             
             VStack(spacing: 12) {
@@ -261,14 +259,12 @@ struct PaywallView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
                         Text(plan.title)
-                            .font(.headline)
-                            .fontWeight(.semibold)
+                            .font(.system(size: 18, weight: .semibold, design: .rounded))
                             .foregroundColor(Color(red: 0.4, green: 0.2, blue: 0.3))
                         
                         if plan.isPopular {
                             Text("POPULAR")
-                                .font(.caption2)
-                                .fontWeight(.bold)
+                                .font(.system(size: 10, weight: .bold, design: .rounded))
                                 .foregroundColor(.white)
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 4)
@@ -282,7 +278,7 @@ struct PaywallView: View {
                     }
                     
                     Text(plan.description)
-                        .font(.caption)
+                        .font(.system(size: 12, weight: .medium, design: .rounded))
                         .foregroundColor(Color(red: 0.6, green: 0.4, blue: 0.5))
                         .lineLimit(2)
                 }
@@ -291,13 +287,12 @@ struct PaywallView: View {
                 
                 VStack(alignment: .trailing, spacing: 4) {
                     Text(plan.price)
-                        .font(.title3)
-                        .fontWeight(.bold)
+                        .font(.system(size: 20, weight: .bold, design: .rounded))
                         .foregroundColor(Color(red: 1.0, green: 0.2, blue: 0.6))
                     
                     if !plan.period.isEmpty {
                         Text(plan.period)
-                            .font(.caption2)
+                            .font(.system(size: 10, weight: .medium, design: .rounded))
                             .foregroundColor(Color(red: 0.6, green: 0.4, blue: 0.5))
                     }
                 }
@@ -346,12 +341,11 @@ struct PaywallView: View {
                             .scaleEffect(0.8)
                     } else {
                         Image(systemName: "heart.fill")
-                            .font(.headline)
+                            .font(.system(size: 18, weight: .medium, design: .rounded))
                     }
                     
                     Text(premiumManager.isLoading ? "Processing..." : "Unlock \(selectedPlan.title)")
-                        .font(.headline)
-                        .fontWeight(.semibold)
+                        .font(.system(size: 18, weight: .semibold, design: .rounded))
                 }
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
@@ -383,7 +377,7 @@ struct PaywallView: View {
                 premiumManager.restorePurchases()
             } label: {
                 Text("Restore Purchases")
-                    .font(.subheadline)
+                    .font(.system(size: 16, weight: .medium, design: .rounded))
                     .foregroundColor(Color(red: 0.6, green: 0.4, blue: 0.5))
             }
             .disabled(premiumManager.isLoading)
@@ -394,7 +388,7 @@ struct PaywallView: View {
     private var footerSection: some View {
         VStack(spacing: 12) {
             Text("• Cancel anytime • Secure payment • Instant access")
-                .font(.caption)
+                .font(.system(size: 12, weight: .medium, design: .rounded))
                 .foregroundColor(Color(red: 0.6, green: 0.4, blue: 0.5))
                 .multilineTextAlignment(.center)
             
@@ -402,13 +396,13 @@ struct PaywallView: View {
                 Button("Terms") {
                     // Handle terms
                 }
-                .font(.caption)
+                .font(.system(size: 12, weight: .medium, design: .rounded))
                 .foregroundColor(Color(red: 0.6, green: 0.4, blue: 0.5))
                 
                 Button("Privacy") {
                     // Handle privacy
                 }
-                .font(.caption)
+                .font(.system(size: 12, weight: .medium, design: .rounded))
                 .foregroundColor(Color(red: 0.6, green: 0.4, blue: 0.5))
             }
         }

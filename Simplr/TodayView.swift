@@ -10,6 +10,7 @@ import UniformTypeIdentifiers
 
 struct TodayView: View {
     @EnvironmentObject var taskManager: TaskManager
+    @EnvironmentObject var categoryManager: CategoryManager
     @EnvironmentObject var themeManager: ThemeManager
     @Environment(\.theme) var theme
     @State private var showingAddTask = false
@@ -19,6 +20,7 @@ struct TodayView: View {
     @State private var taskToDelete: Task?
 
     @State private var selectedFilter: TaskFilter = .all
+    @State private var selectedSortOption: SortOption = .priority
     @State private var showingSettings = false
     @Namespace private var taskNamespace
     
@@ -33,6 +35,28 @@ struct TodayView: View {
             case .all: return "All"
             case .pending: return "Pending"
             case .overdue: return "Overdue"
+            }
+        }
+    }
+    
+    enum SortOption: CaseIterable {
+        case priority, dueDate, creationDate, alphabetical
+        
+        var title: String {
+            switch self {
+            case .priority: return "Priority"
+            case .dueDate: return "Due Date"
+            case .creationDate: return "Creation Date"
+            case .alphabetical: return "Alphabetical"
+            }
+        }
+        
+        var icon: String {
+            switch self {
+            case .priority: return "exclamationmark.triangle"
+            case .dueDate: return "calendar"
+            case .creationDate: return "clock"
+            case .alphabetical: return "textformat.abc"
             }
         }
     }
@@ -83,30 +107,53 @@ struct TodayView: View {
         }
         
         return filteredTasks.sorted { task1, task2 in
-            // First priority: URGENT category tasks always come first
-            let task1IsUrgent = task1.categoryId == TaskCategory.urgent.id
-            let task2IsUrgent = task2.categoryId == TaskCategory.urgent.id
-            
-            if task1IsUrgent != task2IsUrgent {
-                return task1IsUrgent && !task2IsUrgent
+            switch selectedSortOption {
+            case .priority:
+                // First priority: URGENT category tasks always come first
+                let task1IsUrgent = task1.categoryId == TaskCategory.urgent.id
+                let task2IsUrgent = task2.categoryId == TaskCategory.urgent.id
+                
+                if task1IsUrgent != task2IsUrgent {
+                    return task1IsUrgent && !task2IsUrgent
+                }
+                
+                // Second priority: Sort by overdue/pending status
+                if task1.isOverdue != task2.isOverdue {
+                    return task1.isOverdue && !task2.isOverdue
+                }
+                
+                // Third priority: Sort by due date
+                if let date1 = task1.dueDate, let date2 = task2.dueDate {
+                    return date1 < date2
+                } else if task1.dueDate != nil {
+                    return true
+                } else if task2.dueDate != nil {
+                    return false
+                }
+                
+                // Final priority: Sort by creation date (newest first)
+                return task1.createdAt > task2.createdAt
+                
+            case .dueDate:
+                // Sort by due date (earliest first), then by creation date
+                if let date1 = task1.dueDate, let date2 = task2.dueDate {
+                    return date1 < date2
+                } else if task1.dueDate != nil {
+                    return true // Tasks with due dates come first
+                } else if task2.dueDate != nil {
+                    return false
+                } else {
+                    return task1.createdAt > task2.createdAt // Newest first for undated tasks
+                }
+                
+            case .creationDate:
+                // Sort by creation date (newest first)
+                return task1.createdAt > task2.createdAt
+                
+            case .alphabetical:
+                // Sort alphabetically by title
+                return task1.title.localizedCaseInsensitiveCompare(task2.title) == .orderedAscending
             }
-            
-            // Second priority: Sort by overdue/pending status
-            if task1.isOverdue != task2.isOverdue {
-                return task1.isOverdue && !task2.isOverdue
-            }
-            
-            // Third priority: Sort by due date
-            if let date1 = task1.dueDate, let date2 = task2.dueDate {
-                return date1 < date2
-            } else if task1.dueDate != nil {
-                return true
-            } else if task2.dueDate != nil {
-                return false
-            }
-            
-            // Final priority: Sort by creation date (newest first)
-            return task1.createdAt > task2.createdAt
         }
     }
     
@@ -157,10 +204,14 @@ struct TodayView: View {
         }
         .searchable(text: $searchText, prompt: "Search today's tasks...")
         .sheet(isPresented: $showingAddTask) {
-            AddEditTaskView(taskManager: taskManager)
+            NavigationView {
+                AddTaskView(taskManager: taskManager)
+            }
         }
         .sheet(item: $taskToEdit) { task in
-            AddEditTaskView(taskManager: taskManager, taskToEdit: task)
+            NavigationView {
+                AddTaskView(taskManager: taskManager, taskToEdit: task)
+            }
         }
         .sheet(isPresented: $showingSettings) {
             SettingsView()
@@ -212,105 +263,112 @@ struct TodayView: View {
     }
     
     private var headerView: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Today")
-                        .font(.largeTitle)
-                        .fontWeight(.bold)
-                        .foregroundStyle(theme.accentGradient)
-                    
-                    Text(todayDateString)
-                        .font(.subheadline)
-                        .foregroundColor(theme.textSecondary)
-                }
+        HStack {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Today")
+                    .font(.system(size: 34, weight: .bold, design: .rounded))
+                    .foregroundStyle(theme.accentGradient)
+                    .tracking(-0.5)
                 
-                Spacer()
-                
-                HStack(spacing: 12) {
-                    Button {
-                        showingSettings = true
-                        HapticManager.shared.buttonTap()
-                    } label: {
-                        Image(systemName: "gear")
-                            .font(.system(size: 18, weight: .medium))
-                            .foregroundColor(theme.accent)
-                            .frame(width: 44, height: 44)
-                    }
-                    .animatedButton()
-                    
-                    Button {
-                        showingAddTask = true
-                        HapticManager.shared.buttonTap()
-                    } label: {
-                        ZStack {
-                            Circle()
-                                .fill(theme.accentGradient)
-                                .frame(width: 50, height: 50)
-                                .applyNeumorphicShadow(theme.neumorphicButtonStyle)
-                            
-                            Image(systemName: "plus")
-                                .font(.system(size: 20, weight: .semibold))
-                                .foregroundColor(theme.background)
-                                .shadow(
-                                    color: theme.background == .black ? Color.white.opacity(0.3) : Color.black.opacity(0.3),
-                                    radius: 2,
-                                    x: 0,
-                                    y: 1
-                                )
-                        }
-                    }
-                    .animatedButton()
-                }
+                Text(todayDateString)
+                    .font(.system(size: 16, weight: .medium, design: .rounded))
+                    .foregroundColor(theme.textSecondary)
+                    .opacity(0.8)
             }
             
-            if !allTodayTasks.isEmpty {
-                HStack(spacing: 16) {
-                    TaskStatCard(
-                        title: "Pending",
-                        count: allTodayTasks.filter { !$0.isCompleted && !$0.isOverdue }.count,
-                        color: theme.warning,
-                        icon: "clock",
-                        isSelected: selectedFilter == .pending,
-                        onTap: {
-                            withAnimation(.smoothSpring) {
-                                selectedFilter = selectedFilter == .pending ? .all : .pending
+            Spacer()
+            
+            HStack(spacing: 12) {
+                // Sort and Filter menu button
+                Menu {
+                    // Sort Section
+                    Section("Sort By") {
+                        ForEach(SortOption.allCases, id: \.self) { option in
+                            Button {
+                                withAnimation(.smoothSpring) {
+                                    selectedSortOption = option
+                                }
+                                HapticManager.shared.buttonTap()
+                            } label: {
+                                HStack {
+                                    Image(systemName: option.icon)
+                                    Text(option.title)
+                                    Spacer()
+                                    if selectedSortOption == option {
+                                        Image(systemName: "checkmark")
+                                    }
+                                }
                             }
-                            HapticManager.shared.buttonTap()
                         }
-                    )
+                    }
                     
-                    TaskStatCard(
-                        title: "Overdue",
-                        count: allTodayTasks.filter { $0.isOverdue }.count,
-                        color: theme.error,
-                        icon: "exclamationmark.triangle",
-                        isSelected: selectedFilter == .overdue,
-                        onTap: {
-                            withAnimation(.smoothSpring) {
-                                selectedFilter = selectedFilter == .overdue ? .all : .overdue
+                    Divider()
+                    
+                    // Filter Section
+                    Section("Filter") {
+                        ForEach(TaskFilter.allCases, id: \.self) { filter in
+                            Button {
+                                withAnimation(.smoothSpring) {
+                                    selectedFilter = filter
+                                }
+                                HapticManager.shared.buttonTap()
+                            } label: {
+                                HStack {
+                                    Text(filter.title)
+                                    Spacer()
+                                    if selectedFilter == filter {
+                                        Image(systemName: "checkmark")
+                                    }
+                                }
                             }
-                            HapticManager.shared.buttonTap()
                         }
-                    )
-                    
-                    TaskStatCard(
-                        title: "Completed",
-                        count: taskManager.tasks.filter { $0.isCompleted }.count,
-                        color: theme.success,
-                        icon: "checkmark.circle",
-                        isSelected: false,
-                        onTap: {
-                            // Completed tasks don't filter in today view - they're in completed section
-                        }
-                    )
+                    }
+                } label: {
+                    Image(systemName: "arrow.up.arrow.down.circle")
+                        .font(.system(size: 18, weight: .medium))
+                        .foregroundColor(theme.accent)
+                        .frame(width: 44, height: 44)
                 }
-                .transition(.scaleAndSlide)
+                .animatedButton()
+                
+                Button {
+                    showingSettings = true
+                    HapticManager.shared.buttonTap()
+                } label: {
+                    Image(systemName: "gear")
+                        .font(.system(size: 18, weight: .medium))
+                        .foregroundColor(theme.accent)
+                        .frame(width: 44, height: 44)
+                }
+                .animatedButton()
+                
+                Button {
+                    showingAddTask = true
+                    HapticManager.shared.buttonTap()
+                } label: {
+                    ZStack {
+                        Circle()
+                            .fill(theme.accentGradient)
+                            .frame(width: 50, height: 50)
+                            .applyNeumorphicShadow(theme.neumorphicButtonStyle)
+                        
+                        Image(systemName: "plus")
+                            .font(.system(size: 20, weight: .semibold))
+                            .foregroundColor(theme.background)
+                            .shadow(
+                                color: theme.background == .black ? Color.white.opacity(0.3) : Color.black.opacity(0.3),
+                                radius: 2,
+                                x: 0,
+                                y: 1
+                            )
+                    }
+                }
+                .animatedButton()
             }
         }
         .padding(.horizontal, 20)
         .padding(.top, 8)
-        .padding(.bottom, 16)
+        .padding(.bottom, 12)
     }
     
     private var emptyStateView: some View {
@@ -327,17 +385,17 @@ struct TodayView: View {
                 .scaleEffect(showingAddTask ? 1.1 : 1.0)
                 .animation(.easeInOut(duration: 0.3), value: showingAddTask)
             
-            VStack(spacing: 12) {
+            VStack(spacing: 16) {
                 Text("All Clear for Today!")
-                    .font(.title2)
-                    .fontWeight(.semibold)
-                    .foregroundColor(theme.text)
+                    .font(.system(size: 28, weight: .bold, design: .rounded))
+                    .foregroundStyle(theme.accentGradient)
+                    .tracking(-0.3)
                 
                 Text("No tasks due today. Enjoy your free time!")
-                    .font(.subheadline)
-                    .foregroundColor(theme.textSecondary)
+                    .font(.system(size: 18, weight: .medium, design: .rounded))
+                    .foregroundColor(theme.text)
                     .multilineTextAlignment(.center)
-                    .padding(.horizontal, 32)
+                    .padding(.horizontal, 40)
             }
             .opacity(showingAddTask ? 0.7 : 1.0)
             .animation(.easeInOut(duration: 0.3), value: showingAddTask)
@@ -352,9 +410,26 @@ struct TodayView: View {
     
     private var taskListView: some View {
         ScrollView {
-            LazyVStack(spacing: 12) {
-                ForEach(todayTasks, id: \.id) { task in
-                    taskRowWithEffects(task)
+            LazyVStack(spacing: 16) {
+                let groupedTasks = categoryManager.groupTasksByCategory(todayTasks)
+                
+                ForEach(Array(groupedTasks.indices), id: \.self) { index in
+                    let categoryGroup = groupedTasks[index]
+                    if !categoryGroup.tasks.isEmpty {
+                        VStack(spacing: 8) {
+                            // Category section header
+                           CategorySectionHeaderView(
+                                category: categoryGroup.category ?? TaskCategory.uncategorized,
+                                taskCount: categoryGroup.tasks.count
+                            )
+                            .padding(.horizontal, 20)
+                            
+                            // Tasks in this category
+                            ForEach(categoryGroup.tasks, id: \.id) { task in
+                                taskRowWithEffects(task)
+                            }
+                        }
+                    }
                 }
             }
             .padding(.top, 8)
@@ -404,92 +479,5 @@ struct TodayView: View {
         let formatter = DateFormatter()
         formatter.dateFormat = "EEEE, MMMM d"
         return formatter.string(from: Date())
-    }
-}
-
-struct TaskStatCard: View {
-    let title: String
-    let count: Int
-    let color: Color
-    let icon: String
-    let isSelected: Bool
-    let onTap: () -> Void
-    @Environment(\.theme) var theme
-    
-    var body: some View {
-        Button {
-            onTap()
-        } label: {
-            VStack(spacing: 8) {
-                HStack(spacing: 6) {
-                    Image(systemName: icon)
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(isSelected ? theme.background : color)
-                        .shadow(
-                            color: theme.background == .black ? Color.white.opacity(0.1) : Color.clear,
-                            radius: 1,
-                            x: 0,
-                            y: 0.5
-                        )
-                    
-                    Text("\(count)")
-                        .font(.headline)
-                        .fontWeight(.bold)
-                        .foregroundColor(isSelected ? theme.background : theme.text)
-                }
-                
-                Text(title)
-                    .font(.caption)
-                    .foregroundColor(isSelected ? theme.background.opacity(0.8) : theme.textSecondary)
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 12)
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(isSelected ? color : Color.clear)
-                    .background(
-                        RoundedRectangle(cornerRadius: 16)
-                            .fill(
-                                // Make status cards darker and more sleek in dark mode
-                                theme.background == Color(red: 0.02, green: 0.02, blue: 0.02) ?
-                                LinearGradient(
-                                    colors: [
-                                        Color(red: 0.03, green: 0.03, blue: 0.03),
-                                        Color(red: 0.01, green: 0.01, blue: 0.01)
-                                    ],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                ) : theme.surfaceGradient
-                            )
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 16)
-                                    .stroke(theme.border, lineWidth: 0.5)
-                                    .opacity(isSelected ? 0 : 1)
-                            )
-                    )
-                    .applyNeumorphicShadow(
-                        // Enhanced shadow for dark mode sleek look
-                        theme.background == Color(red: 0.02, green: 0.02, blue: 0.02) ?
-                        NeumorphicShadowStyle(
-                            lightShadow: ShadowStyle(
-                                color: Color.white.opacity(0.02),
-                                radius: 8,
-                                x: -4,
-                                y: -4
-                            ),
-                            darkShadow: ShadowStyle(
-                                color: Color.black.opacity(0.8),
-                                radius: 12,
-                                x: 4,
-                                y: 6
-                            )
-                        ) :
-                        (isSelected ? theme.neumorphicButtonStyle : theme.neumorphicStyle)
-                    )
-            )
-            .scaleEffect(isSelected ? 1.02 : 1.0)
-            .animation(.smoothSpring, value: isSelected)
-        }
-        .animatedButton()
     }
 }

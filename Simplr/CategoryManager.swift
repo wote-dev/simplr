@@ -23,6 +23,19 @@ class CategoryManager: ObservableObject {
     private var lastCacheUpdate = Date.distantPast
     private let cacheValidityDuration: TimeInterval = 5.0 // 5 second cache for categories
     
+    // Category hierarchy for importance-based ordering
+    private let categoryHierarchy: [String] = [
+        "URGENT",
+        "IMPORTANT", 
+        "Work",
+        "Health",
+        "Learning",
+        "Shopping",
+        "Travel",
+        "Personal",
+        "Uncategorized"
+    ]
+    
     init() {
         loadCategories()
         loadSelectedFilter()
@@ -193,6 +206,51 @@ class CategoryManager: ObservableObject {
         }
         
         return nil
+    }
+    
+    // MARK: - Category Hierarchy and Grouping
+    
+    /// Returns the priority order for a category (lower number = higher priority)
+    func categoryPriority(for category: TaskCategory?) -> Int {
+        guard let category = category else { return categoryHierarchy.count } // Uncategorized goes last
+        return categoryHierarchy.firstIndex(of: category.name) ?? categoryHierarchy.count
+    }
+    
+    /// Groups tasks by category and returns them in hierarchical order
+    func groupTasksByCategory(_ tasks: [Task]) -> [(category: TaskCategory?, tasks: [Task])] {
+        // Group tasks by category
+        let grouped = Dictionary(grouping: tasks) { task in
+            category(for: task.categoryId)
+        }
+        
+        // Sort categories by hierarchy and return with their tasks
+        return grouped.sorted { first, second in
+            let firstPriority = categoryPriority(for: first.key)
+            let secondPriority = categoryPriority(for: second.key)
+            return firstPriority < secondPriority
+        }.map { (category: $0.key, tasks: $0.value) }
+    }
+    
+    /// Returns categories that have tasks, sorted by hierarchy
+    func categoriesWithTasks(from tasks: [Task]) -> [TaskCategory?] {
+        let categoriesWithTasks = Set(tasks.compactMap { category(for: $0.categoryId) })
+        let hasUncategorized = tasks.contains { $0.categoryId == nil }
+        
+        var result: [TaskCategory?] = []
+        
+        // Add categories in hierarchy order if they have tasks
+        for categoryName in categoryHierarchy {
+            if let category = categories.first(where: { $0.name == categoryName && categoriesWithTasks.contains($0) }) {
+                result.append(category)
+            }
+        }
+        
+        // Add uncategorized if there are tasks without categories
+        if hasUncategorized {
+            result.append(nil)
+        }
+        
+        return result
     }
     
     // MARK: - Category Statistics

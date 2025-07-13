@@ -11,7 +11,8 @@ struct TaskDetailPreviewView: View {
     @Environment(\.theme) var theme
     @EnvironmentObject var categoryManager: CategoryManager
     @EnvironmentObject var themeManager: ThemeManager
-    let task: Task
+    @EnvironmentObject var taskManager: TaskManager
+    @State var task: Task
     
     private var taskCategory: TaskCategory? {
         guard let categoryId = task.categoryId else { return nil }
@@ -26,6 +27,11 @@ struct TaskDetailPreviewView: View {
             // Description if available
             if !task.description.isEmpty {
                 descriptionSection
+            }
+            
+            // Checklist Section
+            if !task.checklist.isEmpty {
+                checklistSection
             }
             
             // Category if assigned
@@ -55,6 +61,34 @@ struct TaskDetailPreviewView: View {
                 .stroke(theme.primary.opacity(0.1), lineWidth: 0)
         )
         .frame(maxWidth: 320)
+    }
+
+    private var checklistSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Image(systemName: "checklist")
+                    .font(.caption2)
+                    .foregroundColor(theme.textSecondary)
+                Text("Checklist")
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundColor(theme.textSecondary)
+                    .textCase(.uppercase)
+            }
+
+            ForEach($task.checklist) { $item in
+                HStack {
+                    Toggle(isOn: $item.isCompleted) {
+                        Text(item.title)
+                            .strikethrough(item.isCompleted)
+                    }
+                    .toggleStyle(CheckboxToggleStyle())
+                    .onChange(of: item.isCompleted) { _ in
+                        taskManager.updateTask(task)
+                    }
+                }
+            }
+        }
     }
     
     private var headerSection: some View {
@@ -133,8 +167,7 @@ struct TaskDetailPreviewView: View {
                     .foregroundColor(theme.textSecondary)
                 
                 Text("Category")
-                    .font(.caption)
-                    .fontWeight(.semibold)
+                    .font(.system(size: 12, weight: .semibold, design: .rounded))
                     .foregroundColor(theme.textSecondary)
                     .textCase(.uppercase)
             }
@@ -159,8 +192,7 @@ struct TaskDetailPreviewView: View {
                 }
                 
                 Text(category.name)
-                    .font(.subheadline)
-                    .fontWeight(.medium)
+                    .font(.system(size: 16, weight: .medium, design: .rounded))
                     .foregroundColor(themeManager.themeMode == .kawaii ? category.color.kawaiiDarkColor : category.color.darkColor)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 4)
@@ -213,16 +245,14 @@ struct TaskDetailPreviewView: View {
                 .frame(width: 12)
             
             Text(label)
-                .font(.caption)
-                .fontWeight(.semibold)
+                .font(.system(size: 12, weight: .semibold, design: .rounded))
                 .foregroundColor(theme.textSecondary)
                 .textCase(.uppercase)
             
             Spacer()
             
             Text(value)
-                .font(.subheadline)
-                .fontWeight(.medium)
+                .font(.system(size: 16, weight: .medium, design: .rounded))
                 .foregroundColor(color)
         }
         .padding(.horizontal, 12)
@@ -245,13 +275,12 @@ struct TaskDetailPreviewView: View {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Created")
-                        .font(.caption2)
-                        .fontWeight(.medium)
+                        .font(.system(size: 10, weight: .medium, design: .rounded))
                         .foregroundColor(theme.textTertiary)
                         .textCase(.uppercase)
                     
                     Text(formatDate(task.createdAt))
-                        .font(.caption)
+                        .font(.system(size: 12, weight: .medium, design: .rounded))
                         .foregroundColor(theme.textSecondary)
                 }
                 
@@ -260,13 +289,12 @@ struct TaskDetailPreviewView: View {
                 if task.isCompleted, let completedAt = task.completedAt {
                     VStack(alignment: .trailing, spacing: 2) {
                         Text("Completed")
-                            .font(.caption2)
-                            .fontWeight(.medium)
+                            .font(.system(size: 10, weight: .medium, design: .rounded))
                             .foregroundColor(theme.textTertiary)
                             .textCase(.uppercase)
                         
                         Text(formatDate(completedAt))
-                            .font(.caption)
+                            .font(.system(size: 12, weight: .medium, design: .rounded))
                             .foregroundColor(theme.success)
                     }
                 }

@@ -307,20 +307,24 @@ struct ContentView: View {
             }
         }
         .sheet(isPresented: $showingAddTask) {
-            AddEditTaskView(taskManager: taskManager)
-                .themedEnvironment(themeManager)
-                .environmentObject(themeManager)
-                .environmentObject(categoryManager)
-                .presentationDetents([.large])
-                .presentationDragIndicator(.visible)
+            NavigationView {
+                AddTaskView(taskManager: taskManager)
+                    .themedEnvironment(themeManager)
+                    .environmentObject(themeManager)
+                    .environmentObject(categoryManager)
+            }
+            .presentationDetents([.large])
+            .presentationDragIndicator(.visible)
         }
         .sheet(item: $taskToEdit) { task in
-            AddEditTaskView(taskManager: taskManager, taskToEdit: task)
-                .themedEnvironment(themeManager)
-                .environmentObject(themeManager)
-                .environmentObject(categoryManager)
-                .presentationDetents([.large])
-                .presentationDragIndicator(.visible)
+            NavigationView {
+                AddTaskView(taskManager: taskManager, taskToEdit: task)
+                    .themedEnvironment(themeManager)
+                    .environmentObject(themeManager)
+                    .environmentObject(categoryManager)
+            }
+            .presentationDetents([.large])
+            .presentationDragIndicator(.visible)
         }
         .sheet(isPresented: $showingThemeSelector) {
             ThemeSelectorView()

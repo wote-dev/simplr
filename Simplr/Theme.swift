@@ -24,6 +24,7 @@ protocol Theme {
     var shadow: Color { get }
     var border: Color { get }
     var borderSecondary: Color { get }
+    var toggle: Color { get }
     
     var backgroundGradient: LinearGradient { get }
     var surfaceGradient: LinearGradient { get }
@@ -82,6 +83,7 @@ struct LightTheme: Theme {
     let shadow = Color.black.opacity(0.15) // Stronger shadow for better definition
     let border = Color(red: 0.9, green: 0.9, blue: 0.9) // Subtle light gray border
     let borderSecondary = Color(red: 0.85, green: 0.85, blue: 0.85) // Slightly darker secondary border
+    let toggle = Color.accentColor
     
     var backgroundGradient: LinearGradient {
         LinearGradient(
@@ -205,6 +207,7 @@ struct DarkTheme: Theme {
     let shadow = Color.black.opacity(0.4)
     let border = Color(red: 0.15, green: 0.15, blue: 0.15) // Subtle dark gray border for definition
     let borderSecondary = Color(red: 0.12, green: 0.12, blue: 0.12) // Darker secondary border
+    let toggle = Color.accentColor
     
     var backgroundGradient: LinearGradient {
         LinearGradient(
@@ -328,6 +331,7 @@ struct KawaiiTheme: Theme {
     let shadow = Color(red: 0.98, green: 0.85, blue: 0.88).opacity(0.2) // Stronger shadow for better definition
     let border = Color(red: 0.92, green: 0.88, blue: 0.85) // Soft pink-tinted border
     let borderSecondary = Color(red: 0.88, green: 0.82, blue: 0.78) // Slightly darker kawaii border
+    let toggle = Color(red: 0.85, green: 0.45, blue: 0.55)
     
     var backgroundGradient: LinearGradient {
         LinearGradient(

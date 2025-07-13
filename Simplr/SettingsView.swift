@@ -249,12 +249,12 @@ struct SettingsView: View {
         VStack(alignment: .leading, spacing: 16) {
             HStack(spacing: 8) {
                 Image(systemName: icon)
-                    .font(.system(size: 16, weight: .medium))
+                    .font(.system(size: 16, weight: .medium, design: .rounded))
                     .foregroundColor(theme.accent)
                 
                 Text(title)
-                    .font(.headline)
-                    .fontWeight(.semibold)
+                    .font(.system(size: 20, weight: .bold, design: .rounded))
+                    .tracking(-0.2)
                     .foregroundColor(theme.text)
             }
             
@@ -277,8 +277,7 @@ struct SettingsView: View {
     private var themeModeSelector: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Theme")
-                .font(.subheadline)
-                .fontWeight(.medium)
+                .font(.system(size: 16, weight: .medium, design: .rounded))
                 .foregroundColor(theme.text)
             
             HStack(spacing: 12) {
@@ -302,8 +301,7 @@ struct SettingsView: View {
                     .foregroundColor(themeManager.themeMode == mode ? theme.background : theme.accent)
                 
                 Text(mode.displayName)
-                    .font(.caption)
-                    .fontWeight(.medium)
+                    .font(.system(size: 12, weight: .medium, design: .rounded))
                     .foregroundColor(themeManager.themeMode == mode ? theme.background : theme.textSecondary)
             }
             .frame(maxWidth: .infinity)
@@ -331,7 +329,7 @@ struct SettingsView: View {
                 .foregroundColor(theme.accent.opacity(0.7))
             
             Text("Theme will automatically switch based on system appearance")
-                .font(.caption)
+                .font(.system(size: 12, weight: .medium, design: .rounded))
                 .foregroundColor(theme.textSecondary)
         }
         .padding(.horizontal, 12)
@@ -346,12 +344,11 @@ struct SettingsView: View {
         HStack {
             VStack(alignment: .leading, spacing: 4) { // Increased spacing
                 Text(title)
-                    .font(.subheadline)
-                    .fontWeight(.medium)
+                    .font(.system(size: 16, weight: .medium, design: .rounded))
                     .foregroundColor(theme.text)
                 
                 Text(subtitle)
-                    .font(.caption)
+                    .font(.system(size: 12, weight: .medium, design: .rounded))
                     .foregroundColor(theme.textSecondary)
                     .fixedSize(horizontal: false, vertical: true) // Allow text wrapping
             }
@@ -359,7 +356,7 @@ struct SettingsView: View {
             Spacer()
             
             Toggle("", isOn: isOn)
-                .tint(theme.accent)
+                .tint(theme.toggle)
                 .scaleEffect(1.1) // Slightly larger toggle for better visibility
         }
         .padding(.vertical, 4) // Added vertical padding
@@ -368,12 +365,11 @@ struct SettingsView: View {
     private var reminderTimePicker: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Reminder Time")
-                .font(.subheadline)
-                .fontWeight(.medium)
+                .font(.system(size: 16, weight: .medium, design: .rounded))
                 .foregroundColor(theme.text)
             
             Text("Notify me before due time")
-                .font(.caption)
+                .font(.system(size: 12, weight: .medium, design: .rounded))
                 .foregroundColor(theme.textSecondary)
             
             Picker("Reminder Time", selection: $reminderTimeOffset) {
@@ -412,16 +408,14 @@ struct SettingsView: View {
                 .frame(width: 24, height: 24) // Fixed frame for better alignment
             
             Text(title)
-                .font(.subheadline)
-                .fontWeight(.medium)
+                .font(.system(size: 16, weight: .medium, design: .rounded))
                 .foregroundColor(theme.text)
             
             Spacer()
             
             if !value.isEmpty {
                 Text(value)
-                    .font(.caption)
-                    .fontWeight(.medium)
+                    .font(.system(size: 12, weight: .medium, design: .rounded))
                     .foregroundColor(theme.textSecondary)
             }
             
@@ -450,7 +444,7 @@ struct SettingsView: View {
             } label: {
                 HStack(spacing: 8) {
                     Text("Built by")
-                        .font(.caption)
+                        .font(.system(size: 12, weight: .medium, design: .rounded))
                         .foregroundColor(theme.textSecondary)
                     
                     Image(themedBCSLogo: themeManager)
@@ -463,7 +457,7 @@ struct SettingsView: View {
             
             // Support text
             Text("If you like our work, feel free to support us by buying us a coffee")
-                .font(.caption)
+                .font(.system(size: 12, weight: .medium, design: .rounded))
                 .foregroundColor(theme.textSecondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 20)
@@ -483,8 +477,7 @@ struct SettingsView: View {
                         .foregroundColor(theme.accent)
                     
                     Text("Buy Me A Coffee")
-                        .font(.caption)
-                        .fontWeight(.medium)
+                        .font(.system(size: 12, weight: .medium, design: .rounded))
                         .foregroundColor(theme.accent)
                 }
                 .padding(.horizontal, 12)
@@ -521,8 +514,7 @@ struct SettingsView: View {
                     )
                 
                 Text(category.name)
-                    .font(.subheadline)
-                    .fontWeight(.medium)
+                    .font(.system(size: 16, weight: .medium, design: .rounded))
                     .foregroundColor(theme.text)
                     .lineLimit(1)
                 
@@ -542,8 +534,7 @@ struct SettingsView: View {
             }
             
             Text(category.isCustom ? "Custom" : "Built-in")
-                .font(.caption2)
-                .fontWeight(.medium)
+                .font(.system(size: 10, weight: .medium, design: .rounded))
                 .foregroundColor(category.isCustom ? theme.warning : theme.success)
                 .padding(.horizontal, 6)
                 .padding(.vertical, 2)

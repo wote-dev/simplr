@@ -94,7 +94,9 @@ struct MainTabView: View {
             handleQuickAction(action)
         }
         .sheet(isPresented: $showingAddTask) {
-            AddEditTaskView(taskManager: taskManager)
+            NavigationView {
+                AddTaskView(taskManager: taskManager)
+            }
         }
         .confirmationDialog("Clear All Today's Tasks", isPresented: $showingClearTodayAlert) {
             Button("Clear All Tasks", role: .destructive) {

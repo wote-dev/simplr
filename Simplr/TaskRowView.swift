@@ -24,7 +24,7 @@ struct TaskRowView: View {
     @State private var completionScale: CGFloat = 1.0
     @State private var checkmarkScale: CGFloat = 0.1
     @State private var showCheckmark = false
-    @State private var showingQuickListDetail = false
+
     
     // Optimized gesture states for 120fps performance
     @State private var dragOffset: CGFloat = 0
@@ -69,6 +69,8 @@ struct TaskRowView: View {
         guard let category = categoryManager.category(for: task) else { return false }
         return category.name == "URGENT"
     }
+    
+    // Category-based glow effect properties removed
     
     var body: some View {
         ZStack {
@@ -258,15 +260,7 @@ struct TaskRowView: View {
                                 .matchedGeometryEffect(id: "\(task.id)-title", in: namespace)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                         }
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            // Only open quick list detail when tapping on the main content area
-                            if task.hasQuickList {
-                                HapticManager.shared.buttonTap()
-                                showingQuickListDetail = true
-                            }
-                        }
-                        
+
                         // Task description with fade animation
                         if !task.description.isEmpty {
                             Text(task.description)
@@ -277,139 +271,99 @@ struct TaskRowView: View {
                                 .scaleEffect(task.isCompleted ? 0.99 : 1.0, anchor: .leading)
                                 .animation(.easeInOut(duration: 0.2), value: task.isCompleted)
                                 .matchedGeometryEffect(id: "\(task.id)-description", in: namespace)
-                                .contentShape(Rectangle())
-                                .onTapGesture {
-                                    // Only open quick list detail when tapping on the description area
-                                    if task.hasQuickList {
-                                        HapticManager.shared.buttonTap()
-                                        showingQuickListDetail = true
-                                    }
-                                }
+
                         }
                         
-                        // Quick List indicator
-                        if task.hasQuickList {
-                            HStack(spacing: 8) {
-                                HStack(spacing: 4) {
-                                    Image(systemName: "list.bullet")
-                                        .font(.caption2)
+                        // Detailed checklist view
+                        if !task.checklist.isEmpty {
+                            VStack(alignment: .leading, spacing: 8) {
+                                // Checklist header with integrated progress pill
+                                let completedCount = task.checklist.filter { $0.isCompleted }.count
+                                let totalCount = task.checklist.count
+                                let progress = totalCount > 0 ? Double(completedCount) / Double(totalCount) : 0
+
+                                HStack(spacing: 8) {
+                                    Text("Checklist")
+                                        .font(.caption)
                                         .fontWeight(.medium)
-                                        .foregroundColor(theme.primary)
+                                        .foregroundColor(theme.textSecondary)
+
+                                    ProgressView(value: progress)
+                                        .progressViewStyle(LinearProgressViewStyle(tint: theme.accent))
+                                        .frame(width: 50, height: 5) // A small pill for progress
+                                        .clipShape(Capsule())
+
+                                    Spacer()
                                     
-                                    Text("\(task.completedQuickListItemsCount)/\(task.totalQuickListItemsCount)")
+                                    Text("\(completedCount)/\(totalCount)")
                                         .font(.caption2)
                                         .fontWeight(.medium)
                                         .foregroundColor(theme.textSecondary)
                                 }
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
-                                .background(
-                                    Capsule()
-                                        .fill(theme.surface)
-                                        .overlay(
-                                            Capsule()
-                                                .stroke(theme.primary.opacity(0.2), lineWidth: 0.5)
-                                        )
-                                )
                                 
-                                // Progress bar
-                                GeometryReader { geometry in
-                                    ZStack(alignment: .leading) {
-                                        // Background track with border
-                                        Capsule()
-                                            .fill(theme.surface)
-                                            .overlay(
-                                                Capsule()
-                                                    .stroke(theme.textTertiary.opacity(0.3), lineWidth: 0.5)
-                                            )
-                                            .frame(height: 5)
-                                        
-                                        // Progress fill with clear end indicator
-                                        if task.quickListCompletionPercentage > 0 {
-                                            Capsule()
-                                                .fill(task.allQuickListItemsCompleted ? Color.green.gradient : theme.primary.gradient)
-                                                .frame(width: max(5, geometry.size.width * task.quickListCompletionPercentage), height: 5)
-                                                .overlay(
-                                                    // End cap indicator
-                                                    Capsule()
-                                                        .stroke(task.allQuickListItemsCompleted ? Color.green : theme.primary, lineWidth: 1)
-                                                        .frame(width: max(5, geometry.size.width * task.quickListCompletionPercentage), height: 5)
-                                                )
-                                                .animation(.easeInOut(duration: 0.3), value: task.quickListCompletionPercentage)
+                                // Individual checklist items
+                                VStack(alignment: .leading, spacing: 6) {
+                                    ForEach(task.checklist) { item in
+                                        HStack(spacing: 8) {
+                                            Button(action: {
+                                                toggleChecklistItem(item)
+                                            }) {
+                                                Image(systemName: item.isCompleted ? "checkmark.circle.fill" : "circle")
+                                                    .font(.system(size: 16, weight: .medium))
+                                                    .foregroundColor(item.isCompleted ? theme.success : theme.textTertiary)
+                                                    .animation(.easeInOut(duration: 0.2), value: item.isCompleted)
+                                            }
+                                            .buttonStyle(PlainButtonStyle())
+                                            
+                                            Text(item.title)
+                                                .font(.caption)
+                                                .foregroundColor(item.isCompleted ? theme.textSecondary : theme.text)
+                                                .strikethrough(item.isCompleted)
+                                                .opacity(item.isCompleted ? 0.7 : 1.0)
+                                                .animation(.easeInOut(duration: 0.2), value: item.isCompleted)
+                                            
+                                            Spacer()
                                         }
                                     }
                                 }
-                                .frame(height: 5)
-                                .frame(maxWidth: 60)
+                                .padding(.top, 2)
+                            }
+                            .padding(.top, 6)
+                        }
+                        
+                        // Due date display under task text
+                        if let dueDate = task.dueDate {
+                            HStack(spacing: 6) {
+                                Image(systemName: task.isOverdue ? "exclamationmark.triangle.fill" : 
+                                      task.isPending ? "clock" : "calendar")
+                                    .font(.caption2)
+                                    .foregroundColor(
+                                        task.isOverdue ? theme.error : 
+                                        task.isPending ? theme.warning : 
+                                        theme.textSecondary
+                                    )
+                                
+                                Text(formatDueDate(dueDate))
+                                    .font(.caption2)
+                                    .fontWeight(.medium)
+                                    .foregroundColor(
+                                        task.isOverdue ? theme.error : 
+                                        task.isPending ? theme.warning : 
+                                        theme.textSecondary
+                                    )
                                 
                                 Spacer()
                             }
                             .opacity(task.isCompleted ? 0.6 : 1.0)
                             .scaleEffect(task.isCompleted ? 0.99 : 1.0, anchor: .leading)
                             .animation(.easeInOut(duration: 0.2), value: task.isCompleted)
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                // Open quick list detail when tapping on the quick list indicator
-                                HapticManager.shared.buttonTap()
-                                showingQuickListDetail = true
-                            }
                         }
+                        
+
                     }
                     
-                    // Right side: Pills (category, due date, reminder)
+                    // Right side: Pills (reminder only)
                     VStack(alignment: .trailing, spacing: 6) {
-                        // Enhanced Category indicator (only for non-urgent categories)
-                        if let category = categoryManager.category(for: task), !isUrgentTask {
-                            HStack(spacing: 4) {
-                                // Regular circle for other categories
-                                Circle()
-                                    .fill(themeManager.themeMode == .kawaii ? category.color.kawaiiGradient : category.color.gradient)
-                                    .frame(width: 8, height: 8)
-                                    .overlay(
-                                        Circle()
-                                            .stroke(
-                                                themeManager.themeMode == .kawaii ? category.color.kawaiiDarkColor : category.color.darkColor,
-                                                lineWidth: 0.5
-                                            )
-                                            .opacity(0.3)
-                                    )
-                                
-                                Text(category.name)
-                                    .font(.caption2)
-                                    .fontWeight(.medium)
-                                    .foregroundColor(
-                                        themeManager.themeMode == .kawaii ? category.color.kawaiiDarkColor : category.color.darkColor
-                                    )
-                            }
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background(
-                                Capsule()
-                                    .fill(
-                                        LinearGradient(
-                                            colors: [themeManager.themeMode == .kawaii ? category.color.kawaiiLightColor : category.color.lightColor],
-                                            startPoint: .top,
-                                            endPoint: .bottom
-                                        )
-                                    )
-                                    .overlay(
-                                        Capsule()
-                                            .stroke(
-                                                (themeManager.themeMode == .kawaii ? category.color.kawaiiColor.opacity(0.2) : category.color.color.opacity(0.2)),
-                                                lineWidth: 0.5
-                                            )
-                                    )
-                            )
-                            .scaleEffect(task.isCompleted ? 0.98 : 1.0)
-                            .opacity(task.isCompleted ? 0.6 : 1.0)
-                            .animation(.easeInOut(duration: 0.2), value: task.isCompleted)
-                        }
-                        
-                        // Due date pill
-                        if let dueDate = task.dueDate {
-                            dueDatePill(dueDate)
-                        }
-                        
                         // Reminder pill
                         if task.hasReminder && !task.isCompleted {
                             reminderPill()
@@ -451,6 +405,7 @@ struct TaskRowView: View {
                             endPoint: .bottomTrailing
                         ) : theme.surfaceGradient)
                     )
+                    // Category-based glow effect removed
                     .shadow(
                         color: isUrgentTask && !task.isCompleted ? 
                             (theme.background == .black ? Color(red: 1.0, green: 0.4, blue: 0.4).opacity(0.25) : Color(red: 0.8, green: 0.1, blue: 0.1).opacity(0.35)) : 
@@ -545,12 +500,7 @@ struct TaskRowView: View {
                 startUrgentPulsatingAnimation()
             }
         }
-        .sheet(isPresented: $showingQuickListDetail) {
-            QuickListDetailView(taskId: task.id)
-                .environmentObject(taskManager)
-                .environmentObject(categoryManager)
-                .environment(\.theme, theme)
-        }
+
         .onChange(of: task.isCompleted) { _, newValue in
             // Handle URGENT animation based on completion state
             if isUrgentTask {
@@ -784,16 +734,12 @@ struct TaskRowView: View {
         if showBothActionsConfirmation {
             dismissConfirmations()
         } else {
-            // Only provide subtle tap feedback for tasks without quick lists
-            // Quick list tasks should only open detail view when tapped on the main content area
-            // This prevents interference with the edit button
-            if !task.hasQuickList {
-                withAnimation(.interactiveSpring(response: 0.2, dampingFraction: 0.8, blendDuration: 0)) {
-                    isPressed = true
-                }
-                withAnimation(.interactiveSpring(response: 0.2, dampingFraction: 0.8, blendDuration: 0).delay(0.1)) {
-                    isPressed = false
-                }
+            // Provide subtle tap feedback for all tasks
+            withAnimation(.interactiveSpring(response: 0.2, dampingFraction: 0.8, blendDuration: 0)) {
+                isPressed = true
+            }
+            withAnimation(.interactiveSpring(response: 0.2, dampingFraction: 0.8, blendDuration: 0).delay(0.1)) {
+                isPressed = false
             }
         }
     }
@@ -1154,6 +1100,21 @@ struct TaskRowView: View {
         }
     }
     
+    private func toggleChecklistItem(_ item: ChecklistItem) {
+        // Create a mutable copy of the task
+        var updatedTask = task
+        
+        // Find and update the checklist item
+        if let index = updatedTask.checklist.firstIndex(where: { $0.id == item.id }) {
+            updatedTask.checklist[index].isCompleted.toggle()
+            
+            // Update the task through the task manager
+            taskManager.updateTask(updatedTask)
+            
+            // Provide haptic feedback
+            HapticManager.shared.buttonTap()
+        }
+    }
 
 }
 

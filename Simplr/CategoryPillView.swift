@@ -167,7 +167,7 @@ struct CategoryPillView: View {
             .padding(.vertical, 8)
             .background(
                 Capsule()
-                    .fill(backgroundColor)
+                    .fill(Color.clear)
                     .overlay(
                         Capsule()
                             .stroke(
@@ -262,16 +262,12 @@ struct CategorySelectorView: View {
                     .background(
                         Capsule()
                             .stroke(theme.textTertiary.opacity(0.3), style: StrokeStyle(lineWidth: 1, dash: [4, 4]))
-                            .background(
-                                Capsule()
-                                    .fill(theme.surface.opacity(0.5))
-                            )
                     )
                 }
                 .buttonStyle(PlainButtonStyle())
             }
             .padding(.horizontal, 20)
-            .padding(.vertical, 4)
+            .padding(.vertical, 8)
         }
         .clipped()
         .sheet(isPresented: $showingCreateCategory) {
@@ -311,6 +307,11 @@ struct CreateCategoryView: View {
                         .multilineTextAlignment(.center)
                 }
                 .padding(.top, 20)
+                .onTapGesture {
+                    // Dismiss keyboard when tapping header area
+                    isNameFocused = false
+                    hideKeyboard()
+                }
                 
                 // Category name input
                 VStack(alignment: .leading, spacing: 8) {
@@ -322,8 +323,12 @@ struct CreateCategoryView: View {
                         .focused($isNameFocused)
                         .font(.body)
                         .foregroundColor(theme.text)
-                        .textFieldStyle(PlainTextFieldStyle())
+                        .textFieldStyle(.plain)
                         .submitLabel(.done)
+                        .autocorrectionDisabled(false)
+                        .textInputAutocapitalization(.words)
+                        .textSelection(.enabled)
+                        .selectionDisabled(false)
                         .onSubmit {
                             if isValidName {
                                 createCategory()
@@ -343,6 +348,7 @@ struct CreateCategoryView: View {
                                 )
                                 .animation(.easeOut(duration: 0.2), value: isValidName)
                         )
+                        .contentShape(Rectangle())
                     
                     if !categoryName.isEmpty && !isValidName {
                         Text("Category name already exists or is invalid")
@@ -383,6 +389,11 @@ struct CreateCategoryView: View {
             }
             .padding(.horizontal, 20)
             .themedBackground(theme)
+            .onTapGesture {
+                // Dismiss keyboard when tapping background
+                isNameFocused = false
+                hideKeyboard()
+            }
             .navigationTitle("New Category")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -416,6 +427,10 @@ struct CreateCategoryView: View {
         let newCategory = categoryManager.createCustomCategory(name: trimmedName, color: selectedColor)
         categoryManager.setSelectedFilter(newCategory.id)
         dismiss()
+    }
+    
+    private func hideKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
 }
 

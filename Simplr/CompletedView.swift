@@ -105,7 +105,7 @@ struct CompletedView: View {
         }
         .searchable(text: $searchText, prompt: "Search completed tasks...")
         .sheet(item: $taskToEdit) { task in
-            AddEditTaskView(taskManager: taskManager, taskToEdit: task)
+            AddTaskView(taskManager: taskManager, taskToEdit: task)
         }
         .confirmationDialog("Delete Task", isPresented: $showingDeleteAlert, presenting: taskToDelete) { task in
             Button("Delete", role: .destructive) {
@@ -153,15 +153,16 @@ struct CompletedView: View {
     private var headerView: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: 8) {
                     Text("Completed")
-                        .font(.largeTitle)
-                        .fontWeight(.bold)
+                        .font(.system(size: 34, weight: .bold, design: .rounded))
                         .foregroundStyle(theme.accentGradient)
+                        .tracking(-0.5)
                     
                     Text("\(completedTasks.count) tasks completed")
-                        .font(.subheadline)
+                        .font(.system(size: 16, weight: .medium, design: .rounded))
                         .foregroundColor(theme.textSecondary)
+                        .opacity(0.8)
                 }
                 
                 Spacer()
@@ -210,17 +211,17 @@ struct CompletedView: View {
                 )
                 .animation(.easeInOut(duration: 0.3), value: completedTasks.isEmpty)
             
-            VStack(spacing: 12) {
+            VStack(spacing: 16) {
                 Text("No Completed Tasks")
-                    .font(.title2)
-                    .fontWeight(.semibold)
-                    .foregroundColor(theme.text)
+                    .font(.system(size: 28, weight: .bold, design: .rounded))
+                    .foregroundStyle(theme.accentGradient)
+                    .tracking(-0.3)
                 
                 Text("Complete some tasks to see them here!")
-                    .font(.subheadline)
-                    .foregroundColor(theme.textSecondary)
+                    .font(.system(size: 18, weight: .medium, design: .rounded))
+                    .foregroundColor(theme.text)
                     .multilineTextAlignment(.center)
-                    .padding(.horizontal, 32)
+                    .padding(.horizontal, 40)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -238,21 +239,38 @@ struct CompletedView: View {
                     VStack(alignment: .leading, spacing: 12) {
                         HStack {
                             Text(sectionTitle)
-                                .font(.headline)
-                                .fontWeight(.semibold)
-                                .foregroundColor(theme.text)
+                                .font(.system(size: 20, weight: .bold, design: .rounded))
+                                .foregroundStyle(
+                                    LinearGradient(
+                                        colors: [
+                                            theme.text,
+                                            theme.text.opacity(0.8)
+                                        ],
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
+                                )
+                                .tracking(-0.2)
                             
                             Spacer()
                             
                             Text("\(tasks.count)")
-                                .font(.caption)
-                                .fontWeight(.medium)
-                                .foregroundColor(theme.textSecondary)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
+                                .font(.system(size: 14, weight: .bold, design: .rounded))
+                                .foregroundColor(theme.background)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 6)
                                 .background(
                                     Capsule()
-                                        .fill(theme.surfaceSecondary)
+                                        .fill(
+                                            LinearGradient(
+                                                colors: [
+                                                    theme.accent,
+                                                    theme.accent.opacity(0.8)
+                                                ],
+                                                startPoint: .topLeading,
+                                                endPoint: .bottomTrailing
+                                            )
+                                        )
                                 )
                         }
                         .padding(.horizontal, 20)

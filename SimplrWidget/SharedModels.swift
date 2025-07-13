@@ -80,26 +80,6 @@ struct TaskCategory: Identifiable, Codable, Hashable {
 }
 
 // MARK: - Task
-// MARK: - Quick List Item
-struct QuickListItem: Identifiable, Codable, Equatable {
-    let id: UUID
-    var text: String
-    var isCompleted: Bool
-    var createdAt: Date
-    var completedAt: Date?
-    
-    init(text: String) {
-        self.id = UUID()
-        self.text = text
-        self.isCompleted = false
-        self.createdAt = Date()
-        self.completedAt = nil
-    }
-    
-    static func == (lhs: QuickListItem, rhs: QuickListItem) -> Bool {
-        return lhs.id == rhs.id
-    }
-}
 
 struct Task: Identifiable, Codable {
     let id: UUID
@@ -112,9 +92,9 @@ struct Task: Identifiable, Codable {
     var createdAt: Date
     var completedAt: Date?
     var categoryId: UUID?
-    var quickListItems: [QuickListItem]
+
     
-    init(title: String, description: String = "", dueDate: Date? = nil, hasReminder: Bool = false, reminderDate: Date? = nil, categoryId: UUID? = nil, quickListItems: [QuickListItem] = []) {
+    init(title: String, description: String = "", dueDate: Date? = nil, hasReminder: Bool = false, reminderDate: Date? = nil, categoryId: UUID? = nil) {
         self.id = UUID()
         self.title = title
         self.description = description
@@ -125,7 +105,7 @@ struct Task: Identifiable, Codable {
         self.createdAt = Date()
         self.completedAt = nil
         self.categoryId = categoryId
-        self.quickListItems = quickListItems
+
     }
     
     // MARK: - Task Status Computed Properties

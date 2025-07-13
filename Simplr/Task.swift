@@ -156,24 +156,18 @@ enum CategoryColor: String, CaseIterable, Codable {
     }
 }
 
-// MARK: - Quick List Item
-struct QuickListItem: Identifiable, Codable, Equatable {
+
+
+// MARK: - Checklist Item
+struct ChecklistItem: Identifiable, Codable, Hashable {
     let id: UUID
-    var text: String
+    var title: String
     var isCompleted: Bool
-    var createdAt: Date
-    var completedAt: Date?
-    
-    init(text: String) {
+
+    init(title: String, isCompleted: Bool = false) {
         self.id = UUID()
-        self.text = text
-        self.isCompleted = false
-        self.createdAt = Date()
-        self.completedAt = nil
-    }
-    
-    static func == (lhs: QuickListItem, rhs: QuickListItem) -> Bool {
-        return lhs.id == rhs.id
+        self.title = title
+        self.isCompleted = isCompleted
     }
 }
 
@@ -188,9 +182,10 @@ struct Task: Identifiable, Codable {
     var createdAt: Date
     var completedAt: Date?
     var categoryId: UUID?
-    var quickListItems: [QuickListItem]
+    var checklist: [ChecklistItem]
+
     
-    init(title: String, description: String = "", dueDate: Date? = nil, hasReminder: Bool = false, reminderDate: Date? = nil, categoryId: UUID? = nil, quickListItems: [QuickListItem] = []) {
+    init(title: String, description: String = "", dueDate: Date? = nil, hasReminder: Bool = false, reminderDate: Date? = nil, categoryId: UUID? = nil, checklist: [ChecklistItem] = []) {
         self.id = UUID()
         self.title = title
         self.description = description
@@ -201,7 +196,7 @@ struct Task: Identifiable, Codable {
         self.createdAt = Date()
         self.completedAt = nil
         self.categoryId = categoryId
-        self.quickListItems = quickListItems
+        self.checklist = checklist
     }
     
     // MARK: - Task Status Computed Properties
@@ -266,32 +261,5 @@ struct Task: Identifiable, Codable {
         return completedAt < sevenDaysAgo
     }
     
-    // MARK: - Quick List Computed Properties
-    
-    /// Returns true if this task has quick list items
-    var hasQuickList: Bool {
-        return !quickListItems.isEmpty
-    }
-    
-    /// Returns the number of completed quick list items
-    var completedQuickListItemsCount: Int {
-        return quickListItems.filter { $0.isCompleted }.count
-    }
-    
-    /// Returns the total number of quick list items
-    var totalQuickListItemsCount: Int {
-        return quickListItems.count
-    }
-    
-    /// Returns the completion percentage of quick list items (0.0 to 1.0)
-    var quickListCompletionPercentage: Double {
-        guard !quickListItems.isEmpty else { return 0.0 }
-        return Double(completedQuickListItemsCount) / Double(totalQuickListItemsCount)
-    }
-    
-    /// Returns true if all quick list items are completed
-    var allQuickListItemsCompleted: Bool {
-        guard !quickListItems.isEmpty else { return false }
-        return quickListItems.allSatisfy { $0.isCompleted }
-    }
+
 }

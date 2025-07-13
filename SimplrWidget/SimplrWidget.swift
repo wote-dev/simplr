@@ -62,58 +62,71 @@ struct TaskProvider: AppIntentTimelineProvider {
             return []
         }
         
-        // Start with all tasks, we'll handle completed tasks in the UI
-        var filteredTasks = allTasks
+        let calendar = Calendar.current
+        let today = Date()
         
-        // Apply category filter if specified
-        if let categoryFilter = configuration.categoryFilter, !categoryFilter.isEmpty {
-            // Load categories to find the category ID
-            if let categoryData = userDefaults.data(forKey: "SavedCategories"),
-               let categories = try? JSONDecoder().decode([TaskCategory].self, from: categoryData) {
-                if let category = categories.first(where: { $0.name == categoryFilter }) {
-                    filteredTasks = filteredTasks.filter { $0.categoryId == category.id }
+        // Filter tasks to match TodayView's exact logic
+        let filteredTasks = allTasks.filter { task in
+            // Exclude completed tasks from today view - they should only appear in completed section
+            guard !task.isCompleted else { return false }
+            
+            // Apply category filter if specified
+            if let categoryFilter = configuration.categoryFilter, !categoryFilter.isEmpty {
+                // Load categories to find the category ID
+                if let categoryData = userDefaults.data(forKey: "SavedCategories"),
+                   let categories = try? JSONDecoder().decode([TaskCategory].self, from: categoryData) {
+                    if let category = categories.first(where: { $0.name == categoryFilter }) {
+                        guard task.categoryId == category.id else { return false }
+                    }
                 }
-            }
-        }
-        
-        // Sort tasks: incomplete first (with URGENT priority), then completed (by completion date)
-        filteredTasks.sort { (task1: Task, task2: Task) in
-            // Prioritize incomplete tasks
-            if task1.isCompleted != task2.isCompleted {
-                return !task1.isCompleted && task2.isCompleted
             }
             
-            // Both completed or both incomplete
-            if task1.isCompleted && task2.isCompleted {
-                // Sort completed tasks by completion date (most recent first)
-                let date1 = task1.completedAt ?? task1.createdAt
-                let date2 = task2.completedAt ?? task2.createdAt
-                return date1 > date2
-            } else {
-                // For incomplete tasks, prioritize URGENT category first
-                let task1IsUrgent = task1.categoryId == TaskCategory.urgent.id
-                let task2IsUrgent = task2.categoryId == TaskCategory.urgent.id
-                
-                if task1IsUrgent != task2IsUrgent {
-                    return task1IsUrgent && !task2IsUrgent
-                }
-                
-                // Then sort by due date, then by creation date
-                switch (task1.dueDate, task2.dueDate) {
-                case (let date1?, let date2?):
-                    return date1 < date2
-                case (_?, nil):
-                    return true
-                case (nil, _?):
-                    return false
-                case (nil, nil):
-                    return task1.createdAt > task2.createdAt
-                }
+            // Check if task has a due date
+            if let dueDate = task.dueDate {
+                // Include tasks due today or overdue incomplete tasks
+                return calendar.isDate(dueDate, inSameDayAs: today) || 
+                       (dueDate < today && !task.isCompleted)
             }
+            
+            // For tasks without due dates, check if they have reminder dates
+            if let reminderDate = task.reminderDate {
+                // Only include if reminder is today or in the past
+                return calendar.isDate(reminderDate, inSameDayAs: today) || reminderDate < today
+            }
+            
+            // Include tasks without due dates or reminder dates (truly undated tasks)
+            return true
         }
         
-        // Return top 3 tasks (mix of incomplete and recently completed)
-        return Array(filteredTasks.prefix(3))
+        // Sort tasks to match TodayView's priority sorting
+        let sortedTasks = filteredTasks.sorted { task1, task2 in
+            // First priority: URGENT category tasks always come first
+            let task1IsUrgent = task1.categoryId == TaskCategory.urgent.id
+            let task2IsUrgent = task2.categoryId == TaskCategory.urgent.id
+            
+            if task1IsUrgent != task2IsUrgent {
+                return task1IsUrgent && !task2IsUrgent
+            }
+            
+            // Second priority: Sort by overdue/pending status
+            if task1.isOverdue != task2.isOverdue {
+                return task1.isOverdue && !task2.isOverdue
+            }
+            
+            // Third priority: Sort by due date
+            if let date1 = task1.dueDate, let date2 = task2.dueDate {
+                return date1 < date2
+            } else if task1.dueDate != nil {
+                return true
+            } else if task2.dueDate != nil {
+                return false
+            }
+            
+            // Final priority: Sort by creation date (newest first)
+            return task1.createdAt > task2.createdAt
+        }
+        
+        return Array(sortedTasks.prefix(3))
     }
     
     private func loadCategories() -> [TaskCategory] {

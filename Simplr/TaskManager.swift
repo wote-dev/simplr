@@ -103,24 +103,81 @@ class TaskManager: ObservableObject {
         }
     }
     
+    func addTask(
+        title: String,
+        description: String,
+        dueDate: Date?,
+        hasReminder: Bool,
+        reminderDate: Date?,
+        categoryId: UUID?
+    ) {
+        let newTask = Task(
+            title: title,
+            description: description,
+            dueDate: dueDate,
+            hasReminder: hasReminder,
+            reminderDate: reminderDate,
+            categoryId: categoryId
+        )
+        addTask(newTask)
+    }
+    
     func updateTask(_ task: Task) {
         if let index = tasks.firstIndex(where: { $0.id == task.id }) {
-            // Cancel existing notification
-            cancelNotification(for: tasks[index])
-            
-            tasks[index] = task
+            var updatedTask = task
+            let oldTask = tasks[index]
+
+            // Note: Task completion is now independent of checklist completion
+            // Users must explicitly mark the task as complete even if all checklist items are done
+
+            // Handle side-effects of completion status change
+            if oldTask.isCompleted != updatedTask.isCompleted {
+                if updatedTask.isCompleted {
+                    updatedTask.completedAt = Date()
+                    HapticManager.shared.taskCompleted()
+                } else {
+                    updatedTask.completedAt = nil
+                    HapticManager.shared.taskUncompleted()
+                }
+            }
+
+            // Always cancel the old notification to prevent duplicates
+            cancelNotification(for: oldTask)
+
+            // Schedule a new notification if the task is not complete and has a reminder
+            if !updatedTask.isCompleted, updatedTask.hasReminder, let reminderDate = updatedTask.reminderDate {
+                scheduleNotification(for: updatedTask, at: reminderDate)
+            }
+
+            // Save the updated task
+            tasks[index] = updatedTask
             invalidateCache()
             saveTasks()
-            
-            // Update the task in Spotlight
+
+            // Update Spotlight index
             let categories = categoryManager?.categories ?? []
-            SpotlightManager.shared.indexTask(task, categories: categories)
-            
-            // Schedule new notification if needed
-            if task.hasReminder, let reminderDate = task.reminderDate {
-                scheduleNotification(for: task, at: reminderDate)
-            }
+            SpotlightManager.shared.indexTask(updatedTask, categories: categories)
         }
+    }
+    
+    func updateTask(
+        _ task: Task,
+        title: String,
+        description: String,
+        dueDate: Date?,
+        hasReminder: Bool,
+        reminderDate: Date?,
+        categoryId: UUID?
+    ) {
+        var updatedTask = task
+        updatedTask.title = title
+        updatedTask.description = description
+        updatedTask.dueDate = dueDate
+        updatedTask.hasReminder = hasReminder
+        updatedTask.reminderDate = reminderDate
+        updatedTask.categoryId = categoryId
+        
+        updateTask(updatedTask)
     }
     
     func deleteTask(_ task: Task) {
@@ -604,76 +661,7 @@ class TaskManager: ObservableObject {
         }
     }
     
-    // MARK: - Quick List Management
-    
-    /// Add a new quick list item to a task
-    func addQuickListItem(to taskId: UUID, text: String) {
-        guard let index = tasks.firstIndex(where: { $0.id == taskId }) else { return }
-        
-        let newItem = QuickListItem(text: text)
-        tasks[index].quickListItems.append(newItem)
-        
-        invalidateCache()
-        saveTasks()
-        updateSpotlightIndex()
-        
-        HapticManager.shared.selectionChange()
-    }
-    
-    /// Toggle completion status of a quick list item
-    func toggleQuickListItem(taskId: UUID, itemId: UUID) {
-        guard let taskIndex = tasks.firstIndex(where: { $0.id == taskId }),
-              let itemIndex = tasks[taskIndex].quickListItems.firstIndex(where: { $0.id == itemId }) else { return }
-        
-        tasks[taskIndex].quickListItems[itemIndex].isCompleted.toggle()
-        tasks[taskIndex].quickListItems[itemIndex].completedAt = tasks[taskIndex].quickListItems[itemIndex].isCompleted ? Date() : nil
-        
-        invalidateCache()
-        saveTasks()
-        updateSpotlightIndex()
-        
-        HapticManager.shared.selectionChange()
-    }
-    
-    /// Update the text of a quick list item
-    func updateQuickListItem(taskId: UUID, itemId: UUID, newText: String) {
-        guard let taskIndex = tasks.firstIndex(where: { $0.id == taskId }),
-              let itemIndex = tasks[taskIndex].quickListItems.firstIndex(where: { $0.id == itemId }) else { return }
-        
-        tasks[taskIndex].quickListItems[itemIndex].text = newText
-        
-        invalidateCache()
-        saveTasks()
-        updateSpotlightIndex()
-        
-        HapticManager.shared.selectionChange()
-    }
-    
-    /// Delete a quick list item from a task
-    func deleteQuickListItem(taskId: UUID, itemId: UUID) {
-        guard let taskIndex = tasks.firstIndex(where: { $0.id == taskId }) else { return }
-        
-        tasks[taskIndex].quickListItems.removeAll { $0.id == itemId }
-        
-        invalidateCache()
-        saveTasks()
-        updateSpotlightIndex()
-        
-        HapticManager.shared.selectionChange()
-    }
-    
-    /// Reorder quick list items within a task
-    func reorderQuickListItems(taskId: UUID, from source: IndexSet, to destination: Int) {
-        guard let taskIndex = tasks.firstIndex(where: { $0.id == taskId }) else { return }
-        
-        tasks[taskIndex].quickListItems.move(fromOffsets: source, toOffset: destination)
-        
-        invalidateCache()
-        saveTasks()
-        updateSpotlightIndex()
-        
-        HapticManager.shared.selectionChange()
-    }
+
     
     // MARK: - Automatic Cleanup
     
