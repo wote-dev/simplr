@@ -66,30 +66,30 @@ struct NeumorphicShadowStyle {
     }
 }
 
-// MARK: - Light Theme (Monochromatic: White with Black accents)
+// MARK: - Light Theme (Sophisticated Blue Accent)
 struct LightTheme: Theme {
-    let primary = Color.black
-    let secondary = Color.gray
-    let accent = Color.black
-    let background = Color(red: 0.98, green: 0.98, blue: 0.98) // Slightly off-white for better contrast
+    let primary = Color(red: 0.2, green: 0.4, blue: 0.8) // Sophisticated blue primary
+    let secondary = Color(red: 0.4, green: 0.6, blue: 0.9) // Lighter blue secondary
+    let accent = Color(red: 0.1, green: 0.3, blue: 0.7) // Deep blue accent
+    let background = Color(red: 0.98, green: 0.99, blue: 1.0) // Subtle blue-tinted background
     let surface = Color.white // Pure white for better contrast against background
-    let surfaceSecondary = Color(red: 0.95, green: 0.95, blue: 0.95) // More contrast for secondary surfaces
-    let text = Color.black
-    let textSecondary = Color(red: 0.4, green: 0.4, blue: 0.4) // Darker for better readability
-    let textTertiary = Color(red: 0.6, green: 0.6, blue: 0.6)
-    let success = Color(red: 0.2, green: 0.8, blue: 0.2) // Green for success actions
-    let warning = Color(red: 1.0, green: 0.7, blue: 0.0) // Orange for warnings
-    let error = Color(red: 0.9, green: 0.2, blue: 0.2) // Red for error actions
-    let shadow = Color.black.opacity(0.15) // Stronger shadow for better definition
-    let border = Color(red: 0.9, green: 0.9, blue: 0.9) // Subtle light gray border
-    let borderSecondary = Color(red: 0.85, green: 0.85, blue: 0.85) // Slightly darker secondary border
-    let toggle = Color.accentColor
+    let surfaceSecondary = Color(red: 0.96, green: 0.98, blue: 1.0) // Light blue-tinted secondary surface
+    let text = Color(red: 0.1, green: 0.1, blue: 0.2) // Dark blue-tinted text
+    let textSecondary = Color(red: 0.3, green: 0.4, blue: 0.5) // Blue-gray secondary text
+    let textTertiary = Color(red: 0.5, green: 0.6, blue: 0.7) // Lighter blue-gray tertiary
+    let success = Color(red: 0.2, green: 0.7, blue: 0.4) // Fresh green for success
+    let warning = Color(red: 1.0, green: 0.6, blue: 0.0) // Warm orange for warnings
+    let error = Color(red: 0.9, green: 0.3, blue: 0.3) // Soft red for errors
+    let shadow = Color(red: 0.2, green: 0.4, blue: 0.8).opacity(0.12) // Blue-tinted shadow
+    let border = Color(red: 0.85, green: 0.92, blue: 0.98) // Light blue border
+    let borderSecondary = Color(red: 0.75, green: 0.85, blue: 0.95) // Slightly darker blue border
+    let toggle = Color(red: 0.2, green: 0.4, blue: 0.8)
     
     var backgroundGradient: LinearGradient {
         LinearGradient(
             colors: [
-                Color(red: 0.98, green: 0.98, blue: 0.98),
-                Color(red: 0.96, green: 0.96, blue: 0.96)
+                Color(red: 0.98, green: 0.99, blue: 1.0),
+                Color(red: 0.95, green: 0.97, blue: 1.0)
             ],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
@@ -100,7 +100,7 @@ struct LightTheme: Theme {
         LinearGradient(
             colors: [
                 Color.white,
-                Color(red: 0.98, green: 0.98, blue: 0.98)
+                Color(red: 0.98, green: 0.99, blue: 1.0)
             ],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
@@ -110,8 +110,8 @@ struct LightTheme: Theme {
     var accentGradient: LinearGradient {
         LinearGradient(
             colors: [
-                Color.black,
-                Color(red: 0.2, green: 0.2, blue: 0.2)
+                Color(red: 0.2, green: 0.4, blue: 0.8),
+                Color(red: 0.1, green: 0.3, blue: 0.7)
             ],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
@@ -124,33 +124,33 @@ struct LightTheme: Theme {
     
     var shadowStyle: ShadowStyle {
         ShadowStyle(
-            color: Color.black.opacity(0.02),
-            radius: 2,
-            y: 0.5
+            color: Color(red: 0.2, green: 0.4, blue: 0.8).opacity(0.08),
+            radius: 4,
+            y: 2
         )
     }
     
     var cardShadowStyle: ShadowStyle {
         ShadowStyle(
-            color: Color.black.opacity(0.03),
-            radius: 3,
-            y: 1
+            color: Color(red: 0.2, green: 0.4, blue: 0.8).opacity(0.12),
+            radius: 8,
+            y: 4
         )
     }
     
     var neumorphicStyle: NeumorphicShadowStyle {
         NeumorphicShadowStyle(
             lightShadow: ShadowStyle(
-                color: Color.white.opacity(0.8),
-                radius: 4,
-                x: -2,
-                y: -2
+                color: Color.white.opacity(0.9),
+                radius: 6,
+                x: -3,
+                y: -3
             ),
             darkShadow: ShadowStyle(
-                color: Color.black.opacity(0.08),
-                radius: 4,
-                x: 2,
-                y: 2
+                color: Color(red: 0.2, green: 0.4, blue: 0.8).opacity(0.15),
+                radius: 6,
+                x: 3,
+                y: 3
             )
         )
     }
@@ -158,16 +158,16 @@ struct LightTheme: Theme {
     var neumorphicButtonStyle: NeumorphicShadowStyle {
         NeumorphicShadowStyle(
             lightShadow: ShadowStyle(
-                color: Color.white.opacity(0.9),
-                radius: 3,
-                x: -1.5,
-                y: -1.5
+                color: Color.white.opacity(0.95),
+                radius: 4,
+                x: -2,
+                y: -2
             ),
             darkShadow: ShadowStyle(
-                color: Color.black.opacity(0.06),
-                radius: 3,
-                x: 1.5,
-                y: 1.5
+                color: Color(red: 0.2, green: 0.4, blue: 0.8).opacity(0.12),
+                radius: 4,
+                x: 2,
+                y: 2
             )
         )
     }
@@ -175,13 +175,13 @@ struct LightTheme: Theme {
     var neumorphicPressedStyle: NeumorphicShadowStyle {
         NeumorphicShadowStyle(
             lightShadow: ShadowStyle(
-                color: Color.black.opacity(0.08),
+                color: Color(red: 0.2, green: 0.4, blue: 0.8).opacity(0.12),
                 radius: 4,
                 x: 2,
                 y: 2
             ),
             darkShadow: ShadowStyle(
-                color: Color.white.opacity(0.6),
+                color: Color.white.opacity(0.7),
                 radius: 4,
                 x: -2,
                 y: -2
