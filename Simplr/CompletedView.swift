@@ -15,10 +15,33 @@ struct CompletedView: View {
     @State private var showingDeleteAlert = false
     @State private var taskToDelete: Task?
     @State private var taskToEdit: Task?
+    @State private var selectedSortOption: SortOption = .creationDate
     @Namespace private var taskNamespace
     
     // Spotlight navigation
     @Binding var selectedTaskId: UUID?
+    
+    enum SortOption: CaseIterable {
+        case priority, dueDate, creationDate, alphabetical
+        
+        var title: String {
+            switch self {
+            case .priority: return "Priority"
+            case .dueDate: return "Due Date"
+            case .creationDate: return "Completion Date"
+            case .alphabetical: return "Alphabetical"
+            }
+        }
+        
+        var icon: String {
+            switch self {
+            case .priority: return "exclamationmark.triangle"
+            case .dueDate: return "calendar"
+            case .creationDate: return "clock"
+            case .alphabetical: return "textformat.abc"
+            }
+        }
+    }
     
     private var completedTasks: [Task] {
         taskManager.tasks.filter { task in
@@ -33,10 +56,46 @@ struct CompletedView: View {
             return true
         }
         .sorted { task1, task2 in
-            // Sort by completion date (most recent first), fallback to created date
-            let date1 = task1.completedAt ?? task1.createdAt
-            let date2 = task2.completedAt ?? task2.createdAt
-            return date1 > date2
+            switch selectedSortOption {
+            case .priority:
+                // First priority: URGENT category tasks always come first
+                let task1IsUrgent = task1.categoryId == TaskCategory.urgent.id
+                let task2IsUrgent = task2.categoryId == TaskCategory.urgent.id
+                
+                if task1IsUrgent != task2IsUrgent {
+                    return task1IsUrgent && !task2IsUrgent
+                }
+                
+                // Second priority: Sort by completion date (most recent first)
+                let date1 = task1.completedAt ?? task1.createdAt
+                let date2 = task2.completedAt ?? task2.createdAt
+                return date1 > date2
+                
+            case .dueDate:
+                // Sort by original due date (earliest first), then by completion date
+                if let date1 = task1.dueDate, let date2 = task2.dueDate {
+                    return date1 < date2
+                } else if task1.dueDate != nil {
+                    return true // Tasks with due dates come first
+                } else if task2.dueDate != nil {
+                    return false
+                } else {
+                    // For tasks without due dates, sort by completion date
+                    let compDate1 = task1.completedAt ?? task1.createdAt
+                    let compDate2 = task2.completedAt ?? task2.createdAt
+                    return compDate1 > compDate2
+                }
+                
+            case .creationDate:
+                // Sort by completion date (most recent first), fallback to created date
+                let date1 = task1.completedAt ?? task1.createdAt
+                let date2 = task2.completedAt ?? task2.createdAt
+                return date1 > date2
+                
+            case .alphabetical:
+                // Sort alphabetically by title
+                return task1.title.localizedCaseInsensitiveCompare(task2.title) == .orderedAscending
+            }
         }
     }
     
@@ -167,25 +226,55 @@ struct CompletedView: View {
                 
                 Spacer()
                 
-                if !completedTasks.isEmpty {
-                    Button {
-                        clearAllCompleted()
-                    } label: {
-                        HStack(spacing: 6) {
-                            Image(systemName: "trash")
-                                .font(.system(size: 14, weight: .medium))
-                            Text("Clear All")
-                                .font(.system(size: 14, weight: .medium))
+                HStack(spacing: 12) {
+                    // Sort Menu
+                    Menu {
+                        ForEach(SortOption.allCases, id: \.self) { option in
+                            Button {
+                                selectedSortOption = option
+                            } label: {
+                                HStack {
+                                    Image(systemName: option.icon)
+                                    Text(option.title)
+                                    if selectedSortOption == option {
+                                        Spacer()
+                                        Image(systemName: "checkmark")
+                                    }
+                                }
+                            }
                         }
-                        .foregroundColor(theme.error)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                        .background(
-                            Capsule()
-                                .stroke(theme.error, lineWidth: 0)
-                        )
+                    } label: {
+                        Image(systemName: "arrow.up.arrow.down")
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundColor(theme.accent)
+                            .padding(10)
+                            .background(
+                                Circle()
+                                    .stroke(theme.accent, lineWidth: 1)
+                            )
                     }
                     .animatedButton()
+                    
+                    if !completedTasks.isEmpty {
+                        Button {
+                            clearAllCompleted()
+                        } label: {
+                            HStack(spacing: 6) {
+                                Image(systemName: "trash")
+                                    .font(.system(size: 14, weight: .medium))
+                                Text("Clear All")
+                                    .font(.system(size: 14, weight: .medium))
+                            }
+                            .foregroundColor(theme.error)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(
+                                Capsule()
+                                    .stroke(theme.error, lineWidth: 0)
+                            )
+                        }
+                        .animatedButton()
+                    }
                 }
             }
             

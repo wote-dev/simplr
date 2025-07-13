@@ -19,6 +19,7 @@ struct SimplrApp: App {
     @StateObject private var premiumManager = PremiumManager()
     // Celebration manager removed
     @State private var showOnboarding = !UserDefaults.standard.bool(forKey: "HasCompletedOnboarding")
+    @State private var showThemeSelection = false
     @State private var selectedTaskId: UUID? = nil
     @State private var quickActionTriggered: QuickAction? = nil
     
@@ -45,10 +46,17 @@ struct SimplrApp: App {
             SystemAwareWrapper {
                 ZStack {
                     if showOnboarding {
-                        OnboardingView(showOnboarding: $showOnboarding)
+                        OnboardingView(showOnboarding: $showOnboarding, showThemeSelection: $showThemeSelection)
                             .themedEnvironment(themeManager)
                             .transition(.asymmetric(
                                 insertion: .identity,
+                                removal: .opacity.combined(with: .scale(scale: 0.95))
+                            ))
+                    } else if showThemeSelection {
+                        ThemeSelectionOnboardingView(showThemeSelection: $showThemeSelection)
+                            .themedEnvironment(themeManager)
+                            .transition(.asymmetric(
+                                insertion: .opacity.combined(with: .scale(scale: 1.05)),
                                 removal: .opacity.combined(with: .scale(scale: 0.95))
                             ))
                     } else {
@@ -106,6 +114,8 @@ struct SimplrApp: App {
         switch themeManager.themeMode {
         case .light:
             return .light
+        case .lightBlue:
+            return .light // Light Blue theme uses light color scheme
         case .dark:
             return .dark
         case .system:
@@ -153,9 +163,14 @@ struct SimplrApp: App {
     private func handleQuickAction(_ shortcutItem: UIApplicationShortcutItem) {
         guard let action = QuickAction(rawValue: shortcutItem.type) else { return }
         
-        // Dismiss onboarding if showing
+        // Dismiss onboarding and theme selection if showing
         if showOnboarding {
             showOnboarding = false
+            // Complete onboarding when quick action is triggered
+            UserDefaults.standard.set(true, forKey: "HasCompletedOnboarding")
+        }
+        if showThemeSelection {
+            showThemeSelection = false
         }
         
         // Add haptic feedback
@@ -172,9 +187,14 @@ struct SimplrApp: App {
     // MARK: - Spotlight Search Result Handling
     
     private func handleSpotlightSearchResult(_ userActivity: NSUserActivity) {
-        // Dismiss onboarding if it's showing
+        // Dismiss onboarding and theme selection if showing
         if showOnboarding {
             showOnboarding = false
+            // Complete onboarding when spotlight search is triggered
+            UserDefaults.standard.set(true, forKey: "HasCompletedOnboarding")
+        }
+        if showThemeSelection {
+            showThemeSelection = false
         }
         
         guard let uniqueIdentifier = userActivity.userInfo?[CSSearchableItemActivityIdentifier] as? String,

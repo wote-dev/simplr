@@ -206,7 +206,8 @@ struct MainTabView: View {
                     Color(red: 243/255, green: 236/255, blue: 230/255) :
                     (themeManager.isDarkMode ?
                      Color.black :
-                     Color(red: 245/255, green: 249/255, blue: 255/255))
+                     (themeManager.themeMode == .lightBlue ? Color(red: 245/255, green: 249/255, blue: 255/255) :
+                      Color(red: 250/255, green: 250/255, blue: 250/255)))
                 )
                 .ignoresSafeArea(.container, edges: .bottom)
         )
@@ -221,8 +222,7 @@ struct MainTabView: View {
                     .font(.system(size: 22, weight: selectedTab == tab ? .semibold : .medium, design: .default))
                     .foregroundColor(
                         selectedTab == tab ? 
-                        (themeManager.themeMode == .kawaii ? theme.accent :
-                         (themeManager.isDarkMode ? Color.white : Color.black)) : 
+                        theme.accent : 
                         (themeManager.themeMode == .kawaii ? theme.textSecondary :
                          (themeManager.isDarkMode ? Color.white.opacity(0.6) : Color.black.opacity(0.5)))
                     )
@@ -233,8 +233,7 @@ struct MainTabView: View {
                     .font(.system(size: 10, weight: selectedTab == tab ? .medium : .regular, design: .default))
                     .foregroundColor(
                         selectedTab == tab ? 
-                        (themeManager.themeMode == .kawaii ? theme.accent :
-                         (themeManager.isDarkMode ? Color.white : Color.black)) : 
+                        theme.accent : 
                         (themeManager.themeMode == .kawaii ? theme.textSecondary :
                          (themeManager.isDarkMode ? Color.white.opacity(0.6) : Color.black.opacity(0.5)))
                     )

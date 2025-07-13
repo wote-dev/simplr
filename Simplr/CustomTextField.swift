@@ -40,6 +40,7 @@ struct CustomTextField: UIViewRepresentable {
             let textField = UITextField(frame: .zero)
             textField.delegate = context.coordinator
             textField.placeholder = placeholder
+            textField.addTarget(context.coordinator, action: #selector(Coordinator.textFieldDidChange(_:)), for: .editingChanged)
             textField.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
             return textField
         }
@@ -47,13 +48,19 @@ struct CustomTextField: UIViewRepresentable {
 
     func updateUIView(_ uiView: UIView, context: Context) {
         if let textView = uiView as? UITextView {
-            textView.text = text
+            if text != textView.text {
+                textView.text = text
+                context.coordinator.internalText = text
+            }
             context.coordinator.placeholderLabel?.isHidden = !text.isEmpty
             if isFirstResponder && !textView.isFirstResponder {
                 textView.becomeFirstResponder()
             }
         } else if let textField = uiView as? UITextField {
-            textField.text = text
+            if text != textField.text {
+                textField.text = text
+                context.coordinator.internalText = text
+            }
             if isFirstResponder && !textField.isFirstResponder {
                 textField.becomeFirstResponder()
             }
@@ -67,66 +74,47 @@ struct CustomTextField: UIViewRepresentable {
     class Coordinator: NSObject, UITextFieldDelegate, UITextViewDelegate {
         var parent: CustomTextField
         var placeholderLabel: UILabel?
+        var internalText: String
 
         init(_ textField: CustomTextField) {
             self.parent = textField
+            self.internalText = textField.text
         }
 
-        func textFieldDidChangeSelection(_ textField: UITextField) {
-            parent.text = textField.text ?? ""
+        @objc func textFieldDidChange(_ textField: UITextField) {
+            let newText = textField.text ?? ""
+            if newText != internalText {
+                internalText = newText
+                parent.text = newText
+            }
         }
 
         func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-            if let onCommit = parent.onCommit {
-                onCommit()
-            } else {
-                textField.resignFirstResponder()
-            }
+            textField.resignFirstResponder()
+            parent.onCommit?()
             return true
         }
         
-        func textViewDidChange(_ textView: UITextView) {
-            parent.text = textView.text
-            placeholderLabel?.isHidden = !textView.text.isEmpty
-        }
-    }
-}
-
-struct CustomTextEditor: UIViewRepresentable {
-    @Binding var text: String
-    var isFirstResponder: Bool = false
-
-    func makeUIView(context: Context) -> UITextView {
-        let textView = UITextView()
-        textView.delegate = context.coordinator
-        textView.font = .preferredFont(forTextStyle: .body)
-        textView.isScrollEnabled = true
-        textView.isEditable = true
-        textView.isUserInteractionEnabled = true
-        textView.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-        return textView
-    }
-
-    func updateUIView(_ uiView: UITextView, context: Context) {
-        uiView.text = text
-        if isFirstResponder && !uiView.isFirstResponder {
-            uiView.becomeFirstResponder()
-        }
-    }
-
-    func makeCoordinator() -> Coordinator {
-        Coordinator(self)
-    }
-
-    class Coordinator: NSObject, UITextViewDelegate {
-        var parent: CustomTextEditor
-
-        init(_ textView: CustomTextEditor) {
-            self.parent = textView
+        func textFieldDidEndEditing(_ textField: UITextField) {
+            let newText = textField.text ?? ""
+            if newText != internalText {
+                internalText = newText
+                parent.text = newText
+            }
+            parent.onCommit?()
         }
 
         func textViewDidChange(_ textView: UITextView) {
-            parent.text = textView.text
+            let newText = textView.text ?? ""
+            if newText != internalText {
+                internalText = newText
+                parent.text = newText
+                placeholderLabel?.isHidden = !newText.isEmpty
+            }
+        }
+
+        func textViewDidEndEditing(_ textView: UITextView) {
+            parent.onCommit?()
         }
     }
 }

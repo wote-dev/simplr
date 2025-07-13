@@ -11,6 +11,7 @@ import Combine
 // MARK: - Theme Mode
 enum ThemeMode: String, CaseIterable {
     case light = "light"
+    case lightBlue = "lightBlue"
     case dark = "dark"
     case system = "system"
     case kawaii = "kawaii"
@@ -18,6 +19,7 @@ enum ThemeMode: String, CaseIterable {
     var displayName: String {
         switch self {
         case .light: return "Light"
+        case .lightBlue: return "Light Blue"
         case .dark: return "Dark"
         case .system: return "System"
         case .kawaii: return "Kawaii"
@@ -27,6 +29,7 @@ enum ThemeMode: String, CaseIterable {
     var icon: String {
         switch self {
         case .light: return "sun.max.fill"
+        case .lightBlue: return "sun.max.circle.fill"
         case .dark: return "moon.fill"
         case .system: return "circle.lefthalf.filled"
         case .kawaii: return "heart.fill"
@@ -35,7 +38,7 @@ enum ThemeMode: String, CaseIterable {
     
     var isPremium: Bool {
         switch self {
-        case .light, .dark, .system:
+        case .light, .lightBlue, .dark, .system:
             return false
         case .kawaii:
             return false // Temporarily disabled premium requirement - can be changed back to true later
@@ -72,8 +75,8 @@ class ThemeManager: ObservableObject {
         let savedMode = userDefaults.string(forKey: themeModeKey) ?? ThemeMode.system.rawValue
         self.themeMode = ThemeMode(rawValue: savedMode) ?? .system
         
-        // Initialize with light theme, will be updated in updateTheme()
-        self.currentTheme = LightTheme()
+        // Initialize with plain light theme, will be updated in updateTheme()
+        self.currentTheme = PlainLightTheme()
         
         // Set initial dark mode state
         #if os(iOS)
@@ -98,6 +101,8 @@ class ThemeManager: ObservableObject {
         withAnimation(.easeInOut(duration: 0.3)) {
             switch themeMode {
             case .light:
+                themeMode = .lightBlue
+            case .lightBlue:
                 themeMode = .dark
             case .dark:
                 themeMode = .light
@@ -116,11 +121,13 @@ class ThemeManager: ObservableObject {
         
         switch themeMode {
         case .light:
+            newTheme = PlainLightTheme()
+        case .lightBlue:
             newTheme = LightTheme()
         case .dark:
             newTheme = DarkTheme()
         case .system:
-            newTheme = isDarkMode ? DarkTheme() : LightTheme()
+            newTheme = isDarkMode ? DarkTheme() : PlainLightTheme()
         case .kawaii:
             // Kawaii theme is now available to all users
             newTheme = KawaiiTheme()
@@ -224,7 +231,7 @@ class ThemeManager: ObservableObject {
 
 // MARK: - Environment Key
 struct ThemeEnvironmentKey: EnvironmentKey {
-    static let defaultValue: Theme = LightTheme()
+    static let defaultValue: Theme = PlainLightTheme()
 }
 
 extension EnvironmentValues {

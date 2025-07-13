@@ -23,6 +23,8 @@ extension Image {
             self.init("\(name)-dark")
         case .light:
             self.init("\(name)-light")
+        case .lightBlue:
+            self.init("\(name)-light") // Use same light icons for light blue theme
         case .system:
             let isDarkMode = themeManager.isDarkMode
             self.init(isDarkMode ? "\(name)-dark" : "\(name)-light")
@@ -37,6 +39,8 @@ extension Image {
             self.init("bcs-dark")
         case .light:
             self.init("bcs-light")
+        case .lightBlue:
+            self.init("bcs-light") // Use same light logo for light blue theme
         case .system:
             let isDarkMode = themeManager.isDarkMode
             self.init(isDarkMode ? "bcs-dark" : "bcs-light")
@@ -48,6 +52,7 @@ struct ContentView: View {
     @EnvironmentObject var taskManager: TaskManager
     @EnvironmentObject var categoryManager: CategoryManager
     @EnvironmentObject var themeManager: ThemeManager
+    @EnvironmentObject var premiumManager: PremiumManager
     @Environment(\.theme) var theme
     @State private var showingAddTask = false
     @State private var taskToEdit: Task?
@@ -330,6 +335,9 @@ struct ContentView: View {
             ThemeSelectorView()
                 .themedEnvironment(themeManager)
                 .environmentObject(themeManager)
+                .environmentObject(premiumManager)
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
         }
         .onAppear {
             // Check for overdue tasks when view appears

@@ -112,9 +112,8 @@ struct AddTaskView: View {
                         .fontWeight(.semibold)
                         .foregroundColor(theme.text)
                     
-                    TextField("Enter task title", text: $title)
-                        .focused($isTitleFocused)
-                        .textFieldStyle(CustomTextFieldStyle())
+                    CustomTextField(text: $title, placeholder: "Enter task title", isFirstResponder: true)
+                        .frame(height: 48)
                 }
                 
                 VStack(alignment: .leading, spacing: 8) {
@@ -123,9 +122,8 @@ struct AddTaskView: View {
                         .fontWeight(.semibold)
                         .foregroundColor(theme.text)
                     
-                    TextField("Add more details...", text: $description, axis: .vertical)
-                        .lineLimit(3...6)
-                        .textFieldStyle(CustomTextFieldStyle())
+                    CustomTextField(text: $description, placeholder: "Add more details...", isMultiline: true)
+                        .frame(minHeight: 80)
                 }
             }
             .padding(20)
@@ -186,8 +184,11 @@ struct AddTaskView: View {
 
                 ForEach($checklistItems) { $item in
                     HStack {
-                        TextField("Checklist item", text: $item.title)
-                            .textFieldStyle(CustomTextFieldStyle())
+                        CustomTextField(
+                            text: $item.title, 
+                            placeholder: "Checklist item"
+                        )
+                        .frame(height: 40)
                         Button(action: {
                             if let index = checklistItems.firstIndex(where: { $0.id == item.id }) {
                                 checklistItems.remove(at: index)
@@ -200,11 +201,12 @@ struct AddTaskView: View {
                 }
 
                 HStack {
-                    TextField("Add new item", text: $newChecklistItemTitle)
-                        .textFieldStyle(CustomTextFieldStyle())
-                        .onSubmit {
-                            addChecklistItem()
-                        }
+                    CustomTextField(
+                        text: $newChecklistItemTitle, 
+                        placeholder: "Add new item",
+                        onCommit: addChecklistItem
+                    )
+                    
                     Button(action: addChecklistItem) {
                         Image(systemName: "plus.circle.fill")
                             .foregroundColor(theme.accent)
@@ -440,22 +442,7 @@ struct CategoryPill: View {
     }
 }
 
-struct CustomTextFieldStyle: TextFieldStyle {
-    @Environment(\.theme) var theme
-    
-    func _body(configuration: TextField<Self._Label>) -> some View {
-        configuration
-            .padding(16)
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(theme.surfaceSecondary)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(theme.border, lineWidth: 1)
-                    )
-            )
-    }
-}
+
 
 #Preview {
     AddTaskView(taskManager: TaskManager())

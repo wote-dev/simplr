@@ -22,19 +22,20 @@ struct ThemeSelectorView: View {
                 Color.clear
                     .themedBackground(theme)
                 
-                VStack(spacing: 24) {
-                    // Header
-                    VStack(spacing: 8) {
-                        Text("Choose Theme")
-                            .font(.title2)
-                            .fontWeight(.semibold)
-                            .foregroundColor(theme.text)
-                        
-                        Text("Select your preferred appearance")
-                            .font(.subheadline)
-                            .foregroundColor(theme.textSecondary)
-                    }
-                    .padding(.top, 20)
+                ScrollView {
+                    VStack(spacing: 24) {
+                        // Header
+                        VStack(spacing: 8) {
+                            Text("Choose Theme")
+                                .font(.title2)
+                                .fontWeight(.semibold)
+                                .foregroundColor(theme.text)
+                            
+                            Text("Select your preferred appearance")
+                                .font(.subheadline)
+                                .foregroundColor(theme.textSecondary)
+                        }
+                        .padding(.top, 20)
                     
                     // Theme options
                     VStack(spacing: 16) {
@@ -50,35 +51,33 @@ struct ThemeSelectorView: View {
                         }
                     }
                     .padding(.horizontal, 20)
-                    
-                    Spacer()
-                    
-                    // Preview section
-                    VStack(spacing: 16) {
-                        Text("Preview")
-                            .font(.headline)
-                            .foregroundColor(theme.text)
                         
-                        ThemePreviewCard()
+                        // Preview section
+                        VStack(spacing: 16) {
+                            Text("Preview")
+                                .font(.headline)
+                                .foregroundColor(theme.text)
+                            
+                            ThemePreviewCard()
+                        }
+                        .padding(.horizontal, 20)
+                        
+                        // Hidden onboarding reset for testing (only visible in debug builds)
+                        #if DEBUG
+                        Button {
+                            UserDefaults.standard.set(false, forKey: "HasCompletedOnboarding")
+                            HapticManager.shared.buttonTap()
+                        } label: {
+                            Text("Reset Onboarding (Debug)")
+                                .font(.caption)
+                                .foregroundColor(theme.textSecondary.opacity(0.6))
+                                .padding(.vertical, 8)
+                        }
+                        .animatedButton()
+                        .padding(.bottom, 20)
+                        #endif
                     }
-                    .padding(.horizontal, 20)
-                    
-                    Spacer()
-                    
-                    // Hidden onboarding reset for testing (only visible in debug builds)
-                    #if DEBUG
-                    Button {
-                        UserDefaults.standard.set(false, forKey: "HasCompletedOnboarding")
-                        HapticManager.shared.buttonTap()
-                    } label: {
-                        Text("Reset Onboarding (Debug)")
-                            .font(.caption)
-                            .foregroundColor(theme.textSecondary.opacity(0.6))
-                            .padding(.vertical, 8)
-                    }
-                    .animatedButton()
-                    .padding(.bottom, 16)
-                    #endif
+                    .padding(.bottom, 20)
                 }
             }
             .navigationTitle("")
@@ -208,6 +207,8 @@ struct ThemeOptionCard: View {
         switch mode {
         case .light:
             return "Clean and bright interface"
+        case .lightBlue:
+            return "Sophisticated blue-accented design"
         case .dark:
             return "Easy on the eyes in low light"
         case .system:

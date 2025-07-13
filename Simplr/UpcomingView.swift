@@ -16,11 +16,34 @@ struct UpcomingView: View {
     @State private var searchText = ""
     @State private var showingDeleteAlert = false
     @State private var taskToDelete: Task?
+    @State private var selectedSortOption: SortOption = .dueDate
 
     @Namespace private var taskNamespace
     
     // Spotlight navigation
     @Binding var selectedTaskId: UUID?
+    
+    enum SortOption: CaseIterable {
+        case priority, dueDate, creationDate, alphabetical
+        
+        var title: String {
+            switch self {
+            case .priority: return "Priority"
+            case .dueDate: return "Due Date"
+            case .creationDate: return "Creation Date"
+            case .alphabetical: return "Alphabetical"
+            }
+        }
+        
+        var icon: String {
+            switch self {
+            case .priority: return "exclamationmark.triangle"
+            case .dueDate: return "calendar"
+            case .creationDate: return "clock"
+            case .alphabetical: return "textformat.abc"
+            }
+        }
+    }
     
     private var upcomingTasks: [Task] {
         let calendar = Calendar.current
@@ -53,21 +76,59 @@ struct UpcomingView: View {
             return true
         }
         .sorted { task1, task2 in
-            // Get the relevant date for sorting (due date or reminder date)
-            let date1 = task1.dueDate ?? task1.reminderDate
-            let date2 = task2.dueDate ?? task2.reminderDate
-            
-            // Sort by the relevant date
-            if let d1 = date1, let d2 = date2 {
-                return d1 < d2
-            } else if date1 != nil {
-                return true
-            } else if date2 != nil {
-                return false
+            switch selectedSortOption {
+            case .priority:
+                // First priority: URGENT category tasks always come first
+                let task1IsUrgent = task1.categoryId == TaskCategory.urgent.id
+                let task2IsUrgent = task2.categoryId == TaskCategory.urgent.id
+                
+                if task1IsUrgent != task2IsUrgent {
+                    return task1IsUrgent && !task2IsUrgent
+                }
+                
+                // Second priority: Sort by overdue/pending status
+                if task1.isOverdue != task2.isOverdue {
+                    return task1.isOverdue && !task2.isOverdue
+                }
+                
+                // Third priority: Sort by due date or reminder date
+                let date1 = task1.dueDate ?? task1.reminderDate
+                let date2 = task2.dueDate ?? task2.reminderDate
+                
+                if let d1 = date1, let d2 = date2 {
+                    return d1 < d2
+                } else if date1 != nil {
+                    return true
+                } else if date2 != nil {
+                    return false
+                }
+                
+                // Final priority: Sort by creation date (newest first)
+                return task1.createdAt > task2.createdAt
+                
+            case .dueDate:
+                // Sort by due date or reminder date (earliest first)
+                let date1 = task1.dueDate ?? task1.reminderDate
+                let date2 = task2.dueDate ?? task2.reminderDate
+                
+                if let d1 = date1, let d2 = date2 {
+                    return d1 < d2
+                } else if date1 != nil {
+                    return true // Tasks with dates come first
+                } else if date2 != nil {
+                    return false
+                } else {
+                    return task1.createdAt > task2.createdAt // Newest first for undated tasks
+                }
+                
+            case .creationDate:
+                // Sort by creation date (newest first)
+                return task1.createdAt > task2.createdAt
+                
+            case .alphabetical:
+                // Sort alphabetically by title
+                return task1.title.localizedCaseInsensitiveCompare(task2.title) == .orderedAscending
             }
-            
-            // Fall back to creation date
-            return task1.createdAt > task2.createdAt
         }
     }
     
@@ -238,28 +299,67 @@ struct UpcomingView: View {
                 
                 Spacer(minLength: 0)
                 
-                // Enhanced add button
-                Button {
-                    withAnimation(.adaptiveBouncy) {
-                        showingAddTask = true
+                HStack(spacing: 12) {
+                    // Sort menu button
+                    Menu {
+                        // Sort Section
+                        Section("Sort By") {
+                            ForEach(SortOption.allCases, id: \.self) { option in
+                                Button {
+                                    withAnimation(.smoothSpring) {
+                                        selectedSortOption = option
+                                    }
+                                    HapticManager.shared.buttonTap()
+                                } label: {
+                                    HStack {
+                                        Image(systemName: option.icon)
+                                        Text(option.title)
+                                        Spacer()
+                                        if selectedSortOption == option {
+                                            Image(systemName: "checkmark")
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } label: {
+                        Image(systemName: "arrow.up.arrow.down.circle")
+                            .font(.system(size: 18, weight: .medium))
+                            .foregroundColor(theme.accent)
+                            .frame(width: 44, height: 44)
                     }
-                    HapticManager.shared.buttonTap()
-                } label: {
-                    ZStack {
-                        // Background
-                        Circle()
-                            .fill(theme.accentGradient)
-                            .frame(width: 56, height: 56)
-                        
-                        // Plus icon
-                        Image(systemName: "plus")
-                            .font(.system(size: 22, weight: .semibold, design: .rounded))
-                            .foregroundColor(theme.background)
+                    .animatedButton()
+                    
+                    // Enhanced add button
+                    Button {
+                        withAnimation(.adaptiveBouncy) {
+                            showingAddTask = true
+                        }
+                        HapticManager.shared.buttonTap()
+                    } label: {
+                        ZStack {
+                            // Background
+                            Circle()
+                                .fill(theme.accentGradient)
+                                .frame(width: 50, height: 50)
+                                .applyNeumorphicShadow(theme.neumorphicButtonStyle)
+                            
+                            // Plus icon
+                            Image(systemName: "plus")
+                                .font(.system(size: 20, weight: .semibold))
+                                .foregroundColor(theme.background)
+                                .shadow(
+                                    color: theme.background == .black ? Color.white.opacity(0.3) : Color.black.opacity(0.3),
+                                    radius: 2,
+                                    x: 0,
+                                    y: 1
+                                )
+                        }
+                        .scaleEffect(showingAddTask ? 0.95 : 1.0)
+                        .animation(.adaptiveSnappy, value: showingAddTask)
                     }
-                    .scaleEffect(showingAddTask ? 0.95 : 1.0)
-                    .animation(.adaptiveSnappy, value: showingAddTask)
+                    .animatedButton()
                 }
-                .animatedButton()
             }
             .padding(.horizontal, 24)
             .padding(.top, 12)

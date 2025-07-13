@@ -83,8 +83,11 @@ struct TaskDetailPreviewView: View {
                             .strikethrough(item.isCompleted)
                     }
                     .toggleStyle(CheckboxToggleStyle())
-                    .onChange(of: item.isCompleted) { _ in
-                        taskManager.updateTask(task)
+                    .onChange(of: item.isCompleted) { oldValue, newValue in
+                        // Ensure the task is updated with the latest checklist state
+                        DispatchQueue.main.async {
+                            taskManager.updateTask(task)
+                        }
                     }
                 }
             }

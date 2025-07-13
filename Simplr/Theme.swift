@@ -66,7 +66,131 @@ struct NeumorphicShadowStyle {
     }
 }
 
-// MARK: - Light Theme (Sophisticated Blue Accent)
+// MARK: - Plain Light Theme (Monochromatic)
+struct PlainLightTheme: Theme {
+    let primary = Color.black
+    let secondary = Color.gray
+    let accent = Color.black
+    let background = Color(red: 0.98, green: 0.98, blue: 0.98) // Slightly off-white for better contrast
+    let surface = Color.white // Pure white for better contrast against background
+    let surfaceSecondary = Color(red: 0.95, green: 0.95, blue: 0.95) // More contrast for secondary surfaces
+    let text = Color.black
+    let textSecondary = Color(red: 0.4, green: 0.4, blue: 0.4) // Darker for better readability
+    let textTertiary = Color(red: 0.6, green: 0.6, blue: 0.6)
+    let success = Color(red: 0.2, green: 0.8, blue: 0.2) // Green for success actions
+    let warning = Color(red: 1.0, green: 0.7, blue: 0.0) // Orange for warnings
+    let error = Color(red: 0.9, green: 0.2, blue: 0.2) // Red for error actions
+    let shadow = Color.black.opacity(0.15) // Stronger shadow for better definition
+    let border = Color(red: 0.9, green: 0.9, blue: 0.9) // Subtle light gray border
+    let borderSecondary = Color(red: 0.85, green: 0.85, blue: 0.85) // Slightly darker secondary border
+    let toggle = Color.accentColor
+    
+    var backgroundGradient: LinearGradient {
+        LinearGradient(
+            colors: [
+                Color(red: 0.98, green: 0.98, blue: 0.98),
+                Color(red: 0.96, green: 0.96, blue: 0.96)
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+    
+    var surfaceGradient: LinearGradient {
+        LinearGradient(
+            colors: [
+                Color.white,
+                Color(red: 0.98, green: 0.98, blue: 0.98)
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+    
+    var accentGradient: LinearGradient {
+        LinearGradient(
+            colors: [
+                Color.black,
+                Color(red: 0.2, green: 0.2, blue: 0.2)
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+    
+    var backgroundImage: String? {
+        nil
+    }
+    
+    var shadowStyle: ShadowStyle {
+        ShadowStyle(
+            color: Color.black.opacity(0.02),
+            radius: 2,
+            y: 0.5
+        )
+    }
+    
+    var cardShadowStyle: ShadowStyle {
+        ShadowStyle(
+            color: Color.black.opacity(0.03),
+            radius: 3,
+            y: 1
+        )
+    }
+    
+    var neumorphicStyle: NeumorphicShadowStyle {
+        NeumorphicShadowStyle(
+            lightShadow: ShadowStyle(
+                color: Color.white.opacity(0.8),
+                radius: 4,
+                x: -2,
+                y: -2
+            ),
+            darkShadow: ShadowStyle(
+                color: Color.black.opacity(0.08),
+                radius: 4,
+                x: 2,
+                y: 2
+            )
+        )
+    }
+    
+    var neumorphicButtonStyle: NeumorphicShadowStyle {
+        NeumorphicShadowStyle(
+            lightShadow: ShadowStyle(
+                color: Color.white.opacity(0.9),
+                radius: 3,
+                x: -1.5,
+                y: -1.5
+            ),
+            darkShadow: ShadowStyle(
+                color: Color.black.opacity(0.06),
+                radius: 3,
+                x: 1.5,
+                y: 1.5
+            )
+        )
+    }
+    
+    var neumorphicPressedStyle: NeumorphicShadowStyle {
+        NeumorphicShadowStyle(
+            lightShadow: ShadowStyle(
+                color: Color.black.opacity(0.08),
+                radius: 4,
+                x: 2,
+                y: 2
+            ),
+            darkShadow: ShadowStyle(
+                color: Color.white.opacity(0.6),
+                radius: 4,
+                x: -2,
+                y: -2
+            )
+        )
+    }
+}
+
+// MARK: - Light Blue Theme (Sophisticated Blue Accent)
 struct LightTheme: Theme {
     let primary = Color(red: 0.2, green: 0.4, blue: 0.8) // Sophisticated blue primary
     let secondary = Color(red: 0.4, green: 0.6, blue: 0.9) // Lighter blue secondary

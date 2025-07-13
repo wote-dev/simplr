@@ -13,6 +13,7 @@ struct OnboardingView: View {
     @Environment(\.theme) var theme
     @State private var currentStep = 0
     @Binding var showOnboarding: Bool
+    @Binding var showThemeSelection: Bool
     
     private let steps = [
         OnboardingStep(
@@ -236,11 +237,10 @@ struct OnboardingView: View {
                 if let error = error {
                     print("Notification permission error: \(error)")
                 }
-                // Complete onboarding regardless of permission result
-                UserDefaults.standard.set(true, forKey: "HasCompletedOnboarding")
-                
+                // Move to theme selection instead of completing onboarding
                 withAnimation(.easeInOut(duration: 0.5)) {
                     showOnboarding = false
+                    showThemeSelection = true
                 }
             }
         }
@@ -254,6 +254,6 @@ struct OnboardingStep {
 }
 
 #Preview {
-    OnboardingView(showOnboarding: .constant(true))
+    OnboardingView(showOnboarding: .constant(true), showThemeSelection: .constant(false))
         .themedEnvironment(ThemeManager())
 }
