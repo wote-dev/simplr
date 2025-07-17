@@ -214,30 +214,30 @@ struct TaskRowWidget: View {
         HStack(alignment: .center, spacing: 8) {
             // Task completion button
             Button(intent: ToggleTaskIntent(taskId: task.id.uuidString)) {
-                ZStack {
-                    Circle()
-                        .fill(Color.clear)
-                        .frame(width: family == .systemSmall ? 20 : 24, height: family == .systemSmall ? 20 : 24)
-                    
-                    if task.isCompleted {
-                        Image(systemName: "checkmark.circle.fill")
-                            .font(family == .systemSmall ? .system(size: 16, weight: .medium) : .system(size: 18, weight: .medium))
-                            .foregroundColor(.green)
-                            .contentTransition(.symbolEffect(.replace.offUp))
-                            .symbolEffect(.bounce, value: task.isCompleted)
-                    } else if isUrgentTask {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .font(family == .systemSmall ? .system(size: 16, weight: .medium) : .system(size: 18, weight: .medium))
-                            .foregroundColor(.red)
-                            .contentTransition(.symbolEffect(.replace.offUp))
-                    } else {
-                        Image(systemName: "circle")
-                            .font(family == .systemSmall ? .system(size: 16, weight: .medium) : .system(size: 18, weight: .medium))
-                            .foregroundColor(dotColor)
-                            .contentTransition(.symbolEffect(.replace.offUp))
-                    }
-                }
-            }
+                 ZStack {
+                     Circle()
+                         .fill(Color.clear)
+                         .frame(width: family == .systemSmall ? 20 : 24, height: family == .systemSmall ? 20 : 24)
+                     
+                     if task.isCompleted {
+                         Image(systemName: "checkmark.circle.fill")
+                             .font(family == .systemSmall ? .system(size: 16, weight: .medium) : .system(size: 18, weight: .medium))
+                             .foregroundColor(.green)
+                             .contentTransition(.symbolEffect(.replace.offUp))
+                             .symbolEffect(.bounce, value: task.isCompleted)
+                     } else if isUrgentTask {
+                         Image(systemName: "exclamationmark.triangle.fill")
+                             .font(family == .systemSmall ? .system(size: 16, weight: .medium) : .system(size: 18, weight: .medium))
+                             .foregroundColor(.red)
+                             .contentTransition(.symbolEffect(.replace.offUp))
+                     } else {
+                         Image(systemName: "circle")
+                             .font(family == .systemSmall ? .system(size: 16, weight: .medium) : .system(size: 18, weight: .medium))
+                             .foregroundColor(dotColor)
+                             .contentTransition(.symbolEffect(.replace.offUp))
+                     }
+                 }
+             }
             .buttonStyle(.plain)
             .scaleEffect(1.0)
             .animation(.easeInOut(duration: 0.1), value: task.isCompleted)

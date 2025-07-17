@@ -34,6 +34,9 @@ struct SimplrApp: App {
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { granted, error in
             if let error = error {
                 print("Notification permission error: \(error)")
+            } else {
+                print("Notification permissions granted: \(granted)")
+                // Badge will be initialized when TaskManager loads tasks
             }
         }
         

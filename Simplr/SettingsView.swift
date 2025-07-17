@@ -16,17 +16,22 @@ struct SettingsView: View {
     @EnvironmentObject var themeManager: ThemeManager
     @EnvironmentObject var categoryManager: CategoryManager
     @EnvironmentObject var premiumManager: PremiumManager
+    @EnvironmentObject var taskManager: TaskManager
 
     @Environment(\.theme) var theme
     @Environment(\.dismiss) var dismiss
     @State private var notificationsEnabled = true
     @State private var soundEnabled = true
-    @State private var badgeCountEnabled = true
     @State private var reminderTimeOffset = 15 // minutes before due time
     @State private var showingCreateCategory = false
     @State private var showingPrivacyPolicy = false
     @State private var showingTermsOfService = false
     @State private var showingThemeSelector = false
+    
+    // Access the shared BadgeManager instance
+    private var badgeManager: BadgeManager {
+        BadgeManager.shared
+    }
 
     
     var body: some View {
@@ -80,7 +85,10 @@ struct SettingsView: View {
                                     settingsToggle(
                                         title: "Badge Count",
                                         subtitle: "Show pending tasks count on app icon",
-                                        isOn: $badgeCountEnabled
+                                        isOn: Binding(
+                                        get: { badgeManager.isBadgeEnabled },
+                                        set: { badgeManager.isBadgeEnabled = $0 }
+                                    )
                                     )
                                     
                                     reminderTimePicker

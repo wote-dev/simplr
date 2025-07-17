@@ -27,10 +27,18 @@ class TaskManager: ObservableObject {
     // Reference to CategoryManager for Spotlight integration
     private var categoryManager: CategoryManager?
     
-    // Performance optimization: Cache filtered results
+    // Badge management
+    private let badgeManager = BadgeManager.shared
+    
+    // Performance optimization: Enhanced caching system
     private var filteredTasksCache: [String: [Task]] = [:]
     private var lastCacheUpdate = Date.distantPast
-    private let cacheValidityDuration: TimeInterval = 1.0 // 1 second cache
+    private let cacheValidityDuration: TimeInterval = PerformanceConfig.Cache.cacheValidityDuration
+    private let maxCacheSize = PerformanceConfig.Cache.maxFilteredTasksCacheSize
+    
+    // Batch operation optimization
+    private var batchUpdateTimer: Timer?
+    private var pendingUpdates: Set<UUID> = []
     
     // Lazy computed properties for better performance
     private var _overdueTasks: [Task]?
@@ -45,6 +53,57 @@ class TaskManager: ObservableObject {
         loadTasks()
         requestNotificationPermission()
         setupNotificationHandling()
+        setupMemoryManagement()
+        
+        // Initial badge update
+        _Concurrency.Task { @MainActor in
+            badgeManager.updateBadgeCount()
+        }
+    }
+    
+    private func setupMemoryManagement() {
+        // Listen for memory warnings
+        NotificationCenter.default.addObserver(
+            forName: UIApplication.didReceiveMemoryWarningNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.handleMemoryWarning()
+        }
+        
+        // Listen for background events
+        NotificationCenter.default.addObserver(
+            forName: UIApplication.didEnterBackgroundNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.handleAppBackground()
+        }
+    }
+    
+    private func handleMemoryWarning() {
+        // Aggressively clear all caches during memory pressure
+        filteredTasksCache.removeAll()
+        lastCacheUpdate = Date.distantPast
+        
+        // Clear computed property caches
+        _overdueTasks = nil
+        _pendingTasks = nil
+        _completedTasks = nil
+        _todayTasks = nil
+        _futureTasks = nil
+        _noDueDateTasks = nil
+        
+        print("TaskManager: Cleared caches due to memory warning")
+    }
+    
+    private func handleAppBackground() {
+        // Reduce cache size when app goes to background
+        let targetSize = PerformanceConfig.Cache.backgroundCacheSize
+        if filteredTasksCache.count > targetSize {
+            let keysToRemove = Array(filteredTasksCache.keys.prefix(filteredTasksCache.count - targetSize))
+            keysToRemove.forEach { filteredTasksCache.removeValue(forKey: $0) }
+        }
     }
     
     // MARK: - Spotlight Integration Setup
@@ -54,6 +113,20 @@ class TaskManager: ObservableObject {
         self.categoryManager = categoryManager
         // Re-index all tasks with category information
         updateSpotlightIndex()
+    }
+    
+    // MARK: - Badge Management
+    
+    /// Get the badge manager instance
+    var badgeManagerInstance: BadgeManager {
+        return badgeManager
+    }
+    
+    /// Force update the app icon badge
+    func updateBadge() {
+        _Concurrency.Task { @MainActor in
+            badgeManager.updateBadgeCountImmediately()
+        }
     }
     
     /// Update the entire Spotlight index with current tasks
@@ -67,10 +140,20 @@ class TaskManager: ObservableObject {
         return tasks.first { $0.id == id }
     }
     
-    // MARK: - Cache Management
+    // MARK: - Enhanced Cache Management
     
     private func invalidateCache() {
-        filteredTasksCache.removeAll()
+        // Clear filtered cache with size management
+        if filteredTasksCache.count > maxCacheSize {
+            // Keep only the most recently used cache entries
+            let sortedKeys = Array(filteredTasksCache.keys).suffix(maxCacheSize / 2)
+            let newCache = Dictionary(uniqueKeysWithValues: sortedKeys.map { ($0, filteredTasksCache[$0]!) })
+            filteredTasksCache = newCache
+        } else {
+            filteredTasksCache.removeAll(keepingCapacity: true)
+        }
+        
+        // Invalidate computed property caches
         _overdueTasks = nil
         _pendingTasks = nil
         _completedTasks = nil
@@ -84,12 +167,26 @@ class TaskManager: ObservableObject {
         return Date().timeIntervalSince(lastCacheUpdate) < cacheValidityDuration
     }
     
+    private func cleanupCache() {
+        // Remove expired cache entries
+        let now = Date()
+        if now.timeIntervalSince(lastCacheUpdate) > cacheValidityDuration * 2 {
+            filteredTasksCache.removeAll(keepingCapacity: true)
+            lastCacheUpdate = now
+        }
+    }
+    
     // MARK: - Task Management
     
     func addTask(_ task: Task) {
         tasks.append(task)
         invalidateCache()
         saveTasks()
+        
+        // Update app icon badge
+        _Concurrency.Task { @MainActor in
+            badgeManager.updateBadgeCount()
+        }
         
         // Index the new task in Spotlight
         let categories = categoryManager?.categories ?? []
@@ -151,13 +248,51 @@ class TaskManager: ObservableObject {
 
             // Save the updated task
             tasks[index] = updatedTask
-            invalidateCache()
-            saveTasks()
-
-            // Update Spotlight index
-            let categories = categoryManager?.categories ?? []
-            SpotlightManager.shared.indexTask(updatedTask, categories: categories)
+            
+            // Use batch updates for better performance
+            scheduleBatchUpdate(for: updatedTask.id)
         }
+    }
+    
+    // MARK: - Batch Update Optimization
+    
+    private func scheduleBatchUpdate(for taskId: UUID) {
+        pendingUpdates.insert(taskId)
+        
+        // Cancel existing timer
+        batchUpdateTimer?.invalidate()
+        
+        // Schedule new batch update
+        batchUpdateTimer = Timer.scheduledTimer(withTimeInterval: PerformanceConfig.UI.batchUpdateDelay, repeats: false) { [weak self] _ in
+            self?.processBatchUpdates()
+        }
+    }
+    
+    private func processBatchUpdates() {
+        guard !pendingUpdates.isEmpty else { return }
+        
+        // Clear pending updates
+        let updatedTaskIds = pendingUpdates
+        pendingUpdates.removeAll()
+        
+        // Perform batch operations
+        invalidateCache()
+        saveTasks()
+        
+        // Update app icon badge
+        _Concurrency.Task { @MainActor in
+                badgeManager.updateBadgeCount()
+            }
+        
+        // Update Spotlight index for all updated tasks
+        let categories = categoryManager?.categories ?? []
+        let updatedTasks = tasks.filter { updatedTaskIds.contains($0.id) }
+        for task in updatedTasks {
+            SpotlightManager.shared.indexTask(task, categories: categories)
+        }
+        
+        // Cleanup cache periodically
+        cleanupCache()
     }
     
     func updateTask(
@@ -190,6 +325,11 @@ class TaskManager: ObservableObject {
         invalidateCache()
         saveTasks()
         
+        // Update app icon badge
+        _Concurrency.Task { @MainActor in
+            badgeManager.updateBadgeCount()
+        }
+        
         // Haptic feedback for deleting a task
         HapticManager.shared.taskDeleted()
     }
@@ -217,6 +357,11 @@ class TaskManager: ObservableObject {
             
             invalidateCache()
             saveTasks()
+            
+            // Update app icon badge
+            _Concurrency.Task { @MainActor in
+                badgeManager.updateBadgeCount()
+            }
         }
     }
     
@@ -730,6 +875,11 @@ class TaskManager: ObservableObject {
         checkForOverdueTasks()
         // Refresh Spotlight index to ensure it's up to date
         updateSpotlightIndex()
+        
+        // Update app icon badge after maintenance
+        _Concurrency.Task { @MainActor in
+            badgeManager.updateBadgeCount()
+        }
     }
 }
 

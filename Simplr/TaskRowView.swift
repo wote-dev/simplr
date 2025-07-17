@@ -40,6 +40,15 @@ struct TaskRowView: View {
     // Performance optimization: Combine related states
     @State private var gestureState = GestureState()
     
+    // Memoized computed properties for better performance
+    private var taskCategory: TaskCategory? {
+        categoryManager.category(for: task)
+    }
+    
+    private var isUrgentTaskMemoized: Bool {
+        taskCategory?.name == "URGENT"
+    }
+    
     // Enum to track initial swipe direction
     private enum SwipeDirection {
         case left, right
@@ -64,10 +73,9 @@ struct TaskRowView: View {
     private let actionThreshold: CGFloat = -120 // Only left swipe triggers actions
     private let maxDragDistance: CGFloat = 150
     
-    // Computed property to check if task has URGENT category
+    // Computed property to check if task has URGENT category (optimized)
     private var isUrgentTask: Bool {
-        guard let category = categoryManager.category(for: task) else { return false }
-        return category.name == "URGENT"
+        return isUrgentTaskMemoized
     }
     
     // Category-based glow effect properties removed
@@ -456,11 +464,12 @@ struct TaskRowView: View {
             )
             .scaleEffect(isPressed ? 0.99 : (isUrgentTask ? urgentPulseScale : 1.0))
             .opacity(completionOpacity * (isUrgentTask ? urgentPulseOpacity : 1.0))
-            .animation(.easeInOut(duration: 0.15), value: isPressed)
+            .animation(UIOptimizer.optimizedAnimation(duration: 0.15), value: isPressed)
 
             .offset(x: dragOffset)
             .scaleEffect(isDragging ? 0.98 : 1.0)
-            .animation(.interactiveSpring(response: 0.3, dampingFraction: 0.8, blendDuration: 0), value: isDragging)
+            .animation(UIOptimizer.optimizedAnimation(duration: 0.3), value: isDragging)
+            .optimizedRendering(shouldUpdate: isDragging || task.isCompleted)
             .zIndex(2) // Task card layer - above action buttons
         }
         .gesture(

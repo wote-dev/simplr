@@ -30,6 +30,7 @@ enum WidgetError: Error, LocalizedError {
 struct ToggleTaskIntent: AppIntent {
     static var title: LocalizedStringResource = "Toggle Task Completion"
     static var description = IntentDescription("Mark a task as completed or incomplete")
+    static var openAppWhenRun: Bool = false
     
     @Parameter(title: "Task ID")
     var taskId: String
@@ -37,7 +38,7 @@ struct ToggleTaskIntent: AppIntent {
     init(taskId: String) {
         self.taskId = taskId
     }
-    
+
     init() {
         self.taskId = ""
     }

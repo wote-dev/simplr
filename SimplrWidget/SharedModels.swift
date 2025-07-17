@@ -81,6 +81,19 @@ struct TaskCategory: Identifiable, Codable, Hashable {
 
 // MARK: - Task
 
+// MARK: - Checklist Item
+struct ChecklistItem: Identifiable, Codable, Hashable {
+    let id: UUID
+    var title: String
+    var isCompleted: Bool
+
+    init(title: String, isCompleted: Bool = false) {
+        self.id = UUID()
+        self.title = title
+        self.isCompleted = isCompleted
+    }
+}
+
 struct Task: Identifiable, Codable {
     let id: UUID
     var title: String
@@ -92,9 +105,10 @@ struct Task: Identifiable, Codable {
     var createdAt: Date
     var completedAt: Date?
     var categoryId: UUID?
+    var checklist: [ChecklistItem]
 
     
-    init(title: String, description: String = "", dueDate: Date? = nil, hasReminder: Bool = false, reminderDate: Date? = nil, categoryId: UUID? = nil) {
+    init(title: String, description: String = "", dueDate: Date? = nil, hasReminder: Bool = false, reminderDate: Date? = nil, categoryId: UUID? = nil, checklist: [ChecklistItem] = []) {
         self.id = UUID()
         self.title = title
         self.description = description
@@ -105,7 +119,7 @@ struct Task: Identifiable, Codable {
         self.createdAt = Date()
         self.completedAt = nil
         self.categoryId = categoryId
-
+        self.checklist = checklist
     }
     
     // MARK: - Task Status Computed Properties

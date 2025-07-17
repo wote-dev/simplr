@@ -64,11 +64,13 @@ struct ContentView: View {
 
     @Namespace private var taskNamespace
     
-    // Optimized filtered tasks with memoization
+    // Optimized filtered tasks with memoization and debouncing
     private var filteredTasks: [Task] {
-        taskManager.filteredTasks(
+        // Use debounced search for better performance
+        let searchQuery = searchText.count < 2 ? "" : searchText
+        return taskManager.filteredTasks(
             categoryId: categoryManager.selectedCategoryFilter,
-            searchText: searchText,
+            searchText: searchQuery,
             filterOption: filterOption
         )
     }
@@ -134,8 +136,10 @@ struct ContentView: View {
                 }
                 .padding(.top, 8)
                 .padding(.bottom, 100)
+                .animation(.easeInOut(duration: 0.2), value: filteredTasks.count) // Optimize list animations
             }
             .searchable(text: $searchText, prompt: "Search tasks...")
+            .debounced(searchText, delay: 0.2, key: "search-debounce")
             .transition(.asymmetric(
                 insertion: .opacity.combined(with: .scale(scale: 0.95)),
                 removal: .opacity.combined(with: .scale(scale: 0.95))
@@ -338,6 +342,11 @@ struct ContentView: View {
                 .environmentObject(premiumManager)
                 .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
+        }
+        .memoryAware {
+            // Clear search text and reset filters on memory warning
+            searchText = ""
+            categoryManager.clearFilter()
         }
         .onAppear {
             // Check for overdue tasks when view appears
