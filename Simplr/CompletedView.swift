@@ -210,81 +210,115 @@ struct CompletedView: View {
     }
     
     private var headerView: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
+        VStack(spacing: 0) {
+            // Main header content
+            HStack(alignment: .top, spacing: 20) {
                 VStack(alignment: .leading, spacing: 8) {
+                    // Title with consistent typography
                     Text("Completed")
                         .font(.system(size: 34, weight: .bold, design: .rounded))
                         .foregroundStyle(theme.accentGradient)
                         .tracking(-0.5)
                     
-                    Text("\(completedTasks.count) tasks completed")
+                    // Subtitle with consistent hierarchy
+                    Text(completedTasks.isEmpty ? "No completed tasks" : "\(completedTasks.count) tasks completed")
                         .font(.system(size: 16, weight: .medium, design: .rounded))
                         .foregroundColor(theme.textSecondary)
                         .opacity(0.8)
+                        .animation(.adaptiveSmooth, value: completedTasks.isEmpty)
                 }
                 
-                Spacer()
+                Spacer(minLength: 0)
                 
                 HStack(spacing: 12) {
-                    // Sort Menu
+                    // Sort Menu with consistent styling
                     Menu {
                         ForEach(SortOption.allCases, id: \.self) { option in
                             Button {
-                                selectedSortOption = option
+                                withAnimation(.smoothSpring) {
+                                    selectedSortOption = option
+                                }
+                                HapticManager.shared.buttonTap()
                             } label: {
                                 HStack {
                                     Image(systemName: option.icon)
                                     Text(option.title)
+                                    Spacer()
                                     if selectedSortOption == option {
-                                        Spacer()
                                         Image(systemName: "checkmark")
                                     }
                                 }
                             }
                         }
                     } label: {
-                        Image(systemName: "arrow.up.arrow.down")
-                            .font(.system(size: 16, weight: .medium))
+                        Image(systemName: "arrow.up.arrow.down.circle")
+                            .font(.system(size: 18, weight: .medium))
                             .foregroundColor(theme.accent)
-                            .padding(10)
-                            .background(
-                                Circle()
-                                    .stroke(theme.accent, lineWidth: 1)
-                            )
+                            .frame(width: 44, height: 44)
                     }
                     .animatedButton()
                     
+                    // Clear all button with consistent styling
                     if !completedTasks.isEmpty {
                         Button {
                             clearAllCompleted()
+                            HapticManager.shared.buttonTap()
                         } label: {
-                            HStack(spacing: 6) {
-                                Image(systemName: "trash")
-                                    .font(.system(size: 14, weight: .medium))
-                                Text("Clear All")
-                                    .font(.system(size: 14, weight: .medium))
-                            }
-                            .foregroundColor(theme.error)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
-                            .background(
-                                Capsule()
-                                    .stroke(theme.error, lineWidth: 0)
-                            )
+                            Image(systemName: "trash")
+                                .font(.system(size: 18, weight: .medium))
+                                .foregroundColor(theme.error)
+                                .frame(width: 44, height: 44)
                         }
                         .animatedButton()
                     }
                 }
             }
+            .padding(.horizontal, 24)
+            .padding(.top, 12)
+            .padding(.bottom, 20)
             
+            // Stats view section
             if !completedTasks.isEmpty {
-                CompletionStatsView(completedCount: completedTasks.count, taskManager: taskManager)
+                VStack(spacing: 0) {
+                    CompletionStatsView(completedCount: completedTasks.count, taskManager: taskManager)
+                        .padding(.horizontal, 24)
+                        .padding(.bottom, 16)
+                    
+                    // Subtle divider for consistency
+                    Rectangle()
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    theme.textSecondary.opacity(0.1),
+                                    theme.textSecondary.opacity(0.05),
+                                    theme.textSecondary.opacity(0.1)
+                                ],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .frame(height: 1)
+                        .padding(.horizontal, 24)
+                        .transition(.opacity.combined(with: .scale(scale: 0.8)))
+                        .animation(.adaptiveSmooth.delay(0.1), value: completedTasks.isEmpty)
+                }
             }
         }
-        .padding(.horizontal, 20)
-        .padding(.top, 8)
-        .padding(.bottom, 16)
+        .background(
+            // Subtle background enhancement
+            Rectangle()
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            theme.background,
+                            theme.background.opacity(0.98)
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+                .ignoresSafeArea(edges: .top)
+        )
     }
     
     private var emptyStateView: some View {

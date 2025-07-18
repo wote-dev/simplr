@@ -90,7 +90,7 @@ extension View {
         delay: TimeInterval = 0.3,
         key: String = UUID().uuidString
     ) -> some View {
-        self.onChange(of: value) { newValue in
+        self.onChange(of: value) { oldValue, newValue in
             UIOptimizer.shared.debounce(key: key, delay: delay) {
                 // View will update naturally
             }

@@ -263,112 +263,159 @@ struct TodayView: View {
     }
     
     private var headerView: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Today")
-                    .font(.system(size: 34, weight: .bold, design: .rounded))
-                    .foregroundStyle(theme.accentGradient)
-                    .tracking(-0.5)
+        VStack(spacing: 0) {
+            // Main header content
+            HStack(alignment: .firstTextBaseline, spacing: 20) {
+                VStack(alignment: .leading, spacing: 8) {
+                    // Title with consistent typography
+                    Text("Today")
+                        .font(.system(size: 34, weight: .bold, design: .rounded))
+                        .foregroundStyle(theme.accentGradient)
+                        .tracking(-0.5)
+                    
+                    // Subtitle with consistent hierarchy
+                    Text(todayDateString)
+                        .font(.system(size: 16, weight: .medium, design: .rounded))
+                        .foregroundColor(theme.textSecondary)
+                        .opacity(0.8)
+                }
                 
-                Text(todayDateString)
-                    .font(.system(size: 16, weight: .medium, design: .rounded))
-                    .foregroundColor(theme.textSecondary)
-                    .opacity(0.8)
-            }
-            
-            Spacer()
-            
-            HStack(spacing: 12) {
-                // Sort and Filter menu button
-                Menu {
-                    // Sort Section
-                    Section("Sort By") {
-                        ForEach(SortOption.allCases, id: \.self) { option in
-                            Button {
-                                withAnimation(.smoothSpring) {
-                                    selectedSortOption = option
-                                }
-                                HapticManager.shared.buttonTap()
-                            } label: {
-                                HStack {
-                                    Image(systemName: option.icon)
-                                    Text(option.title)
-                                    Spacer()
-                                    if selectedSortOption == option {
-                                        Image(systemName: "checkmark")
+                Spacer(minLength: 0)
+                
+                HStack(spacing: 12) {
+                    // Sort and Filter menu button
+                    Menu {
+                        // Sort Section
+                        Section("Sort By") {
+                            ForEach(SortOption.allCases, id: \.self) { option in
+                                Button {
+                                    withAnimation(.smoothSpring) {
+                                        selectedSortOption = option
+                                    }
+                                    HapticManager.shared.buttonTap()
+                                } label: {
+                                    HStack {
+                                        Image(systemName: option.icon)
+                                        Text(option.title)
+                                        Spacer()
+                                        if selectedSortOption == option {
+                                            Image(systemName: "checkmark")
+                                        }
                                     }
                                 }
                             }
                         }
-                    }
-                    
-                    Divider()
-                    
-                    // Filter Section
-                    Section("Filter") {
-                        ForEach(TaskFilter.allCases, id: \.self) { filter in
-                            Button {
-                                withAnimation(.smoothSpring) {
-                                    selectedFilter = filter
-                                }
-                                HapticManager.shared.buttonTap()
-                            } label: {
-                                HStack {
-                                    Text(filter.title)
-                                    Spacer()
-                                    if selectedFilter == filter {
-                                        Image(systemName: "checkmark")
-                                    }
-                                }
-                            }
-                        }
-                    }
-                } label: {
-                    Image(systemName: "arrow.up.arrow.down.circle")
-                        .font(.system(size: 18, weight: .medium))
-                        .foregroundColor(theme.accent)
-                        .frame(width: 44, height: 44)
-                }
-                .animatedButton()
-                
-                Button {
-                    showingSettings = true
-                    HapticManager.shared.buttonTap()
-                } label: {
-                    Image(systemName: "gear")
-                        .font(.system(size: 18, weight: .medium))
-                        .foregroundColor(theme.accent)
-                        .frame(width: 44, height: 44)
-                }
-                .animatedButton()
-                
-                Button {
-                    showingAddTask = true
-                    HapticManager.shared.buttonTap()
-                } label: {
-                    ZStack {
-                        Circle()
-                            .fill(theme.accentGradient)
-                            .frame(width: 50, height: 50)
-                            .applyNeumorphicShadow(theme.neumorphicButtonStyle)
                         
-                        Image(systemName: "plus")
-                            .font(.system(size: 20, weight: .semibold))
-                            .foregroundColor(theme.background)
-                            .shadow(
-                                color: theme.background == .black ? Color.white.opacity(0.3) : Color.black.opacity(0.3),
-                                radius: 2,
-                                x: 0,
-                                y: 1
-                            )
+                        Divider()
+                        
+                        // Filter Section
+                        Section("Filter") {
+                            ForEach(TaskFilter.allCases, id: \.self) { filter in
+                                Button {
+                                    withAnimation(.smoothSpring) {
+                                        selectedFilter = filter
+                                    }
+                                    HapticManager.shared.buttonTap()
+                                } label: {
+                                    HStack {
+                                        Text(filter.title)
+                                        Spacer()
+                                        if selectedFilter == filter {
+                                            Image(systemName: "checkmark")
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } label: {
+                        Image(systemName: "arrow.up.arrow.down.circle")
+                            .font(.system(size: 18, weight: .medium))
+                            .foregroundColor(theme.accent)
+                            .frame(width: 44, height: 44)
                     }
+                    .animatedButton()
+                    
+                    Button {
+                        showingSettings = true
+                        HapticManager.shared.buttonTap()
+                    } label: {
+                        Image(systemName: "gear")
+                            .font(.system(size: 18, weight: .medium))
+                            .foregroundColor(theme.accent)
+                            .frame(width: 44, height: 44)
+                    }
+                    .animatedButton()
+                    
+                    // Enhanced add button with consistent styling
+                    Button {
+                        withAnimation(.adaptiveBouncy) {
+                            showingAddTask = true
+                        }
+                        HapticManager.shared.buttonTap()
+                    } label: {
+                        ZStack {
+                            // Background
+                            Circle()
+                                .fill(theme.accentGradient)
+                                .frame(width: 50, height: 50)
+                                .applyNeumorphicShadow(theme.neumorphicButtonStyle)
+                            
+                            // Plus icon
+                            Image(systemName: "plus")
+                                .font(.system(size: 20, weight: .semibold))
+                                .foregroundColor(theme.background)
+                                .shadow(
+                                    color: theme.background == .black ? Color.white.opacity(0.3) : Color.black.opacity(0.3),
+                                    radius: 2,
+                                    x: 0,
+                                    y: 1
+                                )
+                        }
+                        .scaleEffect(showingAddTask ? 0.95 : 1.0)
+                        .animation(.adaptiveSnappy, value: showingAddTask)
+                    }
+                    .animatedButton()
                 }
-                .animatedButton()
+            }
+            .padding(.horizontal, 24)
+            .padding(.top, 12)
+            .padding(.bottom, 20)
+            
+            // Subtle divider for consistency
+            if !todayTasks.isEmpty {
+                Rectangle()
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                theme.textSecondary.opacity(0.1),
+                                theme.textSecondary.opacity(0.05),
+                                theme.textSecondary.opacity(0.1)
+                            ],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .frame(height: 1)
+                    .padding(.horizontal, 24)
+                    .transition(.opacity.combined(with: .scale(scale: 0.8)))
+                    .animation(.adaptiveSmooth.delay(0.1), value: todayTasks.isEmpty)
             }
         }
-        .padding(.horizontal, 20)
-        .padding(.top, 8)
-        .padding(.bottom, 12)
+        .background(
+            // Subtle background enhancement
+            Rectangle()
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            theme.background,
+                            theme.background.opacity(0.98)
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+                .ignoresSafeArea(edges: .top)
+        )
     }
     
     private var emptyStateView: some View {

@@ -191,7 +191,11 @@ class BadgeManager: ObservableObject {
         guard count != currentBadgeCount else { return }
         
         // Update the app icon badge
-        UIApplication.shared.applicationIconBadgeNumber = count
+        UNUserNotificationCenter.current().setBadgeCount(count) { error in
+            if let error = error {
+                self.logger.error("Error setting badge count: \(error.localizedDescription)")
+            }
+        }
         currentBadgeCount = count
         
         logger.info("Updated app icon badge to: \(count)")

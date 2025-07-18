@@ -12,7 +12,7 @@ struct MainTabView: View {
     @EnvironmentObject var taskManager: TaskManager
     @Environment(\.theme) var theme
     @State private var selectedTab: Tab = .today
-    @Namespace private var tabTransition
+    @State private var shouldUseReducedMotion = UIAccessibility.isReduceMotionEnabled
     
     // Spotlight navigation
     @Binding var selectedTaskId: UUID?
@@ -71,27 +71,26 @@ struct MainTabView: View {
     
     var body: some View {
         ZStack {
-            // Animated background
+            // Static background - no animation for better performance
             backgroundView
             
             VStack(spacing: 0) {
-                // Content area
+                // Content area with optimized transitions
                 contentView
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                 
                 // Custom tab bar
                 customTabBar
             }
-            
-            // Celebration overlay removed
         }
-
-
         .onChange(of: selectedTaskId) { _, newTaskId in
             handleSpotlightNavigation(newTaskId)
         }
         .onChange(of: quickActionTriggered) { _, action in
             handleQuickAction(action)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIAccessibility.reduceMotionStatusDidChangeNotification)) { _ in
+            shouldUseReducedMotion = UIAccessibility.isReduceMotionEnabled
         }
         .sheet(isPresented: $showingAddTask) {
             NavigationView {
@@ -100,7 +99,7 @@ struct MainTabView: View {
         }
         .confirmationDialog("Clear All Today's Tasks", isPresented: $showingClearTodayAlert) {
             Button("Clear All Tasks", role: .destructive) {
-                withAnimation(.smoothSpring) {
+                withAnimation(optimizedAnimation) {
                     taskManager.clearTodayTasks()
                 }
             }
@@ -130,10 +129,7 @@ struct MainTabView: View {
         
         // Navigate to the appropriate tab if not already there
         if selectedTab != targetTab {
-            withAnimation(.interpolatingSpring(stiffness: 300, damping: 30)) {
-                selectedTab = targetTab
-            }
-            HapticManager.shared.selectionChanged()
+            selectTab(targetTab)
         }
     }
     
@@ -150,10 +146,7 @@ struct MainTabView: View {
         case .viewToday:
             // Navigate to today tab if not already there
             if selectedTab != .today {
-                withAnimation(.interpolatingSpring(stiffness: 300, damping: 30)) {
-                    selectedTab = .today
-                }
-                HapticManager.shared.selectionChanged()
+                selectTab(.today)
             }
         }
         
@@ -169,10 +162,9 @@ struct MainTabView: View {
             .themedBackground(theme)
     }
     
-    // MARK: - Tab Content Display (Swipe removed)
+    // MARK: - Optimized Tab Content Display
     
     private var contentView: some View {
-        // Display only the selected tab content without swipe gestures
         Group {
             switch selectedTab {
             case .today:
@@ -183,15 +175,15 @@ struct MainTabView: View {
                 CompletedView(selectedTaskId: $selectedTaskId)
             }
         }
-        .animation(.interpolatingSpring(stiffness: 300, damping: 30), value: selectedTab)
+        .transition(optimizedTransition)
+        .animation(optimizedAnimation, value: selectedTab)
     }
     
 
     private var customTabBar: some View {
-        // Tab bar content with frosted glass background
         HStack(spacing: 0) {
             ForEach(Tab.allCases, id: \.self) { tab in
-                tabButton(for: tab)
+                optimizedTabButton(for: tab)
                     .frame(maxWidth: .infinity)
             }
         }
@@ -199,7 +191,6 @@ struct MainTabView: View {
         .padding(.top, 16)
         .padding(.bottom, 8)
         .background(
-            // Solid background colors for each theme
             Rectangle()
                 .fill(
                     themeManager.themeMode == .kawaii ?
@@ -213,37 +204,70 @@ struct MainTabView: View {
         )
     }
     
-    private func tabButton(for tab: Tab) -> some View {
+
+    
+    private func selectTab(_ tab: Tab) {
+        guard selectedTab != tab else { return }
+        
+        // Minimal haptic feedback
+        HapticManager.shared.selectionChanged()
+        
+        // Direct tab switch with optimized animation
+        withAnimation(optimizedAnimation) {
+            selectedTab = tab
+        }
+    }
+    
+    // MARK: - Performance Optimization Helpers
+    
+    /// Ultra-optimized animation for maximum performance
+    private var optimizedAnimation: Animation {
+        if shouldUseReducedMotion {
+            return .linear(duration: 0.1)
+        }
+        
+        // Use the fastest, most efficient animation
+        return .easeOut(duration: 0.2)
+    }
+    
+    /// Minimal transition for best performance
+    private var optimizedTransition: AnyTransition {
+        if shouldUseReducedMotion {
+            return .identity
+        }
+        
+        // Simple opacity transition - fastest and most efficient
+        return .opacity
+    }
+    
+    /// Ultra-optimized tab button for maximum performance
+    private func optimizedTabButton(for tab: Tab) -> some View {
         Button {
             selectTab(tab)
         } label: {
             VStack(spacing: 4) {
                 Image(systemName: selectedTab == tab ? tab.selectedIcon : tab.icon)
-                    .font(.system(size: 22, weight: selectedTab == tab ? .semibold : .medium, design: .default))
+                    .font(.system(size: 22, weight: selectedTab == tab ? .semibold : .medium))
                     .foregroundColor(
                         selectedTab == tab ? 
                         theme.accent : 
                         (themeManager.themeMode == .kawaii ? theme.textSecondary :
                          (themeManager.isDarkMode ? Color.white.opacity(0.6) : Color.black.opacity(0.5)))
                     )
-                    .scaleEffect(selectedTab == tab ? 1.0 : 0.9)
-                    .animation(.easeInOut(duration: 0.2), value: selectedTab == tab)
                 
                 Text(tab.title)
-                    .font(.system(size: 10, weight: selectedTab == tab ? .medium : .regular, design: .default))
+                    .font(.system(size: 10, weight: selectedTab == tab ? .medium : .regular))
                     .foregroundColor(
                         selectedTab == tab ? 
                         theme.accent : 
                         (themeManager.themeMode == .kawaii ? theme.textSecondary :
                          (themeManager.isDarkMode ? Color.white.opacity(0.6) : Color.black.opacity(0.5)))
                     )
-                    .opacity(selectedTab == tab ? 1.0 : 0.7)
-                    .animation(.easeInOut(duration: 0.2), value: selectedTab == tab)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 12)
         }
-        .buttonStyle(ModernTabButtonStyle())
+        .buttonStyle(OptimizedTabButtonStyle(isSelected: selectedTab == tab))
         .if(tab == .today) { view in
             view.contextMenu {
                 Button {
@@ -255,31 +279,22 @@ struct MainTabView: View {
             }
         }
     }
-    
-    private func selectTab(_ tab: Tab) {
-        guard selectedTab != tab else { return }
-        
-        HapticManager.shared.selectionChanged()
-        
-        withAnimation(.interpolatingSpring(stiffness: 300, damping: 30)) {
-            selectedTab = tab
-        }
-    }
-    
-
-    
 
 }
 
-// MARK: - Modern Tab Button Style
-struct ModernTabButtonStyle: ButtonStyle {
+// MARK: - Optimized Tab Button Style for Maximum Performance
+struct OptimizedTabButtonStyle: ButtonStyle {
+    let isSelected: Bool
+    
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .scaleEffect(configuration.isPressed ? 0.96 : 1.0)
-            .opacity(configuration.isPressed ? 0.85 : 1.0)
-            .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
+            .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
+            .opacity(configuration.isPressed ? 0.9 : 1.0)
+            .animation(.easeOut(duration: 0.1), value: configuration.isPressed)
     }
 }
+
+
 
 // MARK: - View Extension for Conditional Modifiers
 extension View {

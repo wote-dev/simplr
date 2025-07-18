@@ -166,8 +166,8 @@ struct MemoryAware: ViewModifier {
     
     func body(content: Content) -> some View {
         content
-            .onChange(of: memoryManager.memoryPressure) { pressure in
-                if pressure == .critical {
+            .onChange(of: memoryManager.memoryPressure) { oldValue, newValue in
+                if newValue == .critical {
                     onMemoryWarning?()
                 }
             }

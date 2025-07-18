@@ -65,6 +65,11 @@ extension Animation {
     // Unified smooth tab animation (legacy)
     static let smoothTabTransitionLegacy = Animation.interactiveSpring(response: 0.4, dampingFraction: 0.8, blendDuration: 0.1)
     
+    // High-performance tab switching animations
+    static let ultraSmoothTab = Animation.interpolatingSpring(stiffness: 400, damping: 28)
+    static let responsiveTab = Animation.interpolatingSpring(stiffness: 500, damping: 30)
+    static let silkyTab = Animation.interpolatingSpring(stiffness: 350, damping: 25)
+    
     // Helper methods to use appropriate animation based on iOS version
     static var adaptiveSmooth: Animation {
         if #available(iOS 17.0, *) {
@@ -123,6 +128,8 @@ extension Animation {
     static let overshoot = Animation.timingCurve(0.25, 0, 0.1, 1.5, duration: 0.6)
     static let bounceBack = Animation.timingCurve(0.68, -0.6, 0.32, 1.6, duration: 0.7)
 }
+
+
 
 // MARK: - Sound Effects for Animations
 enum AnimationSound {

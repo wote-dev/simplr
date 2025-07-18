@@ -258,36 +258,10 @@ struct UpcomingView: View {
             HStack(alignment: .top, spacing: 20) {
                 VStack(alignment: .leading, spacing: 8) {
                     // Title with enhanced typography
-                    HStack(alignment: .firstTextBaseline, spacing: 12) {
-                        Text("Upcoming")
-                            .font(.system(size: 34, weight: .bold, design: .rounded))
-                            .foregroundStyle(theme.accentGradient)
-                            .tracking(-0.5)
-                        
-                        // Animated task count badge
-                        if upcomingTasks.count > 0 {
-                            Text("\(upcomingTasks.count)")
-                                .font(.system(size: 16, weight: .semibold, design: .rounded))
-                                .foregroundColor(theme.background)
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 4)
-                                .background(
-                                    Capsule()
-                                        .fill(theme.accentGradient)
-                                        .shadow(
-                                            color: theme.shadow,
-                                            radius: 4,
-                                            x: 0,
-                                            y: 2
-                                        )
-                                )
-                                .transition(.asymmetric(
-                                    insertion: .scale.combined(with: .opacity),
-                                    removal: .scale.combined(with: .opacity)
-                                ))
-                                .animation(.adaptiveBouncy, value: upcomingTasks.count)
-                        }
-                    }
+                    Text("Upcoming")
+                        .font(.system(size: 34, weight: .bold, design: .rounded))
+                        .foregroundStyle(theme.accentGradient)
+                        .tracking(-0.5)
                     
                     // Subtitle with better hierarchy
                     Text(upcomingTasks.isEmpty ? "All caught up!" : "Tasks scheduled ahead")
