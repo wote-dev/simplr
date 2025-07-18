@@ -24,33 +24,12 @@ struct ThemeSelectorView: View {
             
             ScrollView {
                 VStack(spacing: 24) {
-                    // Header with Done button
+                    // Header description
                     VStack(spacing: 8) {
-                        HStack {
-                            Spacer()
-                            
-                            VStack(spacing: 8) {
-                                Text("Choose Theme")
-                                    .font(.title2)
-                                    .fontWeight(.semibold)
-                                    .foregroundColor(theme.text)
-                                
-                                Text("Select your preferred appearance")
-                                    .font(.subheadline)
-                                    .foregroundColor(theme.textSecondary)
-                            }
-                            
-                            Spacer()
-                            
-                            Button("Done") {
-                                HapticManager.shared.buttonTap()
-                                withAnimation(.easeInOut(duration: 0.2)) {
-                                    dismiss()
-                                }
-                            }
-                            .foregroundColor(theme.accent)
-                            .fontWeight(.semibold)
-                        }
+                        Text("Select your preferred appearance")
+                            .font(.subheadline)
+                            .foregroundColor(theme.textSecondary)
+                            .multilineTextAlignment(.center)
                     }
                     .padding(.top, 20)
                     .padding(.horizontal, 20)
@@ -97,6 +76,28 @@ struct ThemeSelectorView: View {
                     #endif
                 }
                 .padding(.bottom, 20)
+            }
+        }
+        .navigationBarBackButtonHidden(true)
+        .toolbarColorScheme(theme.background == .black || theme.background == Color(red: 0.02, green: 0.02, blue: 0.02) ? .dark : .light, for: .navigationBar)
+        .toolbarBackground(theme.surface.opacity(0.95), for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button {
+                    HapticManager.shared.buttonTap()
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        dismiss()
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 16, weight: .semibold))
+                        Text("Settings")
+                            .font(.body)
+                    }
+                    .foregroundColor(theme.accent)
+                }
             }
         }
         .sheet(isPresented: $showingPaywall) {
@@ -241,15 +242,15 @@ struct ThemeOptionCard: View {
     private func description(for mode: ThemeMode) -> String {
         switch mode {
         case .light:
-            return "Clean and bright interface"
+            return "Clean and minimal"
         case .lightBlue:
-            return "Sophisticated blue-accented design"
+            return "Soft and calming"
         case .dark:
-            return "Easy on the eyes in low light"
+            return "Easy on the eyes"
         case .system:
-            return "Matches your device settings"
+            return "Follows your device"
         case .kawaii:
-            return "Adorable pink theme with cute aesthetics"
+            return "Cute and colorful"
         }
     }
 }
