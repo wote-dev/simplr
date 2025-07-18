@@ -165,18 +165,19 @@ struct MainTabView: View {
     // MARK: - Optimized Tab Content Display
     
     private var contentView: some View {
-        Group {
-            switch selectedTab {
-            case .today:
-                TodayView(selectedTaskId: $selectedTaskId)
-            case .upcoming:
-                UpcomingView(selectedTaskId: $selectedTaskId)
-            case .completed:
-                CompletedView(selectedTaskId: $selectedTaskId)
-            }
+        ZStack {
+            TodayView(selectedTaskId: $selectedTaskId)
+                .opacity(selectedTab == .today ? 1 : 0)
+                .allowsHitTesting(selectedTab == .today)
+
+            UpcomingView(selectedTaskId: $selectedTaskId)
+                .opacity(selectedTab == .upcoming ? 1 : 0)
+                .allowsHitTesting(selectedTab == .upcoming)
+
+            CompletedView(selectedTaskId: $selectedTaskId)
+                .opacity(selectedTab == .completed ? 1 : 0)
+                .allowsHitTesting(selectedTab == .completed)
         }
-        .transition(optimizedTransition)
-        .animation(optimizedAnimation, value: selectedTab)
     }
     
 
@@ -208,11 +209,9 @@ struct MainTabView: View {
     
     private func selectTab(_ tab: Tab) {
         guard selectedTab != tab else { return }
-        
-        // Minimal haptic feedback
+
         HapticManager.shared.selectionChanged()
-        
-        // Direct tab switch with optimized animation
+
         withAnimation(optimizedAnimation) {
             selectedTab = tab
         }
@@ -223,7 +222,7 @@ struct MainTabView: View {
     /// Ultra-optimized animation for maximum performance
     private var optimizedAnimation: Animation {
         if shouldUseReducedMotion {
-            return .linear(duration: 0.1)
+            return .linear(duration: 0)
         }
         
         // Use the fastest, most efficient animation
