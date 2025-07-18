@@ -61,6 +61,22 @@ struct TaskRowView: View {
         var lastTranslation: CGFloat = 0
         var velocity: CGFloat = 0
         var isActive = false
+        var gestureStartTime: Date? = nil
+        var isScrollGesture = false
+        
+        mutating func reset() {
+            initialDirection = nil
+            hasShownIcon = false
+            lastTranslation = 0
+            velocity = 0
+            isActive = false
+            gestureStartTime = nil
+            isScrollGesture = false
+        }
+        
+        mutating func markAsScrollGesture() {
+            isScrollGesture = true
+        }
     }
     
     // URGENT category pulsating animation states - optimized for performance
@@ -464,23 +480,17 @@ struct TaskRowView: View {
             .zIndex(2) // Task card layer - above action buttons
         }
         .gesture(
-            // High-performance drag gesture optimized for 120fps
-            DragGesture(minimumDistance: 5, coordinateSpace: .local)
+            // Highly optimized drag gesture for seamless scrolling
+            DragGesture(minimumDistance: 2, coordinateSpace: .local)
                 .onChanged { value in
-                    // Advanced throttling for optimal performance
-                    let translationDelta = abs(value.translation.width - gestureState.lastTranslation)
-                    let velocityThreshold = abs(value.velocity.width) > 500 ? 1.0 : 2.0
-                    
-                    if translationDelta > velocityThreshold {
-                        handleDragChanged(value)
-                    }
+                    handleDragChanged(value)
                 }
                 .onEnded { value in
                     handleDragEnded(value)
                 }
         )
         .simultaneousGesture(
-            // Add tap gesture that doesn't interfere with drag
+            // Add tap gesture that doesn't interfere with drag or scroll
             TapGesture()
                 .onEnded { _ in
                     handleTapGesture()
@@ -604,6 +614,35 @@ struct TaskRowView: View {
         
         let translation = value.translation.width
         let velocity = value.velocity.width
+        let horizontalTranslation = abs(value.translation.width)
+        let verticalTranslation = abs(value.translation.height)
+        
+        // Initialize gesture timing if this is the first movement
+        if gestureState.gestureStartTime == nil {
+            gestureState.gestureStartTime = Date()
+        }
+        
+        // If this is marked as a scroll gesture, don't process further
+        if gestureState.isScrollGesture {
+            return
+        }
+        
+        // Simplified scroll detection - only block if it's clearly a vertical scroll
+        // Allow more horizontal movement to coexist with vertical scrolling
+        let isDefinitelyScrollGesture = (
+            // Strong vertical movement with very little horizontal component
+            (verticalTranslation > 25 && horizontalTranslation < 10) ||
+            // Very fast vertical velocity with minimal horizontal
+            (abs(value.velocity.height) > 400 && abs(value.velocity.width) < 100)
+        )
+        
+        if isDefinitelyScrollGesture {
+            gestureState.markAsScrollGesture()
+            if isDragging {
+                resetToNeutralState()
+            }
+            return
+        }
         
         // Update gesture state for performance tracking
         gestureState.velocity = velocity
@@ -628,8 +667,15 @@ struct TaskRowView: View {
             return
         }
         
+        // Require more deliberate horizontal movement before engaging swipe
+        // This prevents accidental swipe activation during vertical scrolling
+        guard horizontalTranslation > 15 else { return }
+        
+        // Additional check: ensure horizontal movement is more significant than vertical
+        guard horizontalTranslation > verticalTranslation * 0.6 else { return }
+        
         // Determine initial swipe direction on first significant movement
-        if gestureState.initialDirection == nil && abs(translation) > 15 {
+        if gestureState.initialDirection == nil && abs(translation) > 12 {
             gestureState.initialDirection = .left
         }
         
@@ -664,6 +710,10 @@ struct TaskRowView: View {
     // MARK: - Optimized Helper Methods for Gesture Handling
     
     private func resetToNeutralState() {
+        // Immediately clear scroll gesture flag to allow scrolling
+        gestureState.isScrollGesture = false
+        gestureState.isActive = false
+        
         // High-performance spring animation for 120fps
         withAnimation(.interactiveSpring(response: 0.3, dampingFraction: 0.8, blendDuration: 0)) {
             dragOffset = 0
@@ -672,6 +722,11 @@ struct TaskRowView: View {
             showEditIcon = false
             showDeleteIcon = false
         }
+        
+        // Reset enhanced gesture state
+        gestureState.reset()
+        gestureCompleted = false
+        hasTriggeredHaptic = false
     }
     
     private func handleIconShownState(translation: CGFloat) {
@@ -765,8 +820,15 @@ struct TaskRowView: View {
         let translation = value.translation.width
         let velocity = value.velocity.width
         
-        // Mark gesture as inactive
+        // If this was identified as a scroll gesture, reset state and allow scrolling
+        if gestureState.isScrollGesture {
+            resetToNeutralState()
+            return
+        }
+        
+        // Mark gesture as inactive and clear scroll gesture flag
         gestureState.isActive = false
+        gestureState.isScrollGesture = false
         
         // If confirmations are already showing, handle dismissal
         if showBothActionsConfirmation {
@@ -828,6 +890,10 @@ struct TaskRowView: View {
         gestureCompleted = true
         HapticManager.shared.buttonTap()
         
+        // Immediately clear scroll gesture flag to allow scrolling
+        gestureState.isScrollGesture = false
+        gestureState.isActive = false
+        
         // Reset gesture state and trigger edit
         resetGestureState()
         
@@ -841,6 +907,10 @@ struct TaskRowView: View {
         // Execute the mark as incomplete action
         gestureCompleted = true
         HapticManager.shared.buttonTap()
+        
+        // Immediately clear scroll gesture flag to allow scrolling
+        gestureState.isScrollGesture = false
+        gestureState.isActive = false
         
         // Reset gesture state and trigger completion toggle
         resetGestureState()
@@ -856,6 +926,10 @@ struct TaskRowView: View {
         gestureCompleted = true
         HapticManager.shared.swipeToDelete()
         
+        // Immediately clear scroll gesture flag to allow scrolling
+        gestureState.isScrollGesture = false
+        gestureState.isActive = false
+        
         // High-performance delete animation
         withAnimation(.interactiveSpring(response: 0.5, dampingFraction: 0.7, blendDuration: 0)) {
             dragOffset = -UIScreen.main.bounds.width
@@ -869,6 +943,11 @@ struct TaskRowView: View {
     
     private func dismissConfirmations() {
         HapticManager.shared.gestureCancelled()
+        
+        // Immediately clear scroll gesture flag to allow scrolling
+        gestureState.isScrollGesture = false
+        gestureState.isActive = false
+        
         resetGestureState()
         // Notify parent that deletion was canceled
         onDeleteCanceled?()
@@ -932,10 +1011,19 @@ struct TaskRowView: View {
             completionOpacity = 1.0
         }
         
-        // Reset all gesture state efficiently
+        // Reset all gesture state efficiently with explicit cleanup
         hasTriggeredHaptic = false
         gestureCompleted = false
-        gestureState = GestureState() // Reset entire gesture state at once
+        
+        // Explicitly reset gesture state to ensure clean slate
+        gestureState.reset()
+        
+        // Force a brief delay to ensure state is fully cleared before allowing new gestures
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            // Additional cleanup to ensure no lingering state
+            gestureState.isScrollGesture = false
+            gestureState.isActive = false
+        }
     }
     
     private func duplicateTask() {

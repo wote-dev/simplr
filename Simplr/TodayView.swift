@@ -456,8 +456,8 @@ struct TodayView: View {
     }
     
     private var taskListView: some View {
-        ScrollView {
-            LazyVStack(spacing: 16) {
+        ScrollView(.vertical, showsIndicators: false) {
+            LazyVStack(spacing: 16, pinnedViews: []) {
                 let groupedTasks = categoryManager.groupTasksByCategory(todayTasks)
                 
                 ForEach(Array(groupedTasks.indices), id: \.self) { index in
@@ -474,6 +474,7 @@ struct TodayView: View {
                             // Tasks in this category
                             ForEach(categoryGroup.tasks, id: \.id) { task in
                                 taskRowWithEffects(task)
+                                    .id("task-\(task.id.uuidString)")
                             }
                         }
                     }
@@ -482,6 +483,10 @@ struct TodayView: View {
             .padding(.top, 8)
             .padding(.bottom, 100)
         }
+        .scrollContentBackground(.hidden)
+        .scrollBounceBehavior(.automatic)
+        .scrollClipDisabled(false)
+        .scrollDismissesKeyboard(.interactively)
         .transition(.asymmetric(
             insertion: .opacity.combined(with: .scale(scale: 0.95)),
             removal: .opacity.combined(with: .scale(scale: 0.95))

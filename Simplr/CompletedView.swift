@@ -331,8 +331,8 @@ struct CompletedView: View {
     }
     
     private var taskListView: some View {
-        ScrollView {
-            LazyVStack(spacing: 20) {
+        ScrollView(.vertical, showsIndicators: false) {
+            LazyVStack(spacing: 20, pinnedViews: []) {
                 ForEach(groupedTasks, id: \.0) { sectionTitle, tasks in
                     VStack(alignment: .leading, spacing: 12) {
                         HStack {
@@ -376,6 +376,7 @@ struct CompletedView: View {
                         LazyVStack(spacing: 8) {
                             ForEach(tasks, id: \.id) { task in
                                 completedTaskRow(task)
+                                    .id("task-\(task.id.uuidString)")
                             }
                         }
                     }
@@ -384,6 +385,10 @@ struct CompletedView: View {
             .padding(.top, 8)
             .padding(.bottom, 100)
         }
+        .scrollContentBackground(.hidden)
+        .scrollBounceBehavior(.automatic)
+        .scrollClipDisabled(false)
+        .scrollDismissesKeyboard(.interactively)
         .transition(.asymmetric(
             insertion: .opacity.combined(with: .scale(scale: 0.95)),
             removal: .opacity.combined(with: .scale(scale: 0.95))

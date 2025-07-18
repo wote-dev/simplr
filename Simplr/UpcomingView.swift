@@ -426,8 +426,8 @@ struct UpcomingView: View {
     }
     
     private var taskListView: some View {
-        ScrollView {
-            LazyVStack(spacing: 24) {
+        ScrollView(.vertical, showsIndicators: false) {
+            LazyVStack(spacing: 24, pinnedViews: []) {
                 ForEach(groupedTasks, id: \.0) { sectionTitle, tasks in
                     VStack(alignment: .leading, spacing: 16) {
                         // Enhanced section header
@@ -497,6 +497,7 @@ struct UpcomingView: View {
                         LazyVStack(spacing: 10) {
                             ForEach(tasks, id: \.id) { task in
                                 taskRowWithEffects(task)
+                                    .id("task-\(task.id.uuidString)")
                             }
                         }
                     }
@@ -505,6 +506,10 @@ struct UpcomingView: View {
             .padding(.top, 16)
             .padding(.bottom, 120)
         }
+        .scrollContentBackground(.hidden)
+        .scrollBounceBehavior(.automatic)
+        .scrollClipDisabled(false)
+        .scrollDismissesKeyboard(.interactively)
         .transition(.asymmetric(
             insertion: .opacity.combined(with: .scale(scale: 0.95)).combined(with: .offset(y: 10)),
             removal: .opacity.combined(with: .scale(scale: 0.95)).combined(with: .offset(y: -10))
