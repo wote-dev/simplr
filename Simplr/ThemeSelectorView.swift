@@ -24,18 +24,33 @@ struct ThemeSelectorView: View {
                 
                 ScrollView {
                     VStack(spacing: 24) {
-                        // Header
+                        // Header with Done button
                         VStack(spacing: 8) {
-                            Text("Choose Theme")
-                                .font(.title2)
+                            HStack {
+                                Spacer()
+                                
+                                VStack(spacing: 8) {
+                                    Text("Choose Theme")
+                                        .font(.title2)
+                                        .fontWeight(.semibold)
+                                        .foregroundColor(theme.text)
+                                    
+                                    Text("Select your preferred appearance")
+                                        .font(.subheadline)
+                                        .foregroundColor(theme.textSecondary)
+                                }
+                                
+                                Spacer()
+                                
+                                Button("Done") {
+                                    dismiss()
+                                }
+                                .foregroundColor(theme.accent)
                                 .fontWeight(.semibold)
-                                .foregroundColor(theme.text)
-                            
-                            Text("Select your preferred appearance")
-                                .font(.subheadline)
-                                .foregroundColor(theme.textSecondary)
+                            }
                         }
                         .padding(.top, 20)
+                        .padding(.horizontal, 20)
                     
                     // Theme options
                     VStack(spacing: 16) {
@@ -82,15 +97,6 @@ struct ThemeSelectorView: View {
             }
             .navigationTitle("")
             .navigationBarHidden(true)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                    .foregroundColor(theme.accent)
-                    .fontWeight(.semibold)
-                }
-            }
             .sheet(isPresented: $showingPaywall) {
                 PaywallView(targetFeature: .kawaiiTheme)
                     .environmentObject(premiumManager)
