@@ -158,7 +158,7 @@ struct OnboardingView: View {
                                 .frame(maxWidth: .infinity)
                                 .background(
                                     RoundedRectangle(cornerRadius: 12)
-                                        .stroke(theme.textSecondary.opacity(0.3), lineWidth: 1)
+                                        .stroke(theme.textSecondary.opacity(0.3), lineWidth: 0.8)
                                 )
                             }
                             .transition(.asymmetric(

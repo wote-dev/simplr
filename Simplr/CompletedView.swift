@@ -277,32 +277,7 @@ struct CompletedView: View {
             .padding(.top, 12)
             .padding(.bottom, 20)
             
-            // Stats view section
-            if !completedTasks.isEmpty {
-                VStack(spacing: 0) {
-                    CompletionStatsView(completedCount: completedTasks.count, taskManager: taskManager)
-                        .padding(.horizontal, 24)
-                        .padding(.bottom, 16)
-                    
-                    // Subtle divider for consistency
-                    Rectangle()
-                        .fill(
-                            LinearGradient(
-                                colors: [
-                                    theme.textSecondary.opacity(0.1),
-                                    theme.textSecondary.opacity(0.05),
-                                    theme.textSecondary.opacity(0.1)
-                                ],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
-                        .frame(height: 1)
-                        .padding(.horizontal, 24)
-                        .transition(.opacity.combined(with: .scale(scale: 0.8)))
-                        .animation(.adaptiveSmooth.delay(0.1), value: completedTasks.isEmpty)
-                }
-            }
+
         }
         .background(
             // Subtle background enhancement
@@ -457,97 +432,5 @@ struct CompletedView: View {
         }
         
         HapticManager.shared.successFeedback()
-    }
-}
-
-struct CompletionStatsView: View {
-    let completedCount: Int
-    let taskManager: TaskManager
-    @Environment(\.theme) var theme
-    
-    var body: some View {
-        HStack(spacing: 16) {
-            StatItem(
-                title: "Today",
-                count: todayCompletedCount,
-                icon: "calendar.circle",
-                color: theme.success
-            )
-            
-            StatItem(
-                title: "This Week",
-                count: weekCompletedCount,
-                icon: "calendar.badge.clock",
-                color: theme.primary
-            )
-            
-            StatItem(
-                title: "Total",
-                count: completedCount,
-                icon: "trophy",
-                color: theme.accent
-            )
-        }
-    }
-    
-    private var todayCompletedCount: Int {
-        let calendar = Calendar.current
-        let today = Date()
-        
-        return taskManager.completedTasks.filter { task in
-            guard let completedAt = task.completedAt else { return false }
-            return calendar.isDate(completedAt, inSameDayAs: today)
-        }.count
-    }
-    
-    private var weekCompletedCount: Int {
-        let calendar = Calendar.current
-        let today = Date()
-        let weekAgo = calendar.date(byAdding: .weekOfYear, value: -1, to: today) ?? today
-        
-        return taskManager.completedTasks.filter { task in
-            guard let completedAt = task.completedAt else { return false }
-            return completedAt >= weekAgo
-        }.count
-    }
-}
-
-struct StatItem: View {
-    let title: String
-    let count: Int
-    let icon: String
-    let color: Color
-    @Environment(\.theme) var theme
-    
-    var body: some View {
-        VStack(spacing: 8) {
-            HStack(spacing: 6) {
-                Image(systemName: icon)
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(color)
-                    .shadow(
-                        color: theme.background == .black ? Color.white.opacity(0.1) : Color.clear,
-                        radius: 1,
-                        x: 0,
-                        y: 0.5
-                    )
-                
-                Text("\(count)")
-                    .font(.headline)
-                    .fontWeight(.bold)
-                    .foregroundColor(theme.text)
-            }
-            
-            Text(title)
-                .font(.caption)
-                .foregroundColor(theme.textSecondary)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 12)
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(theme.surfaceGradient)
-                .applyNeumorphicShadow(theme.neumorphicStyle)
-        )
     }
 }

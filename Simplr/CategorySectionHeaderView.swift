@@ -79,7 +79,7 @@ struct CategorySectionHeaderView: View {
                             Circle()
                                 .stroke(
                                     themeManager.themeMode == .kawaii ? category.color.kawaiiDarkColor : category.color.darkColor,
-                                    lineWidth: 1
+                                    lineWidth: 0.8
                                 )
                                 .opacity(0.3)
                         )

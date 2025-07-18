@@ -63,11 +63,9 @@ struct TaskRowView: View {
         var isActive = false
     }
     
-    // URGENT category pulsating animation states
-    @State private var urgentPulseScale: CGFloat = 0.998  // Start at minimum scale for breathing motion
-    @State private var urgentPulseOpacity: CGFloat = 0.95  // Start at minimum opacity for breathing motion
-    @State private var urgentBorderOpacity: CGFloat = 0.0
-    @State private var urgentBorderScale: CGFloat = 1.0
+    // URGENT category pulsating animation states - optimized for performance
+    @State private var urgentGlowIntensity: CGFloat = 0.0
+    @State private var urgentTintOpacity: CGFloat = 0.0
     
     // Constants for gesture thresholds
     private let actionThreshold: CGFloat = -120 // Only left swipe triggers actions
@@ -94,7 +92,7 @@ struct TaskRowView: View {
                             Circle()
                                 .fill(showBothActionsConfirmation ? theme.error : theme.error.opacity(0.3))
                                 .frame(width: showBothActionsConfirmation ? 50 : 40, height: showBothActionsConfirmation ? 50 : 40)
-                                .scaleEffect(showDeleteIcon ? 1.1 : 0.9)
+                                .scaleEffect(showBothActionsConfirmation ? 1.0 : (showDeleteIcon ? 1.0 : 0.85))
                                 .animation(.interactiveSpring(response: 0.3, dampingFraction: 0.7, blendDuration: 0), value: showDeleteIcon)
                                 .animation(.interactiveSpring(response: 0.35, dampingFraction: 0.8, blendDuration: 0), value: showBothActionsConfirmation)
                             
@@ -114,12 +112,12 @@ struct TaskRowView: View {
                                 }
                                 .buttonStyle(PlainButtonStyle())
                             } else {
-                                // Preview icon
+                                // Preview icon with consistent sizing
                                 Image(systemName: "trash")
-                                    .font(.system(size: 18, weight: .bold))
+                                    .font(.system(size: showDeleteIcon ? 18 : 14, weight: .bold))
                                     .foregroundColor(getIconColor(for: theme.error))
-                                    .scaleEffect(showDeleteIcon ? 1.0 : 0.5)
-                                    .animation(Animation.adaptiveSnappy, value: showDeleteIcon)
+                                    .scaleEffect(1.0)
+                                    .animation(.interactiveSpring(response: 0.25, dampingFraction: 0.8, blendDuration: 0), value: showDeleteIcon)
                             }
                         }
                         .opacity(showBothActionsConfirmation ? 1.0 : abs(dragProgress))
@@ -132,7 +130,7 @@ struct TaskRowView: View {
                                     (isInCompletedView ? theme.warning : theme.primary) : 
                                     (isInCompletedView ? theme.warning.opacity(0.3) : theme.primary.opacity(0.3)))
                                 .frame(width: showBothActionsConfirmation ? 50 : 40, height: showBothActionsConfirmation ? 50 : 40)
-                                .scaleEffect(showEditIcon ? 1.1 : 0.9)
+                                .scaleEffect(showBothActionsConfirmation ? 1.0 : (showEditIcon ? 1.0 : 0.85))
                                 .animation(.interactiveSpring(response: 0.3, dampingFraction: 0.7, blendDuration: 0), value: showEditIcon)
                                 .animation(.interactiveSpring(response: 0.35, dampingFraction: 0.8, blendDuration: 0), value: showBothActionsConfirmation)
                             
@@ -151,12 +149,12 @@ struct TaskRowView: View {
                                 }
                                 .buttonStyle(PlainButtonStyle())
                             } else {
-                                // Preview icon
+                                // Preview icon with consistent sizing
                                 Image(systemName: isInCompletedView ? "arrow.uturn.backward" : "pencil")
-                                    .font(.system(size: 18, weight: .bold))
+                                    .font(.system(size: showEditIcon ? 18 : 14, weight: .bold))
                                     .foregroundColor(getIconColor(for: isInCompletedView ? theme.warning : theme.primary))
-                                    .scaleEffect(showEditIcon ? 1.0 : 0.5)
-                                    .animation(Animation.adaptiveSnappy, value: showEditIcon)
+                                    .scaleEffect(1.0)
+                                    .animation(.interactiveSpring(response: 0.25, dampingFraction: 0.8, blendDuration: 0), value: showEditIcon)
                             }
                         }
                         .opacity(showBothActionsConfirmation ? 1.0 : abs(dragProgress))
@@ -182,7 +180,6 @@ struct TaskRowView: View {
                                 Circle()
                                     .stroke(task.isCompleted ? theme.success : theme.textTertiary, lineWidth: 2)
                             )
-                            .applyNeumorphicShadow(task.isCompleted ? theme.neumorphicPressedStyle : theme.neumorphicButtonStyle)
                             .scaleEffect(completionScale)
                             .animation(Animation.adaptiveElastic, value: completionScale)
                         
@@ -381,13 +378,13 @@ struct TaskRowView: View {
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         ) :
-                        // Enhanced dark mode task card gradient for sleeker look
+                        // Enhanced dark mode task card gradient with better distinction
                         (theme.background == Color(red: 0.02, green: 0.02, blue: 0.02) ?
                         LinearGradient(
                             colors: [
-                                Color(red: 0.04, green: 0.04, blue: 0.04),
-                                Color(red: 0.02, green: 0.02, blue: 0.02),
-                                Color(red: 0.03, green: 0.03, blue: 0.03)
+                                Color(red: 0.08, green: 0.08, blue: 0.08),  // Lighter top for better contrast
+                                Color(red: 0.05, green: 0.05, blue: 0.05),  // Mid-tone
+                                Color(red: 0.06, green: 0.06, blue: 0.06)   // Slightly lighter bottom
                             ],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
@@ -397,53 +394,67 @@ struct TaskRowView: View {
                     .shadow(
                         color: isUrgentTask && !task.isCompleted ? 
                             (theme.background == .black ? Color(red: 1.0, green: 0.4, blue: 0.4).opacity(0.25) : Color(red: 0.8, green: 0.1, blue: 0.1).opacity(0.35)) : 
-                            // Enhanced shadow for dark mode sleek cards
+                            // Enhanced shadow for better card distinction in dark mode
                             (theme.background == Color(red: 0.02, green: 0.02, blue: 0.02) ? 
-                                Color.black.opacity(0.8) :
+                                Color.black.opacity(0.9) :  // Stronger shadow for better separation
                                 (themeManager.themeMode == .kawaii ? theme.shadow.opacity(0.4) : theme.shadow.opacity(0.6))),
                         radius: isUrgentTask && !task.isCompleted ? (theme.background == .black ? 8 : 12) : 
-                            // Larger shadow radius for dark mode sleek look
-                            (theme.background == Color(red: 0.02, green: 0.02, blue: 0.02) ? 15 :
+                            // Enhanced shadow radius for better card distinction
+                            (theme.background == Color(red: 0.02, green: 0.02, blue: 0.02) ? 18 :  // Larger radius for more depth
                                 (themeManager.themeMode == .kawaii ? 1.0 : 1.0)),
                         x: 0,
                         y: isUrgentTask && !task.isCompleted ? (theme.background == .black ? 2 : 3) : 
-                            // Enhanced shadow offset for dark mode depth
-                            (theme.background == Color(red: 0.02, green: 0.02, blue: 0.02) ? 8 :
+                            // Enhanced shadow offset for better depth perception
+                            (theme.background == Color(red: 0.02, green: 0.02, blue: 0.02) ? 10 :  // Increased offset for more pronounced depth
                                 (themeManager.themeMode == .kawaii ? 0.3 : 0.3))
                     )
             )
             .overlay(
-                // Subtle border for definition
+                // Standard border for non-urgent tasks
                 RoundedRectangle(cornerRadius: 24)
-                    .stroke(theme.border, lineWidth: 0.5)
+                    .stroke(
+                        getBorderColor(for: theme),
+                        lineWidth: getBorderWidth(for: theme)
+                    )
                     .opacity(isUrgentTask && !task.isCompleted ? 0 : 1)
             )
             .overlay(
-                // Urgent border pulsation effect coordinated with glow
+                // Optimized urgent red glow border - contained within card bounds
                 RoundedRectangle(cornerRadius: 24)
-                    .stroke(
+                    .strokeBorder(
                         LinearGradient(
-                            colors: theme.background == .black ? [
-                                Color(red: 1.0, green: 0.4, blue: 0.4).opacity(urgentBorderOpacity * 0.9),
-                                Color(red: 1.0, green: 0.4, blue: 0.4).opacity(urgentBorderOpacity * 0.7),
-                                Color(red: 1.0, green: 0.4, blue: 0.4).opacity(urgentBorderOpacity * 0.5)
-                            ] : [
-                                Color(red: 0.7, green: 0.05, blue: 0.05).opacity(urgentBorderOpacity * 1.0), // Darker red for light mode
-                                Color(red: 0.8, green: 0.1, blue: 0.1).opacity(urgentBorderOpacity * 0.8),
-                                Color(red: 0.7, green: 0.05, blue: 0.05).opacity(urgentBorderOpacity * 0.6)
+                            colors: [
+                                Color.red.opacity(urgentGlowIntensity * 0.9),
+                                Color.red.opacity(urgentGlowIntensity * 0.6)
                             ],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         ),
-                        lineWidth: theme.background == .black ? 1.5 : 2.0
+                        lineWidth: 1.5
                     )
-                    .scaleEffect(isUrgentTask && !task.isCompleted ? urgentBorderScale : 1.0)
-                    .opacity(isUrgentTask && !task.isCompleted ? urgentBorderOpacity : 0)
-                    .animation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true), value: urgentBorderOpacity)
-                    .animation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true), value: urgentBorderScale)
+                    .opacity(isUrgentTask && !task.isCompleted ? 1.0 : 0)
+                    .animation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true), value: urgentGlowIntensity)
             )
-            .scaleEffect(isPressed ? 0.99 : (isUrgentTask ? urgentPulseScale : 1.0))
-            .opacity(completionOpacity * (isUrgentTask ? urgentPulseOpacity : 1.0))
+            .scaleEffect(isPressed ? 0.99 : 1.0)
+            .opacity(completionOpacity)
+            .overlay(
+                // Red tint overlay for urgent tasks with inner glow
+                RoundedRectangle(cornerRadius: 24)
+                    .fill(
+                        RadialGradient(
+                            colors: [
+                                Color.red.opacity(urgentTintOpacity * 0.12),
+                                Color.red.opacity(urgentTintOpacity * 0.04),
+                                Color.clear
+                            ],
+                            center: .center,
+                            startRadius: 0,
+                            endRadius: 120
+                        )
+                    )
+                    .allowsHitTesting(false)
+                    .animation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true), value: urgentTintOpacity)
+            )
             .animation(UIOptimizer.optimizedAnimation(duration: 0.15), value: isPressed)
 
             .offset(x: dragOffset)
@@ -556,6 +567,20 @@ struct TaskRowView: View {
     }
     
     // MARK: - Helper Methods
+    
+    /// Returns subtle, consistent border color for all themes
+    private func getBorderColor(for theme: Theme) -> Color {
+        // Use theme's built-in border property for consistency
+        return theme.border.opacity(0.3)
+    }
+    
+    /// Returns consistent border width across all themes for uniform appearance
+    private func getBorderWidth(for theme: Theme) -> CGFloat {
+        // Consistent 0.8pt border width for all themes - subtle but visible
+        return 0.8
+    }
+    
+
     
     /// Returns the appropriate icon color based on the background color for maximum contrast
     private func getIconColor(for baseColor: Color) -> Color {
@@ -691,13 +716,16 @@ struct TaskRowView: View {
         dragProgress = min(1.0, abs(translation) / abs(actionThreshold))
         let shouldShowIcons = abs(translation) > 40
         
-        // Batch state updates to reduce re-renders
+        // Batch state updates to reduce re-renders with improved state management
         let newShowDeleteIcon = shouldShowIcons
         let newShowEditIcon = shouldShowIcons
         
         if newShowDeleteIcon != showDeleteIcon || newShowEditIcon != showEditIcon {
-            showDeleteIcon = newShowDeleteIcon
-            showEditIcon = newShowEditIcon
+            // Use optimized animation for icon state changes
+            withAnimation(.interactiveSpring(response: 0.25, dampingFraction: 0.8, blendDuration: 0)) {
+                showDeleteIcon = newShowDeleteIcon
+                showEditIcon = newShowEditIcon
+            }
             
             if shouldShowIcons {
                 gestureState.hasShownIcon = true
@@ -914,41 +942,27 @@ struct TaskRowView: View {
         taskManager.duplicateTask(task)
     }
     
-    /// Starts the enhanced pulsating animation for URGENT category tasks
+    /// Starts the optimized red glow pulsating animation for URGENT category tasks
     private func startUrgentPulsatingAnimation() {
         // Only animate if task is not completed and is URGENT
         guard isUrgentTask && !task.isCompleted else { return }
         
-        // Create border pulse animation with improved timing
-        // Using ease-in-out curves for smooth, polished breathing motion
+        // Single, optimized animation for both glow and tint
+        // Using a longer duration for a more subtle, elegant pulse
         withAnimation(
-            Animation.easeInOut(duration: 1.0)
+            Animation.easeInOut(duration: 1.2)
                 .repeatForever(autoreverses: true)
         ) {
-            urgentPulseOpacity = theme.background == .black ? 0.95 : 0.92
-            urgentBorderOpacity = theme.background == .black ? 0.6 : 0.8 // More prominent border in light mode
+            urgentGlowIntensity = 0.7  // Moderate glow intensity for visibility without being overwhelming
+            urgentTintOpacity = 0.6    // Subtle red tint on the card
         }
-        
-        // Add more noticeable card scale for breathing motion
-        withAnimation(
-            Animation.easeInOut(duration: 1.0)
-                .repeatForever(autoreverses: true)
-                .delay(0.1)
-        ) {
-            urgentPulseScale = theme.background == .black ? 1.002 : 1.004  // More prominent scale in light mode
-        }
-        
-        // Reset border scale for clean appearance
-        urgentBorderScale = 1.0
     }
     
     /// Stops the URGENT pulsating animation
     private func stopUrgentPulsatingAnimation() {
         withAnimation(.easeOut(duration: 0.5)) {
-            urgentPulseScale = theme.background == .black ? 0.998 : 0.996  // Reset to minimum scale
-            urgentPulseOpacity = theme.background == .black ? 0.95 : 0.92  // Reset to minimum opacity
-            urgentBorderOpacity = 0.0
-            urgentBorderScale = 1.0
+            urgentGlowIntensity = 0.0
+            urgentTintOpacity = 0.0
         }
     }
     
@@ -1039,12 +1053,12 @@ struct TaskRowView: View {
                 )
         )
         .overlay(
-            // Maximum contrast border for urgent tasks in light and kawaii themes
+            // Consistent border for urgent tasks in light and kawaii themes
             (isUrgentTask && (theme.background != .black)) ?
                 Capsule()
                     .stroke(
                         (theme is KawaiiTheme ? Color(red: 0.5, green: 0.2, blue: 0.0) : Color(red: 0.7, green: 0.4, blue: 0.0)),
-                        lineWidth: (theme is KawaiiTheme ? 2.0 : 1.5)
+                        lineWidth: 0.8
                     ) : nil
         )
         .scaleEffect(task.isCompleted ? 0.95 : 1.0)

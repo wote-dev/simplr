@@ -82,8 +82,8 @@ struct PlainLightTheme: Theme {
     let warning = Color(red: 1.0, green: 0.7, blue: 0.0) // Orange for warnings
     let error = Color(red: 0.9, green: 0.2, blue: 0.2) // Red for error actions
     let shadow = Color.black.opacity(0.15) // Stronger shadow for better definition
-    let border = Color(red: 0.9, green: 0.9, blue: 0.9) // Subtle light gray border
-    let borderSecondary = Color(red: 0.85, green: 0.85, blue: 0.85) // Slightly darker secondary border
+    let border = Color(red: 0.75, green: 0.75, blue: 0.75).opacity(0.6) // Enhanced visibility border
+    let borderSecondary = Color(red: 0.7, green: 0.7, blue: 0.7).opacity(0.8) // More visible secondary border
     let toggle = Color.accentColor
     let progress = Color(red: 0.2, green: 0.6, blue: 0.85) // A consistent, pleasant blue
     
@@ -207,8 +207,8 @@ struct LightTheme: Theme {
     let warning = Color(red: 1.0, green: 0.6, blue: 0.0) // Warm orange for warnings
     let error = Color(red: 0.9, green: 0.3, blue: 0.3) // Soft red for errors
     let shadow = Color(red: 0.2, green: 0.4, blue: 0.8).opacity(0.12) // Blue-tinted shadow
-    let border = Color(red: 0.85, green: 0.92, blue: 0.98) // Light blue border
-    let borderSecondary = Color(red: 0.75, green: 0.85, blue: 0.95) // Slightly darker blue border
+    let border = Color(red: 0.7, green: 0.8, blue: 0.9).opacity(0.7) // Enhanced visibility blue border
+    let borderSecondary = Color(red: 0.6, green: 0.75, blue: 0.85).opacity(0.8) // More visible blue secondary border
     let toggle = Color(red: 0.2, green: 0.4, blue: 0.8)
     let progress = Color(red: 0.2, green: 0.6, blue: 0.85)
     
@@ -323,8 +323,8 @@ struct DarkTheme: Theme {
     let secondary = Color(red: 0.85, green: 0.85, blue: 0.85)
     let accent = Color.white
     let background = Color(red: 0.02, green: 0.02, blue: 0.02) // Slightly lighter than pure black
-    let surface = Color(red: 0.04, green: 0.04, blue: 0.04) // Much darker and sleeker surface
-    let surfaceSecondary = Color(red: 0.06, green: 0.06, blue: 0.06) // Darker secondary surface for better depth
+    let surface = Color(red: 0.08, green: 0.08, blue: 0.08) // Lighter surface for better distinction
+    let surfaceSecondary = Color(red: 0.10, green: 0.10, blue: 0.10) // Lighter secondary surface for better contrast
     let text = Color.white
     let textSecondary = Color(red: 0.75, green: 0.75, blue: 0.75) // Better contrast for secondary text
     let textTertiary = Color(red: 0.6, green: 0.6, blue: 0.6)
@@ -332,8 +332,8 @@ struct DarkTheme: Theme {
     let warning = Color(red: 1.0, green: 0.8, blue: 0.2) // Bright orange for warnings  
     let error = Color(red: 1.0, green: 0.3, blue: 0.3) // Bright red for error actions
     let shadow = Color.black.opacity(0.4)
-    let border = Color(red: 0.15, green: 0.15, blue: 0.15) // Subtle dark gray border for definition
-    let borderSecondary = Color(red: 0.12, green: 0.12, blue: 0.12) // Darker secondary border
+    let border = Color(red: 0.18, green: 0.18, blue: 0.18) // More visible border for better card distinction
+    let borderSecondary = Color(red: 0.15, green: 0.15, blue: 0.15) // Lighter secondary border for better contrast
     let toggle = Color.accentColor
     let progress = Color(red: 0.3, green: 0.7, blue: 0.9) // A slightly brighter blue for dark mode
     
@@ -351,8 +351,8 @@ struct DarkTheme: Theme {
     var surfaceGradient: LinearGradient {
         LinearGradient(
             colors: [
-                Color(red: 0.04, green: 0.04, blue: 0.04),
-                Color(red: 0.02, green: 0.02, blue: 0.02)
+                Color(red: 0.08, green: 0.08, blue: 0.08),  // Lighter top for better distinction
+                Color(red: 0.05, green: 0.05, blue: 0.05)   // Slightly darker bottom for depth
             ],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
@@ -384,9 +384,9 @@ struct DarkTheme: Theme {
     
     var cardShadowStyle: ShadowStyle {
         ShadowStyle(
-            color: Color.black.opacity(0.6),
-            radius: 20,
-            y: 8
+            color: Color.black.opacity(0.8),  // Stronger shadow for better card separation
+            radius: 24,                       // Larger radius for more pronounced depth
+            y: 12                            // Increased offset for better distinction
         )
     }
     
@@ -457,8 +457,8 @@ struct KawaiiTheme: Theme {
     let warning = Color(red: 1.0, green: 0.85, blue: 0.6) // Soft peach warning
     let error = Color(red: 1.0, green: 0.71, blue: 0.76) // Hello Kitty pink error
     let shadow = Color(red: 0.98, green: 0.85, blue: 0.88).opacity(0.2) // Stronger shadow for better definition
-    let border = Color(red: 0.92, green: 0.88, blue: 0.85) // Soft pink-tinted border
-    let borderSecondary = Color(red: 0.88, green: 0.82, blue: 0.78) // Slightly darker kawaii border
+    let border = Color(red: 0.85, green: 0.75, blue: 0.78).opacity(0.8) // Enhanced visibility kawaii border
+    let borderSecondary = Color(red: 0.8, green: 0.7, blue: 0.73).opacity(0.9) // More visible kawaii secondary border
     let toggle = Color(red: 0.85, green: 0.45, blue: 0.55)
     let progress = Color(red: 0.7, green: 0.95, blue: 0.8) // Mint green to match the theme's success color
     

@@ -14,43 +14,46 @@ struct ThemeSelectorView: View {
     @Environment(\.theme) var theme
     
     @State private var showingPaywall = false
+    @State private var isChangingTheme = false
     
     var body: some View {
-        NavigationView {
-            ZStack {
-                // Background with image support
-                Color.clear
-                    .themedBackground(theme)
-                
-                ScrollView {
-                    VStack(spacing: 24) {
-                        // Header with Done button
-                        VStack(spacing: 8) {
-                            HStack {
-                                Spacer()
+        ZStack {
+            // Background with image support
+            Color.clear
+                .themedBackground(theme)
+            
+            ScrollView {
+                VStack(spacing: 24) {
+                    // Header with Done button
+                    VStack(spacing: 8) {
+                        HStack {
+                            Spacer()
+                            
+                            VStack(spacing: 8) {
+                                Text("Choose Theme")
+                                    .font(.title2)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(theme.text)
                                 
-                                VStack(spacing: 8) {
-                                    Text("Choose Theme")
-                                        .font(.title2)
-                                        .fontWeight(.semibold)
-                                        .foregroundColor(theme.text)
-                                    
-                                    Text("Select your preferred appearance")
-                                        .font(.subheadline)
-                                        .foregroundColor(theme.textSecondary)
-                                }
-                                
-                                Spacer()
-                                
-                                Button("Done") {
+                                Text("Select your preferred appearance")
+                                    .font(.subheadline)
+                                    .foregroundColor(theme.textSecondary)
+                            }
+                            
+                            Spacer()
+                            
+                            Button("Done") {
+                                HapticManager.shared.buttonTap()
+                                withAnimation(.easeInOut(duration: 0.2)) {
                                     dismiss()
                                 }
-                                .foregroundColor(theme.accent)
-                                .fontWeight(.semibold)
                             }
+                            .foregroundColor(theme.accent)
+                            .fontWeight(.semibold)
                         }
-                        .padding(.top, 20)
-                        .padding(.horizontal, 20)
+                    }
+                    .padding(.top, 20)
+                    .padding(.horizontal, 20)
                     
                     // Theme options
                     VStack(spacing: 16) {
@@ -59,6 +62,7 @@ struct ThemeSelectorView: View {
                                 mode: mode,
                                 isSelected: themeManager.themeMode == mode,
                                 canAccess: themeManager.canAccessTheme(mode),
+                                isChanging: isChangingTheme && themeManager.themeMode == mode,
                                 onSelect: {
                                     selectTheme(mode)
                                 }
@@ -66,56 +70,71 @@ struct ThemeSelectorView: View {
                         }
                     }
                     .padding(.horizontal, 20)
+                    
+                    // Preview section
+                    VStack(spacing: 16) {
+                        Text("Preview")
+                            .font(.headline)
+                            .foregroundColor(theme.text)
                         
-                        // Preview section
-                        VStack(spacing: 16) {
-                            Text("Preview")
-                                .font(.headline)
-                                .foregroundColor(theme.text)
-                            
-                            ThemePreviewCard()
-                        }
-                        .padding(.horizontal, 20)
-                        
-                        // Hidden onboarding reset for testing (only visible in debug builds)
-                        #if DEBUG
-                        Button {
-                            UserDefaults.standard.set(false, forKey: "HasCompletedOnboarding")
-                            HapticManager.shared.buttonTap()
-                        } label: {
-                            Text("Reset Onboarding (Debug)")
-                                .font(.caption)
-                                .foregroundColor(theme.textSecondary.opacity(0.6))
-                                .padding(.vertical, 8)
-                        }
-                        .animatedButton()
-                        .padding(.bottom, 20)
-                        #endif
+                        ThemePreviewCard()
                     }
+                    .padding(.horizontal, 20)
+                    
+                    // Hidden onboarding reset for testing (only visible in debug builds)
+                    #if DEBUG
+                    Button {
+                        UserDefaults.standard.set(false, forKey: "HasCompletedOnboarding")
+                        HapticManager.shared.buttonTap()
+                    } label: {
+                        Text("Reset Onboarding (Debug)")
+                            .font(.caption)
+                            .foregroundColor(theme.textSecondary.opacity(0.6))
+                            .padding(.vertical, 8)
+                    }
+                    .animatedButton()
                     .padding(.bottom, 20)
+                    #endif
                 }
+                .padding(.bottom, 20)
             }
-            .navigationTitle("")
-            .navigationBarHidden(true)
-            .sheet(isPresented: $showingPaywall) {
-                PaywallView(targetFeature: .kawaiiTheme)
-                    .environmentObject(premiumManager)
-            }
-            .onChange(of: premiumManager.showingPaywall) { _, newValue in
-                showingPaywall = newValue
-            }
+        }
+        .sheet(isPresented: $showingPaywall) {
+            PaywallView(targetFeature: .kawaiiTheme)
+                .environmentObject(premiumManager)
+        }
+        .onChange(of: premiumManager.showingPaywall) { _, newValue in
+            showingPaywall = newValue
         }
     }
     
     private func selectTheme(_ mode: ThemeMode) {
+        // Prevent rapid theme changes that could cause UI freezing
+        guard !isChangingTheme else { return }
+        
         HapticManager.shared.buttonTap()
         
         if mode.isPremium && !themeManager.canAccessTheme(mode) {
             // Show paywall for premium themes
             premiumManager.showPaywall(for: .kawaiiTheme)
         } else {
-            // Set theme directly without premium check since we already verified access
-            themeManager.setThemeMode(mode, checkPremium: false)
+            // Set debounce flag to prevent rapid changes
+            isChangingTheme = true
+            
+            // Optimize theme change with proper animation and state management
+            withAnimation(.easeInOut(duration: 0.3)) {
+                themeManager.setThemeMode(mode, checkPremium: false)
+            }
+            
+            // Provide success feedback and reset debounce flag
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                HapticManager.shared.successFeedback()
+            }
+            
+            // Reset debounce flag after animation completes
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                isChangingTheme = false
+            }
         }
     }
 }
@@ -125,10 +144,11 @@ struct ThemeOptionCard: View {
     let mode: ThemeMode
     let isSelected: Bool
     let canAccess: Bool
+    let isChanging: Bool
     let onSelect: () -> Void
     
     var body: some View {
-        Button(action: onSelect) {
+        Button(action: isChanging ? {} : onSelect) {
             HStack(spacing: 16) {
                 // Icon
                 ZStack {
@@ -188,9 +208,16 @@ struct ThemeOptionCard: View {
                 
                 // Selection indicator
                 if isSelected {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.title2)
-                        .foregroundColor(theme.accent)
+                    if isChanging {
+                        // Show loading indicator when theme is changing
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(tint: theme.accent))
+                            .scaleEffect(0.8)
+                    } else {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.title2)
+                            .foregroundColor(theme.accent)
+                    }
                 }
             }
             .padding(20)
@@ -206,7 +233,9 @@ struct ThemeOptionCard: View {
         }
         .buttonStyle(PlainButtonStyle())
         .scaleEffect(isSelected ? 1.02 : 1.0)
+        .opacity(isChanging && !isSelected ? 0.6 : 1.0)
         .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isSelected)
+        .animation(.easeInOut(duration: 0.2), value: isChanging)
     }
     
     private func description(for mode: ThemeMode) -> String {
@@ -227,6 +256,18 @@ struct ThemeOptionCard: View {
 
 struct ThemePreviewCard: View {
     @Environment(\.theme) var theme
+    
+    /// Returns subtle, consistent border color for all themes in preview
+    private func getPreviewBorderColor(for theme: Theme) -> Color {
+        // Use theme's built-in border property for consistency
+        return theme.border.opacity(0.3)
+    }
+    
+    /// Returns consistent border width across all themes for uniform appearance in preview
+    private func getPreviewBorderWidth(for theme: Theme) -> CGFloat {
+        // Consistent 0.8pt border width for all themes - subtle but visible
+        return 0.8
+    }
     
     var body: some View {
         VStack(spacing: 16) {
@@ -324,9 +365,12 @@ struct ThemePreviewCard: View {
                     )
             )
             .overlay(
-                // Subtle border for definition
+                // Enhanced border for better definition across all themes
                 RoundedRectangle(cornerRadius: 24)
-                    .stroke(theme.border, lineWidth: 0.5)
+                    .stroke(
+                        getPreviewBorderColor(for: theme),
+                        lineWidth: getPreviewBorderWidth(for: theme)
+                    )
             )
             
             // Mock add button

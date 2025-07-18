@@ -141,7 +141,7 @@ struct SettingsView: View {
                                     .padding(.vertical, 12)
                                     .background(
                                         RoundedRectangle(cornerRadius: 16)
-                                            .stroke(theme.accent.opacity(0.3), lineWidth: 1)
+                                            .stroke(theme.accent.opacity(0.3), lineWidth: 0.8)
                                             .background(
                                                 RoundedRectangle(cornerRadius: 12)
                                                     .fill(theme.surface)
@@ -276,7 +276,7 @@ struct SettingsView: View {
                     .fill(theme.surfaceGradient)
                     .overlay(
                         RoundedRectangle(cornerRadius: 16)
-                            .stroke(theme.border, lineWidth: 0.5)
+                            .stroke(theme.border, lineWidth: 0.8)
                     )
                     .applyNeumorphicShadow(theme.neumorphicStyle)
             )
@@ -398,7 +398,7 @@ struct SettingsView: View {
                     .fill(theme.surface.opacity(0.5))
                     .overlay(
                         RoundedRectangle(cornerRadius: 16)
-                            .stroke(theme.accent.opacity(0.2), lineWidth: 0)
+                            .stroke(theme.accent.opacity(0.2), lineWidth: 0.8)
                     )
             )
         }
@@ -496,7 +496,7 @@ struct SettingsView: View {
                         .fill(theme.accent.opacity(0.1))
                         .overlay(
                             RoundedRectangle(cornerRadius: 12)
-                                .stroke(theme.accent.opacity(0.3), lineWidth: 0)
+                                .stroke(theme.accent.opacity(0.3), lineWidth: 0.8)
                         )
                 )
             }
@@ -517,7 +517,7 @@ struct SettingsView: View {
                         Circle()
                             .stroke(
                                 themeManager.themeMode == .kawaii ? category.color.kawaiiDarkColor : category.color.darkColor,
-                                lineWidth: 1
+                                lineWidth: 0.8
                             )
                             .opacity(0.3)
                     )
@@ -562,7 +562,7 @@ struct SettingsView: View {
                     RoundedRectangle(cornerRadius: 16)
                         .stroke(
                             (themeManager.themeMode == .kawaii ? category.color.kawaiiColor.opacity(0.3) : category.color.color.opacity(0.3)),
-                            lineWidth: 0
+                            lineWidth: 0.8
                         )
                 )
         )

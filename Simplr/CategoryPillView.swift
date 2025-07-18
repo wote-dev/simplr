@@ -124,7 +124,7 @@ struct CategoryPillView: View {
                                 Circle()
                                     .stroke(
                                         themeManager.themeMode == .kawaii ? category.color.kawaiiDarkColor : category.color.darkColor,
-                                        lineWidth: 1
+                                        lineWidth: 0.8
                                     )
                                     .opacity(0.3)
                             )
@@ -172,7 +172,7 @@ struct CategoryPillView: View {
                         Capsule()
                             .stroke(
                                 isSelected ? categoryColor.opacity(0.3) : Color.clear,
-                                lineWidth: 1
+                                lineWidth: 0.8
                             )
                     )
             )
@@ -261,7 +261,7 @@ struct CategorySelectorView: View {
                     .padding(.vertical, 8)
                     .background(
                         Capsule()
-                            .stroke(theme.textTertiary.opacity(0.3), style: StrokeStyle(lineWidth: 1, dash: [4, 4]))
+                            .stroke(theme.textTertiary.opacity(0.3), style: StrokeStyle(lineWidth: 0.8, dash: [4, 4]))
                     )
                 }
                 .buttonStyle(PlainButtonStyle())
@@ -344,7 +344,7 @@ struct CreateCategoryView: View {
                                 .stroke(
                                     isValidName ? selectedColor.color.opacity(0.5) : 
                                     (categoryName.isEmpty ? Color.clear : theme.error.opacity(0.5)),
-                                    lineWidth: 2
+                                    lineWidth: 0.8
                                 )
                                 .animation(.easeOut(duration: 0.2), value: isValidName)
                         )
