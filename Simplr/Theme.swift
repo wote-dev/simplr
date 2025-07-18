@@ -25,6 +25,7 @@ protocol Theme {
     var border: Color { get }
     var borderSecondary: Color { get }
     var toggle: Color { get }
+    var progress: Color { get }
     
     var backgroundGradient: LinearGradient { get }
     var surfaceGradient: LinearGradient { get }
@@ -84,6 +85,7 @@ struct PlainLightTheme: Theme {
     let border = Color(red: 0.9, green: 0.9, blue: 0.9) // Subtle light gray border
     let borderSecondary = Color(red: 0.85, green: 0.85, blue: 0.85) // Slightly darker secondary border
     let toggle = Color.accentColor
+    let progress = Color(red: 0.2, green: 0.6, blue: 0.85) // A consistent, pleasant blue
     
     var backgroundGradient: LinearGradient {
         LinearGradient(
@@ -208,6 +210,7 @@ struct LightTheme: Theme {
     let border = Color(red: 0.85, green: 0.92, blue: 0.98) // Light blue border
     let borderSecondary = Color(red: 0.75, green: 0.85, blue: 0.95) // Slightly darker blue border
     let toggle = Color(red: 0.2, green: 0.4, blue: 0.8)
+    let progress = Color(red: 0.2, green: 0.6, blue: 0.85)
     
     var backgroundGradient: LinearGradient {
         LinearGradient(
@@ -332,6 +335,7 @@ struct DarkTheme: Theme {
     let border = Color(red: 0.15, green: 0.15, blue: 0.15) // Subtle dark gray border for definition
     let borderSecondary = Color(red: 0.12, green: 0.12, blue: 0.12) // Darker secondary border
     let toggle = Color.accentColor
+    let progress = Color(red: 0.3, green: 0.7, blue: 0.9) // A slightly brighter blue for dark mode
     
     var backgroundGradient: LinearGradient {
         LinearGradient(
@@ -456,6 +460,7 @@ struct KawaiiTheme: Theme {
     let border = Color(red: 0.92, green: 0.88, blue: 0.85) // Soft pink-tinted border
     let borderSecondary = Color(red: 0.88, green: 0.82, blue: 0.78) // Slightly darker kawaii border
     let toggle = Color(red: 0.85, green: 0.45, blue: 0.55)
+    let progress = Color(red: 0.7, green: 0.95, blue: 0.8) // Mint green to match the theme's success color
     
     var backgroundGradient: LinearGradient {
         LinearGradient(

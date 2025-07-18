@@ -286,28 +286,8 @@ struct TaskRowView: View {
                         if !task.checklist.isEmpty {
                             VStack(alignment: .leading, spacing: 8) {
                                 // Checklist header with integrated progress pill
-                                let completedCount = task.checklist.filter { $0.isCompleted }.count
-                                let totalCount = task.checklist.count
-                                let progress = totalCount > 0 ? Double(completedCount) / Double(totalCount) : 0
-
-                                HStack(spacing: 8) {
-                                    Text("Checklist")
-                                        .font(.caption)
-                                        .fontWeight(.medium)
-                                        .foregroundColor(theme.textSecondary)
-
-                                    ProgressView(value: progress)
-                                        .progressViewStyle(LinearProgressViewStyle(tint: theme.accent))
-                                        .frame(width: 50, height: 5) // A small pill for progress
-                                        .clipShape(Capsule())
-
-                                    Spacer()
-                                    
-                                    Text("\(completedCount)/\(totalCount)")
-                                        .font(.caption2)
-                                        .fontWeight(.medium)
-                                        .foregroundColor(theme.textSecondary)
-                                }
+                                ChecklistProgressHeader(checklist: task.checklist)
+                                    .animation(.easeInOut(duration: 0.3), value: task.checklist.map { $0.isCompleted })
                                 
                                 // Individual checklist items
                                 VStack(alignment: .leading, spacing: 6) {
@@ -1110,21 +1090,71 @@ struct TaskRowView: View {
     }
     
     private func toggleChecklistItem(_ item: ChecklistItem) {
-        // Create a mutable copy of the task
-        var updatedTask = task
-        
-        // Find and update the checklist item
-        if let index = updatedTask.checklist.firstIndex(where: { $0.id == item.id }) {
-            updatedTask.checklist[index].isCompleted.toggle()
+        // Optimized checklist item toggle with performance considerations
+        PerformanceMonitor.shared.measure("ChecklistItemToggle") {
+            // Create a mutable copy of the task
+            var updatedTask = task
             
-            // Update the task through the task manager
-            taskManager.updateTask(updatedTask)
-            
-            // Provide haptic feedback
-            HapticManager.shared.buttonTap()
+            // Find and update the checklist item
+            if let index = updatedTask.checklist.firstIndex(where: { $0.id == item.id }) {
+                updatedTask.checklist[index].isCompleted.toggle()
+                
+                // Update the task through the task manager (uses batch updates for performance)
+                taskManager.updateTask(updatedTask)
+                
+                // Provide haptic feedback
+                HapticManager.shared.buttonTap()
+            }
         }
     }
+}
 
+// MARK: - Checklist Progress Header Component
+struct ChecklistProgressHeader: View {
+    let checklist: [ChecklistItem]
+    @Environment(\.theme) var theme
+    
+    // Optimized computed properties with caching for better performance
+    private var progressData: (completed: Int, total: Int, progress: Double) {
+        let total = checklist.count
+        guard total > 0 else { return (0, 0, 0) }
+        
+        let completed = checklist.lazy.filter { $0.isCompleted }.count
+        let progress = Double(completed) / Double(total)
+        
+        return (completed, total, progress)
+    }
+    
+    var body: some View {
+        let data = progressData
+        
+        HStack(spacing: 8) {
+            Text("Checklist")
+                .font(.caption)
+                .fontWeight(.medium)
+                .foregroundColor(theme.textSecondary)
+
+            // Custom progress bar to avoid SwiftUI issues
+            ZStack(alignment: .leading) {
+                Capsule()
+                    .fill(theme.textTertiary.opacity(0.2))
+                    .frame(width: 50, height: 5)
+                
+                Capsule()
+                    .fill(theme.progress)
+                    .frame(width: 50 * data.progress, height: 5)
+                    .animation(.easeInOut(duration: 0.25), value: data.progress)
+            }
+
+            Spacer()
+            
+            Text("\(data.completed)/\(data.total)")
+                .font(.caption2)
+                .fontWeight(.medium)
+                .foregroundColor(theme.textSecondary)
+                .animation(.easeInOut(duration: 0.2), value: data.completed)
+        }
+    }
 }
 
 #Preview {
