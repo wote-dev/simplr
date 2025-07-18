@@ -188,7 +188,7 @@ struct AddTaskView: View {
                             text: $item.title, 
                             placeholder: "Checklist item"
                         )
-                        .frame(height: 40)
+                        .frame(height: 48)
                         Button(action: {
                             if let index = checklistItems.firstIndex(where: { $0.id == item.id }) {
                                 checklistItems.remove(at: index)
@@ -206,6 +206,7 @@ struct AddTaskView: View {
                         placeholder: "Add new item",
                         onCommit: addChecklistItem
                     )
+                    .frame(height: 48)
                     
                     Button(action: addChecklistItem) {
                         Image(systemName: "plus.circle.fill")
