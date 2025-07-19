@@ -189,8 +189,8 @@ struct PlainLightTheme: Theme {
     let secondary = Color.gray
     let accent = Color.black
     let background = Color(red: 0.98, green: 0.98, blue: 0.98) // Slightly off-white for better contrast
-    let surface = Color.white // Pure white for better contrast against background
-    let surfaceSecondary = Color(red: 0.95, green: 0.95, blue: 0.95) // More contrast for secondary surfaces
+    let surface = Color(red: 0.92, green: 0.92, blue: 0.92) // More distinct gray surface with better contrast
+    let surfaceSecondary = Color(red: 0.90, green: 0.90, blue: 0.90) // Darker gray secondary surface for clear distinction
     let text = Color.black
     let textSecondary = Color(red: 0.4, green: 0.4, blue: 0.4) // Darker for better readability
     let textTertiary = Color(red: 0.6, green: 0.6, blue: 0.6)
@@ -217,8 +217,8 @@ struct PlainLightTheme: Theme {
     var surfaceGradient: LinearGradient {
         LinearGradient(
             colors: [
-                Color.white,
-                Color(red: 0.98, green: 0.98, blue: 0.98)
+                Color(red: 0.93, green: 0.93, blue: 0.93), // More distinct lighter gray
+                Color(red: 0.91, green: 0.91, blue: 0.91)  // More distinct darker gray for better contrast
             ],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
@@ -314,8 +314,8 @@ struct LightGreenTheme: Theme {
     let secondary = Color(red: 0.4, green: 0.8, blue: 0.7) // Lighter teal green secondary
     let accent = Color(red: 0.1, green: 0.6, blue: 0.5) // Deep teal green accent
     let background = Color(red: 0.98, green: 1.0, blue: 0.99) // Subtle green-tinted background
-    let surface = Color.white // Pure white for better contrast against background
-    let surfaceSecondary = Color(red: 0.96, green: 1.0, blue: 0.98) // Light green-tinted secondary surface
+    let surface = Color(red: 0.93, green: 0.97, blue: 0.95) // More distinct green surface with better contrast
+    let surfaceSecondary = Color(red: 0.91, green: 0.95, blue: 0.93) // Darker green-tinted secondary surface for clear distinction
     let text = Color(red: 0.05, green: 0.15, blue: 0.1) // Dark green-tinted text
     let textSecondary = Color(red: 0.25, green: 0.45, blue: 0.35) // Green-gray secondary text
     let textTertiary = Color(red: 0.45, green: 0.65, blue: 0.55) // Lighter green-gray tertiary
@@ -342,8 +342,8 @@ struct LightGreenTheme: Theme {
     var surfaceGradient: LinearGradient {
         LinearGradient(
             colors: [
-                Color.white,
-                Color(red: 0.98, green: 1.0, blue: 0.99)
+                Color(red: 0.94, green: 0.98, blue: 0.96), // More distinct lighter green
+                Color(red: 0.92, green: 0.96, blue: 0.94)  // More distinct darker green for better contrast
             ],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
@@ -439,8 +439,8 @@ struct LightTheme: Theme {
     let secondary = Color(red: 0.4, green: 0.6, blue: 0.9) // Lighter blue secondary
     let accent = Color(red: 0.1, green: 0.3, blue: 0.7) // Deep blue accent
     let background = Color(red: 0.98, green: 0.99, blue: 1.0) // Subtle blue-tinted background
-    let surface = Color.white // Pure white for better contrast against background
-    let surfaceSecondary = Color(red: 0.96, green: 0.98, blue: 1.0) // Light blue-tinted secondary surface
+    let surface = Color(red: 0.93, green: 0.95, blue: 0.98) // More distinct blue surface with better contrast
+    let surfaceSecondary = Color(red: 0.91, green: 0.93, blue: 0.96) // Darker blue-tinted secondary surface for clear distinction
     let text = Color(red: 0.1, green: 0.1, blue: 0.2) // Dark blue-tinted text
     let textSecondary = Color(red: 0.3, green: 0.4, blue: 0.5) // Blue-gray secondary text
     let textTertiary = Color(red: 0.5, green: 0.6, blue: 0.7) // Lighter blue-gray tertiary
@@ -467,8 +467,8 @@ struct LightTheme: Theme {
     var surfaceGradient: LinearGradient {
         LinearGradient(
             colors: [
-                Color.white,
-                Color(red: 0.98, green: 0.99, blue: 1.0)
+                Color(red: 0.94, green: 0.96, blue: 0.99), // More distinct lighter blue
+                Color(red: 0.92, green: 0.94, blue: 0.97)  // More distinct darker blue for better contrast
             ],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
@@ -689,8 +689,8 @@ struct KawaiiTheme: Theme {
     let secondary = Color(red: 0.7, green: 0.95, blue: 0.8) // Mint green
     let accent = Color(red: 0.85, green: 0.45, blue: 0.55) // Deeper Hello Kitty pink for better contrast
     let background = Color(red: 0.97, green: 0.94, blue: 0.92) // Slightly darker background for better contrast
-    let surface = Color.white // Pure white for maximum contrast
-    let surfaceSecondary = Color(red: 0.95, green: 0.92, blue: 0.90) // More visible secondary surface
+    let surface = Color(red: 0.92, green: 0.88, blue: 0.86) // More distinct kawaii surface with better contrast
+    let surfaceSecondary = Color(red: 0.90, green: 0.86, blue: 0.84) // Darker kawaii secondary surface for clear distinction
     let text = Color(red: 0.15, green: 0.05, blue: 0.1) // Even darker text for better readability
     let textSecondary = Color(red: 0.35, green: 0.25, blue: 0.3) // Darker secondary text
     let textTertiary = Color(red: 0.55, green: 0.45, blue: 0.5) // Improved tertiary text contrast
@@ -721,8 +721,8 @@ struct KawaiiTheme: Theme {
     var surfaceGradient: LinearGradient {
         LinearGradient(
             colors: [
-                Color.white,
-                Color(red: 0.98, green: 0.96, blue: 0.94)
+                Color(red: 0.93, green: 0.89, blue: 0.87), // More distinct lighter kawaii tone
+                Color(red: 0.91, green: 0.87, blue: 0.85)  // More distinct darker kawaii tone for better contrast
             ],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
@@ -811,8 +811,8 @@ struct SereneTheme: Theme {
     let secondary = Color(red: 0.85, green: 0.72, blue: 0.78) // Dusty rose secondary
     let accent = Color(red: 0.68, green: 0.58, blue: 0.82) // Deeper lavender accent for better contrast
     let background = Color(red: 0.97, green: 0.95, blue: 0.98) // Very light lavender background
-    let surface = Color.white // Pure white for maximum contrast
-    let surfaceSecondary = Color(red: 0.95, green: 0.93, blue: 0.96) // Light lavender-tinted secondary surface
+    let surface = Color(red: 0.92, green: 0.89, blue: 0.94) // More distinct lavender surface with better contrast
+    let surfaceSecondary = Color(red: 0.90, green: 0.87, blue: 0.92) // Darker lavender-tinted secondary surface for clear distinction
     let text = Color(red: 0.15, green: 0.12, blue: 0.18) // Dark purple-tinted text for readability
     let textSecondary = Color(red: 0.35, green: 0.32, blue: 0.38) // Medium purple-gray secondary text
     let textTertiary = Color(red: 0.55, green: 0.52, blue: 0.58) // Light purple-gray tertiary text
@@ -839,8 +839,8 @@ struct SereneTheme: Theme {
     var surfaceGradient: LinearGradient {
         LinearGradient(
             colors: [
-                Color.white,
-                Color(red: 0.98, green: 0.96, blue: 0.99)
+                Color(red: 0.93, green: 0.90, blue: 0.95), // More distinct lighter lavender
+                Color(red: 0.91, green: 0.88, blue: 0.93)  // More distinct darker lavender for better contrast
             ],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
