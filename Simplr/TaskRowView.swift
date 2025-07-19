@@ -426,9 +426,9 @@ struct TaskRowView: View {
                     )
             )
             .overlay(
-                // Standard border for non-urgent tasks
+                // Standard border for non-urgent tasks - using strokeBorder for clean corners
                 RoundedRectangle(cornerRadius: 24)
-                    .stroke(
+                    .strokeBorder(
                         getBorderColor(for: theme),
                         lineWidth: getBorderWidth(for: theme)
                     )
@@ -498,6 +498,8 @@ struct TaskRowView: View {
         )
         .contextMenu {
             contextMenuContent
+        } preview: {
+            taskDetailPreview
         }
         .onAppear {
             // Initial animation when task appears
@@ -556,6 +558,14 @@ struct TaskRowView: View {
                 )
             }
             
+            // Edit action
+            Button(action: {
+                HapticManager.shared.contextMenuAction()
+                onEdit()
+            }) {
+                Label("Edit Task", systemImage: "pencil")
+            }
+            
             // Duplicate action
             Button(action: {
                 HapticManager.shared.contextMenuAction()
@@ -576,12 +586,39 @@ struct TaskRowView: View {
         }
     }
     
+    // MARK: - Preview Content
+    
+    private var taskDetailPreview: some View {
+        TaskDetailPreviewView(task: task)
+            .environmentObject(categoryManager)
+            .environmentObject(themeManager)
+            .environmentObject(taskManager)
+            .onAppear {
+                HapticManager.shared.previewAppears()
+            }
+            .onDisappear {
+                HapticManager.shared.previewDismissed()
+            }
+    }
+    
     // MARK: - Helper Methods
     
-    /// Returns subtle, consistent border color for all themes
+    /// Returns subtle, consistent border color for all themes with enhanced visibility for light themes
     private func getBorderColor(for theme: Theme) -> Color {
-        // Use theme's built-in border property for consistency
-        return theme.border.opacity(0.3)
+        // Enhanced border visibility for light and kawaii themes while maintaining subtlety
+        if theme is KawaiiTheme {
+            // Kawaii theme: soft pink-gray border that's visible but not prominent
+            return Color(red: 0.75, green: 0.65, blue: 0.68).opacity(0.6)
+        } else if theme.background == Color.white || 
+                  theme.background == Color(red: 0.98, green: 0.98, blue: 0.98) ||
+                  theme.background == Color(red: 0.98, green: 0.99, blue: 1.0) ||
+                  theme.background == Color(red: 0.98, green: 1.0, blue: 0.99) {
+            // Light themes: subtle gray border with better visibility
+            return Color(red: 0.85, green: 0.85, blue: 0.85).opacity(0.7)
+        } else {
+            // Dark themes: use existing border with reduced opacity
+            return theme.border.opacity(0.3)
+        }
     }
     
     /// Returns consistent border width across all themes for uniform appearance

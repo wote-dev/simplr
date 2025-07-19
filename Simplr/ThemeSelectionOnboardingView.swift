@@ -211,6 +211,8 @@ struct ThemeOnboardingCard: View {
             return "Soft and calming"
         case .lightGreen:
             return "Fresh and natural"
+        case .minimal:
+            return "Ultra-clean white"
         case .dark:
             return "Easy on the eyes"
         case .system:

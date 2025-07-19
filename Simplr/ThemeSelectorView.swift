@@ -247,6 +247,8 @@ struct ThemeOptionCard: View {
             return "Soft and calming"
         case .lightGreen:
             return "Fresh and natural"
+        case .minimal:
+            return "Ultra-clean white"
         case .dark:
             return "Easy on the eyes"
         case .system:
@@ -260,10 +262,22 @@ struct ThemeOptionCard: View {
 struct ThemePreviewCard: View {
     @Environment(\.theme) var theme
     
-    /// Returns subtle, consistent border color for all themes in preview
+    /// Returns subtle, consistent border color for all themes in preview with enhanced visibility for light themes
     private func getPreviewBorderColor(for theme: Theme) -> Color {
-        // Use theme's built-in border property for consistency
-        return theme.border.opacity(0.3)
+        // Enhanced border visibility for light and kawaii themes while maintaining subtlety
+        if theme is KawaiiTheme {
+            // Kawaii theme: soft pink-gray border that's visible but not prominent
+            return Color(red: 0.75, green: 0.65, blue: 0.68).opacity(0.6)
+        } else if theme.background == Color.white || 
+                  theme.background == Color(red: 0.98, green: 0.98, blue: 0.98) ||
+                  theme.background == Color(red: 0.98, green: 0.99, blue: 1.0) ||
+                  theme.background == Color(red: 0.98, green: 1.0, blue: 0.99) {
+            // Light themes: subtle gray border with better visibility
+            return Color(red: 0.85, green: 0.85, blue: 0.85).opacity(0.7)
+        } else {
+            // Dark themes: use existing border with reduced opacity
+            return theme.border.opacity(0.3)
+        }
     }
     
     /// Returns consistent border width across all themes for uniform appearance in preview
@@ -368,9 +382,9 @@ struct ThemePreviewCard: View {
                     )
             )
             .overlay(
-                // Enhanced border for better definition across all themes
+                // Enhanced border for better definition across all themes - using strokeBorder for clean corners
                 RoundedRectangle(cornerRadius: 24)
-                    .stroke(
+                    .strokeBorder(
                         getPreviewBorderColor(for: theme),
                         lineWidth: getPreviewBorderWidth(for: theme)
                     )

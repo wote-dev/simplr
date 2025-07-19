@@ -13,6 +13,7 @@ enum ThemeMode: String, CaseIterable {
     case light = "light"
     case lightBlue = "lightBlue"
     case lightGreen = "lightGreen"
+    case minimal = "minimal"
     case dark = "dark"
     case system = "system"
     case kawaii = "kawaii"
@@ -22,6 +23,7 @@ enum ThemeMode: String, CaseIterable {
         case .light: return "Light"
         case .lightBlue: return "Light Blue"
         case .lightGreen: return "Light Green"
+        case .minimal: return "Minimal"
         case .dark: return "Dark"
         case .system: return "System"
         case .kawaii: return "Kawaii"
@@ -33,6 +35,7 @@ enum ThemeMode: String, CaseIterable {
         case .light: return "sun.max.fill"
         case .lightBlue: return "sun.max.circle.fill"
         case .lightGreen: return "leaf.fill"
+        case .minimal: return "circle.fill"
         case .dark: return "moon.fill"
         case .system: return "circle.lefthalf.filled"
         case .kawaii: return "heart.fill"
@@ -41,7 +44,7 @@ enum ThemeMode: String, CaseIterable {
     
     var isPremium: Bool {
         switch self {
-        case .light, .lightBlue, .lightGreen, .dark, .system:
+        case .light, .lightBlue, .lightGreen, .minimal, .dark, .system:
             return false
         case .kawaii:
             return false // Temporarily disabled premium requirement - can be changed back to true later
@@ -108,6 +111,8 @@ class ThemeManager: ObservableObject {
             case .lightBlue:
                 themeMode = .lightGreen
             case .lightGreen:
+                themeMode = .minimal
+            case .minimal:
                 themeMode = .dark
             case .dark:
                 themeMode = .light
@@ -131,6 +136,8 @@ class ThemeManager: ObservableObject {
             newTheme = LightTheme()
         case .lightGreen:
             newTheme = LightGreenTheme()
+        case .minimal:
+            newTheme = MinimalTheme()
         case .dark:
             newTheme = DarkTheme()
         case .system:

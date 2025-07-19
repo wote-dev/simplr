@@ -67,6 +67,122 @@ struct NeumorphicShadowStyle {
     }
 }
 
+// MARK: - Minimal Theme (Ultra-Clean White)
+struct MinimalTheme: Theme {
+    let primary = Color.black
+    let secondary = Color.gray.opacity(0.6)
+    let accent = Color.black
+    let background = Color.white // Pure white background
+    let surface = Color.white // Pure white surfaces
+    let surfaceSecondary = Color.white // Keep secondary surfaces white too
+    let text = Color.black
+    let textSecondary = Color.gray.opacity(0.7) // Subtle gray for secondary text
+    let textTertiary = Color.gray.opacity(0.5) // Lighter gray for tertiary text
+    let success = Color.green // Simple green for success
+    let warning = Color.orange // Simple orange for warnings
+    let error = Color.red // Simple red for errors
+    let shadow = Color.clear // No shadows for ultra-minimal look
+    let border = Color.gray.opacity(0.2) // Very subtle borders
+    let borderSecondary = Color.gray.opacity(0.1) // Even more subtle secondary borders
+    let toggle = Color.black
+    let progress = Color.black
+    
+    var backgroundGradient: LinearGradient {
+        LinearGradient(
+            colors: [Color.white, Color.white], // Pure white gradient
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+    
+    var surfaceGradient: LinearGradient {
+        LinearGradient(
+            colors: [Color.white, Color.white], // Pure white gradient
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+    
+    var accentGradient: LinearGradient {
+        LinearGradient(
+            colors: [Color.black, Color.black], // Solid black for accent
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+    
+    var backgroundImage: String? {
+        nil
+    }
+    
+    var shadowStyle: ShadowStyle {
+        ShadowStyle(
+            color: Color.clear, // No shadow
+            radius: 0,
+            y: 0
+        )
+    }
+    
+    var cardShadowStyle: ShadowStyle {
+        ShadowStyle(
+            color: Color.clear, // No shadow
+            radius: 0,
+            y: 0
+        )
+    }
+    
+    var neumorphicStyle: NeumorphicShadowStyle {
+        NeumorphicShadowStyle(
+            lightShadow: ShadowStyle(
+                color: Color.clear, // No neumorphic effects
+                radius: 0,
+                x: 0,
+                y: 0
+            ),
+            darkShadow: ShadowStyle(
+                color: Color.clear, // No neumorphic effects
+                radius: 0,
+                x: 0,
+                y: 0
+            )
+        )
+    }
+    
+    var neumorphicButtonStyle: NeumorphicShadowStyle {
+        NeumorphicShadowStyle(
+            lightShadow: ShadowStyle(
+                color: Color.clear, // No neumorphic effects
+                radius: 0,
+                x: 0,
+                y: 0
+            ),
+            darkShadow: ShadowStyle(
+                color: Color.clear, // No neumorphic effects
+                radius: 0,
+                x: 0,
+                y: 0
+            )
+        )
+    }
+    
+    var neumorphicPressedStyle: NeumorphicShadowStyle {
+        NeumorphicShadowStyle(
+            lightShadow: ShadowStyle(
+                color: Color.clear, // No neumorphic effects
+                radius: 0,
+                x: 0,
+                y: 0
+            ),
+            darkShadow: ShadowStyle(
+                color: Color.clear, // No neumorphic effects
+                radius: 0,
+                x: 0,
+                y: 0
+            )
+        )
+    }
+}
+
 // MARK: - Plain Light Theme (Monochromatic)
 struct PlainLightTheme: Theme {
     let primary = Color.black
