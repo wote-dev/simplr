@@ -87,6 +87,23 @@ struct ContentView: View {
         )
     }
     
+    /// Returns appropriate icon color for non-selected theme options with proper contrast
+    private func getIconColor(for theme: Theme) -> Color {
+        if theme is KawaiiTheme {
+            // Kawaii theme: use accent color for better visibility against light backgrounds
+            return theme.accent
+        } else if theme.background == Color.white || 
+                  theme.background == Color(red: 0.98, green: 0.98, blue: 0.98) ||
+                  theme.background == Color(red: 0.98, green: 0.99, blue: 1.0) ||
+                  theme.background == Color(red: 0.98, green: 1.0, blue: 0.99) {
+            // Light themes: use text color for better contrast
+            return theme.text
+        } else {
+            // Dark themes and others: use primary color as before
+            return theme.primary
+        }
+    }
+    
     private var emptyStateView: some View {
         VStack(spacing: 24) {
             ZStack {
@@ -210,7 +227,7 @@ struct ContentView: View {
                         .applyNeumorphicShadow(theme.neumorphicButtonStyle)
                     
                     Image(systemName: "line.3.horizontal.decrease.circle")
-                        .foregroundColor(theme.primary)
+                        .foregroundColor(getIconColor(for: theme))
                         .font(.system(size: 18, weight: .medium))
                         .shadow(
                             color: theme.background == .black ? Color.white.opacity(0.1) : Color.clear,
@@ -229,7 +246,7 @@ struct ContentView: View {
                     .applyNeumorphicShadow(theme.neumorphicButtonStyle)
                 
                 Image(systemName: themeManager.themeMode.icon)
-                    .foregroundColor(theme.primary)
+                    .foregroundColor(getIconColor(for: theme))
                     .font(.system(size: 16, weight: .medium))
                     .shadow(
                         color: theme.background == .black ? Color.white.opacity(0.1) : Color.clear,

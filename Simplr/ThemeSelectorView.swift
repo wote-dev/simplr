@@ -148,6 +148,47 @@ struct ThemeOptionCard: View {
     let isChanging: Bool
     let onSelect: () -> Void
     
+    /// Returns subtle, consistent border color for all themes with enhanced visibility for light themes
+    private func getBorderColor(for theme: Theme) -> Color {
+        // Enhanced border visibility for light and kawaii themes while maintaining subtlety
+        if theme is KawaiiTheme {
+            // Kawaii theme: soft pink-gray border that's visible but not prominent
+            return Color(red: 0.75, green: 0.65, blue: 0.68).opacity(0.6)
+        } else if theme.background == Color.white || 
+                  theme.background == Color(red: 0.98, green: 0.98, blue: 0.98) ||
+                  theme.background == Color(red: 0.98, green: 0.99, blue: 1.0) ||
+                  theme.background == Color(red: 0.98, green: 1.0, blue: 0.99) {
+            // Light themes: subtle gray border with better visibility
+            return Color(red: 0.85, green: 0.85, blue: 0.85).opacity(0.7)
+        } else {
+            // Dark themes: use existing border with reduced opacity
+            return theme.border.opacity(0.3)
+        }
+    }
+    
+    /// Returns consistent border width across all themes for uniform appearance
+    private func getBorderWidth(for theme: Theme) -> CGFloat {
+        // Consistent 0.8pt border width for all themes - subtle but visible
+        return 0.8
+    }
+    
+    /// Returns appropriate icon color for non-selected theme options with proper contrast
+    private func getIconColor(for theme: Theme) -> Color {
+        if theme is KawaiiTheme {
+            // Kawaii theme: use accent color for better visibility against light backgrounds
+            return theme.accent
+        } else if theme.background == Color.white || 
+                  theme.background == Color(red: 0.98, green: 0.98, blue: 0.98) ||
+                  theme.background == Color(red: 0.98, green: 0.99, blue: 1.0) ||
+                  theme.background == Color(red: 0.98, green: 1.0, blue: 0.99) {
+            // Light themes: use text color for better contrast
+            return theme.text
+        } else {
+            // Dark themes and others: use primary color as before
+            return theme.primary
+        }
+    }
+    
     var body: some View {
         Button(action: isChanging ? {} : onSelect) {
             HStack(spacing: 16) {
@@ -160,7 +201,7 @@ struct ThemeOptionCard: View {
                     
                     Image(systemName: mode.icon)
                         .font(.system(size: 22, weight: .medium))
-                        .foregroundColor(isSelected ? theme.background : theme.primary)
+                        .foregroundColor(isSelected ? theme.background : getIconColor(for: theme))
                         .shadow(
                             color: isSelected ? (theme.background == .black ? Color.white.opacity(0.3) : Color.black.opacity(0.3)) : Color.clear,
                             radius: isSelected ? 2 : 0,
@@ -228,7 +269,10 @@ struct ThemeOptionCard: View {
                     .applyShadow(isSelected ? theme.cardShadowStyle : theme.shadowStyle)
                     .overlay(
                         RoundedRectangle(cornerRadius: 16)
-                            .stroke(isSelected ? theme.accent : Color.clear, lineWidth: 0)
+                            .stroke(
+                                isSelected ? theme.accent : getBorderColor(for: theme),
+                                lineWidth: isSelected ? 2.0 : getBorderWidth(for: theme)
+                            )
                     )
             )
         }

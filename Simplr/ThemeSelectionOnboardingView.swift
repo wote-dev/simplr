@@ -153,6 +153,23 @@ struct ThemeOnboardingCard: View {
     let canAccess: Bool
     let onSelect: () -> Void
     
+    /// Returns appropriate icon color for non-selected theme options with proper contrast
+    private func getIconColor(for theme: Theme) -> Color {
+        if theme is KawaiiTheme {
+            // Kawaii theme: use accent color for better visibility against light backgrounds
+            return theme.accent
+        } else if theme.background == Color.white || 
+                  theme.background == Color(red: 0.98, green: 0.98, blue: 0.98) ||
+                  theme.background == Color(red: 0.98, green: 0.99, blue: 1.0) ||
+                  theme.background == Color(red: 0.98, green: 1.0, blue: 0.99) {
+            // Light themes: use text color for better contrast
+            return theme.text
+        } else {
+            // Dark themes and others: use primary color as before
+            return theme.primary
+        }
+    }
+    
     var body: some View {
         Button(action: onSelect) {
             HStack(spacing: 16) {
@@ -164,7 +181,7 @@ struct ThemeOnboardingCard: View {
                     
                     Image(systemName: mode.icon)
                         .font(.system(size: 20, weight: .medium))
-                        .foregroundColor(isSelected ? theme.background : theme.primary)
+                        .foregroundColor(isSelected ? theme.background : getIconColor(for: theme))
                 }
                 
                 // Content
