@@ -255,6 +255,8 @@ struct ThemeOptionCard: View {
             return "Follows your device"
         case .kawaii:
             return "Cute and colorful"
+        case .serene:
+            return "Peaceful and calming"
         }
     }
 }

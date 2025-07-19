@@ -129,6 +129,8 @@ struct SimplrApp: App {
             return nil
         case .kawaii:
             return .light // Kawaii theme uses light color scheme
+        case .serene:
+            return .light // Serene theme uses light color scheme
         }
     }
     

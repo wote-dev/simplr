@@ -17,6 +17,7 @@ enum ThemeMode: String, CaseIterable {
     case dark = "dark"
     case system = "system"
     case kawaii = "kawaii"
+    case serene = "serene"
     
     var displayName: String {
         switch self {
@@ -27,6 +28,7 @@ enum ThemeMode: String, CaseIterable {
         case .dark: return "Dark"
         case .system: return "System"
         case .kawaii: return "Kawaii"
+        case .serene: return "Serene"
         }
     }
     
@@ -39,12 +41,13 @@ enum ThemeMode: String, CaseIterable {
         case .dark: return "moon.fill"
         case .system: return "circle.lefthalf.filled"
         case .kawaii: return "heart.fill"
+        case .serene: return "cloud.fill"
         }
     }
     
     var isPremium: Bool {
         switch self {
-        case .light, .lightBlue, .lightGreen, .minimal, .dark, .system:
+        case .light, .lightBlue, .lightGreen, .minimal, .dark, .system, .serene:
             return false
         case .kawaii:
             return false // Temporarily disabled premium requirement - can be changed back to true later
@@ -111,6 +114,8 @@ class ThemeManager: ObservableObject {
             case .lightBlue:
                 themeMode = .lightGreen
             case .lightGreen:
+                themeMode = .serene
+            case .serene:
                 themeMode = .minimal
             case .minimal:
                 themeMode = .dark
@@ -136,6 +141,8 @@ class ThemeManager: ObservableObject {
             newTheme = LightTheme()
         case .lightGreen:
             newTheme = LightGreenTheme()
+        case .serene:
+            newTheme = SereneTheme()
         case .minimal:
             newTheme = MinimalTheme()
         case .dark:
@@ -215,8 +222,8 @@ class ThemeManager: ObservableObject {
             return true
         }
         
-        // Kawaii theme is now free for all users
-        if mode == .kawaii {
+        // Kawaii and Serene themes are now free for all users
+        if mode == .kawaii || mode == .serene {
             return true
         }
         
@@ -225,8 +232,8 @@ class ThemeManager: ObservableObject {
         }
         
         switch mode {
-        case .kawaii:
-            return true // Always allow kawaii theme access
+        case .kawaii, .serene:
+            return true // Always allow kawaii and serene theme access
             // Premium check preserved for future use:
             // return premiumManager.hasAccess(to: .kawaiiTheme)
         default:

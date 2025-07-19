@@ -196,11 +196,13 @@ struct MainTabView: View {
                 .fill(
                     themeManager.themeMode == .kawaii ?
                     Color(red: 243/255, green: 236/255, blue: 230/255) :
-                    (themeManager.isDarkMode ?
-                     Color.black :
-                     (themeManager.themeMode == .lightBlue ? Color(red: 245/255, green: 249/255, blue: 255/255) :
-                      (themeManager.themeMode == .lightGreen ? Color(red: 245/255, green: 255/255, blue: 249/255) :
-                       Color(red: 250/255, green: 250/255, blue: 250/255))))
+                    (themeManager.themeMode == .serene ?
+                     theme.surfaceSecondary :
+                     (themeManager.isDarkMode ?
+                      Color.black :
+                      (themeManager.themeMode == .lightBlue ? Color(red: 245/255, green: 249/255, blue: 255/255) :
+                       (themeManager.themeMode == .lightGreen ? Color(red: 245/255, green: 255/255, blue: 249/255) :
+                        Color(red: 250/255, green: 250/255, blue: 250/255)))))
                 )
                 .ignoresSafeArea(.container, edges: .bottom)
         )

@@ -805,6 +805,131 @@ struct KawaiiTheme: Theme {
     }
 }
 
+// MARK: - Serene Theme (Soft Lavender and Dusty Rose)
+struct SereneTheme: Theme {
+    let primary = Color(red: 0.75, green: 0.68, blue: 0.85) // Soft lavender primary
+    let secondary = Color(red: 0.85, green: 0.72, blue: 0.78) // Dusty rose secondary
+    let accent = Color(red: 0.68, green: 0.58, blue: 0.82) // Deeper lavender accent for better contrast
+    let background = Color(red: 0.97, green: 0.95, blue: 0.98) // Very light lavender background
+    let surface = Color.white // Pure white for maximum contrast
+    let surfaceSecondary = Color(red: 0.95, green: 0.93, blue: 0.96) // Light lavender-tinted secondary surface
+    let text = Color(red: 0.15, green: 0.12, blue: 0.18) // Dark purple-tinted text for readability
+    let textSecondary = Color(red: 0.35, green: 0.32, blue: 0.38) // Medium purple-gray secondary text
+    let textTertiary = Color(red: 0.55, green: 0.52, blue: 0.58) // Light purple-gray tertiary text
+    let success = Color(red: 0.65, green: 0.85, blue: 0.75) // Soft sage green for success
+    let warning = Color(red: 0.95, green: 0.82, blue: 0.68) // Warm peach for warnings
+    let error = Color(red: 0.92, green: 0.68, blue: 0.72) // Soft rose for errors
+    let shadow = Color(red: 0.75, green: 0.68, blue: 0.85).opacity(0.15) // Lavender-tinted shadow
+    let border = Color(red: 0.82, green: 0.78, blue: 0.88).opacity(0.6) // Soft lavender border
+    let borderSecondary = Color(red: 0.78, green: 0.74, blue: 0.84).opacity(0.7) // Slightly darker lavender secondary border
+    let toggle = Color(red: 0.68, green: 0.58, blue: 0.82)
+    let progress = Color(red: 0.75, green: 0.68, blue: 0.85) // Lavender progress color
+    
+    var backgroundGradient: LinearGradient {
+        LinearGradient(
+            colors: [
+                Color(red: 0.97, green: 0.95, blue: 0.98),
+                Color(red: 0.95, green: 0.92, blue: 0.96)
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+    
+    var surfaceGradient: LinearGradient {
+        LinearGradient(
+            colors: [
+                Color.white,
+                Color(red: 0.98, green: 0.96, blue: 0.99)
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+    
+    var accentGradient: LinearGradient {
+        LinearGradient(
+            colors: [
+                Color(red: 0.75, green: 0.68, blue: 0.85),
+                Color(red: 0.68, green: 0.58, blue: 0.82)
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+    
+    var backgroundImage: String? {
+        nil
+    }
+    
+    var shadowStyle: ShadowStyle {
+        ShadowStyle(
+            color: primary.opacity(0.08),
+            radius: 6,
+            y: 2
+        )
+    }
+    
+    var cardShadowStyle: ShadowStyle {
+        ShadowStyle(
+            color: primary.opacity(0.12),
+            radius: 12,
+            y: 4
+        )
+    }
+    
+    var neumorphicStyle: NeumorphicShadowStyle {
+        NeumorphicShadowStyle(
+            lightShadow: ShadowStyle(
+                color: Color.white.opacity(0.9),
+                radius: 8,
+                x: -4,
+                y: -4
+            ),
+            darkShadow: ShadowStyle(
+                color: primary.opacity(0.18),
+                radius: 8,
+                x: 4,
+                y: 4
+            )
+        )
+    }
+    
+    var neumorphicButtonStyle: NeumorphicShadowStyle {
+        NeumorphicShadowStyle(
+            lightShadow: ShadowStyle(
+                color: Color.white.opacity(0.95),
+                radius: 6,
+                x: -3,
+                y: -3
+            ),
+            darkShadow: ShadowStyle(
+                color: primary.opacity(0.15),
+                radius: 6,
+                x: 3,
+                y: 3
+            )
+        )
+    }
+    
+    var neumorphicPressedStyle: NeumorphicShadowStyle {
+        NeumorphicShadowStyle(
+            lightShadow: ShadowStyle(
+                color: primary.opacity(0.12),
+                radius: 4,
+                x: 2,
+                y: 2
+            ),
+            darkShadow: ShadowStyle(
+                color: Color.white.opacity(0.8),
+                radius: 4,
+                x: -2,
+                y: -2
+            )
+        )
+    }
+}
+
 // MARK: - Theme Extensions
 extension View {
     func applyShadow(_ shadowStyle: ShadowStyle) -> some View {

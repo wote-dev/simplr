@@ -15,83 +15,84 @@ struct ThemeSelectionOnboardingView: View {
     
     @State private var selectedTheme: ThemeMode = .system
     @State private var showingPaywall = false
+    @State private var isChangingTheme = false
     
     var body: some View {
         ZStack {
             theme.background
                 .ignoresSafeArea()
             
-            VStack(spacing: 40) {
-                Spacer(minLength: 20)
-                
-                // Header
-                VStack(spacing: 20) {
-                    Image(systemName: "paintbrush.fill")
-                        .font(.system(size: 60, weight: .light))
-                        .foregroundColor(theme.accent)
-                    
-                    VStack(spacing: 8) {
-                        Text("Choose Your Style")
-                            .font(.title2)
-                            .fontWeight(.semibold)
-                            .foregroundColor(theme.text)
+            ScrollView(.vertical, showsIndicators: false) {
+                LazyVStack(spacing: 32) {
+                    // Header
+                    VStack(spacing: 20) {
+                        Image(systemName: "paintbrush.fill")
+                            .font(.system(size: 60, weight: .light))
+                            .foregroundColor(theme.accent)
                         
-                        Text("Pick a theme that matches your vibe")
-                            .font(.callout)
-                            .foregroundColor(theme.textSecondary)
-                            .multilineTextAlignment(.center)
-                    }
-                }
-                
-                // Theme options
-                VStack(spacing: 16) {
-                    ForEach(ThemeMode.allCases, id: \.self) { mode in
-                        ThemeOnboardingCard(
-                            mode: mode,
-                            isSelected: selectedTheme == mode,
-                            canAccess: themeManager.canAccessTheme(mode),
-                            onSelect: {
-                                selectTheme(mode)
-                            }
-                        )
-                    }
-                }
-                .padding(.horizontal, 20)
-                
-                Spacer(minLength: 20)
-                
-                // Continue button
-                VStack(spacing: 16) {
-                    Button {
-                        completeThemeSelection()
-                    } label: {
-                        HStack(spacing: 8) {
-                            Text("Continue")
-                                .font(.system(size: 17, weight: .medium))
-                            Image(systemName: "arrow.right")
-                                .font(.system(size: 14, weight: .medium))
+                        VStack(spacing: 8) {
+                            Text("Choose Your Style")
+                                .font(.title2)
+                                .fontWeight(.semibold)
+                                .foregroundColor(theme.text)
+                            
+                            Text("Pick a theme that matches your vibe")
+                                .font(.callout)
+                                .foregroundColor(theme.textSecondary)
+                                .multilineTextAlignment(.center)
                         }
-                        .foregroundColor(theme.background)
-                        .frame(height: 50)
-                        .frame(maxWidth: .infinity)
-                        .background(
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(theme.accent)
-                        )
                     }
-                    .padding(.horizontal, 40)
+                    .padding(.top, 20)
                     
-                    // Skip option
-                    Button {
-                        completeThemeSelection()
-                    } label: {
-                        Text("Skip for now")
-                            .font(.system(size: 16, weight: .regular))
-                            .foregroundColor(theme.textSecondary)
+                    // Theme options
+                    LazyVStack(spacing: 12) {
+                        ForEach(ThemeMode.allCases, id: \.self) { mode in
+                            ThemeOnboardingCard(
+                                mode: mode,
+                                isSelected: selectedTheme == mode,
+                                canAccess: themeManager.canAccessTheme(mode),
+                                onSelect: {
+                                    selectTheme(mode)
+                                }
+                            )
+                        }
                     }
+                    .padding(.horizontal, 20)
+                    
+                    // Continue button
+                    VStack(spacing: 16) {
+                        Button {
+                            completeThemeSelection()
+                        } label: {
+                            HStack(spacing: 8) {
+                                Text("Continue")
+                                    .font(.system(size: 17, weight: .medium))
+                                Image(systemName: "arrow.right")
+                                    .font(.system(size: 14, weight: .medium))
+                            }
+                            .foregroundColor(theme.background)
+                            .frame(height: 50)
+                            .frame(maxWidth: .infinity)
+                            .background(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(theme.accent)
+                            )
+                        }
+                        .padding(.horizontal, 40)
+                        
+                        // Skip option
+                        Button {
+                            completeThemeSelection()
+                        } label: {
+                            Text("Skip for now")
+                                .font(.system(size: 16, weight: .regular))
+                                .foregroundColor(theme.textSecondary)
+                        }
+                    }
+                    .padding(.bottom, 50)
                 }
-                .padding(.bottom, 50)
             }
+            .scrollBounceBehavior(.basedOnSize)
         }
         .onAppear {
             // Set initial selected theme to current theme
@@ -107,15 +108,28 @@ struct ThemeSelectionOnboardingView: View {
     }
     
     private func selectTheme(_ mode: ThemeMode) {
+        // Prevent rapid theme changes that could cause UI freezing
+        guard !isChangingTheme else { return }
+        
         HapticManager.shared.buttonTap()
         
         if mode.isPremium && !themeManager.canAccessTheme(mode) {
             // Show paywall for premium themes
             premiumManager.showPaywall(for: .kawaiiTheme)
         } else {
-            // Set theme and update selection
-            selectedTheme = mode
-            themeManager.setThemeMode(mode, checkPremium: false)
+            // Set debounce flag to prevent rapid changes
+            isChangingTheme = true
+            
+            // Optimize theme change with proper animation and state management
+            withAnimation(.easeInOut(duration: 0.3)) {
+                selectedTheme = mode
+                themeManager.setThemeMode(mode, checkPremium: false)
+            }
+            
+            // Reset debounce flag after animation completes
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                isChangingTheme = false
+            }
         }
     }
     
@@ -179,6 +193,7 @@ struct ThemeOnboardingCard: View {
                         .font(.subheadline)
                         .foregroundColor(theme.textSecondary)
                         .multilineTextAlignment(.leading)
+                        .lineLimit(1)
                 }
                 
                 Spacer()
@@ -188,6 +203,7 @@ struct ThemeOnboardingCard: View {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.title3)
                         .foregroundColor(theme.accent)
+                        .transition(.scale.combined(with: .opacity))
                 }
             }
             .padding(16)
@@ -200,7 +216,8 @@ struct ThemeOnboardingCard: View {
                     )
             )
         }
-        .animatedButton()
+        .animatedButton(pressedScale: 0.96, animation: .quickSpring)
+        .animation(.easeInOut(duration: 0.2), value: isSelected)
     }
     
     private func description(for mode: ThemeMode) -> String {
@@ -219,6 +236,8 @@ struct ThemeOnboardingCard: View {
             return "Follows your device"
         case .kawaii:
             return "Cute and colorful"
+        case .serene:
+            return "Peaceful and calming"
         }
     }
 }
