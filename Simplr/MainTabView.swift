@@ -199,7 +199,8 @@ struct MainTabView: View {
                     (themeManager.isDarkMode ?
                      Color.black :
                      (themeManager.themeMode == .lightBlue ? Color(red: 245/255, green: 249/255, blue: 255/255) :
-                      Color(red: 250/255, green: 250/255, blue: 250/255)))
+                      (themeManager.themeMode == .lightGreen ? Color(red: 245/255, green: 255/255, blue: 249/255) :
+                       Color(red: 250/255, green: 250/255, blue: 250/255))))
                 )
                 .ignoresSafeArea(.container, edges: .bottom)
         )

@@ -192,6 +192,131 @@ struct PlainLightTheme: Theme {
     }
 }
 
+// MARK: - Light Green Theme (Sophisticated Teal Green Accent)
+struct LightGreenTheme: Theme {
+    let primary = Color(red: 0.2, green: 0.7, blue: 0.6) // Sophisticated teal green primary
+    let secondary = Color(red: 0.4, green: 0.8, blue: 0.7) // Lighter teal green secondary
+    let accent = Color(red: 0.1, green: 0.6, blue: 0.5) // Deep teal green accent
+    let background = Color(red: 0.98, green: 1.0, blue: 0.99) // Subtle green-tinted background
+    let surface = Color.white // Pure white for better contrast against background
+    let surfaceSecondary = Color(red: 0.96, green: 1.0, blue: 0.98) // Light green-tinted secondary surface
+    let text = Color(red: 0.05, green: 0.15, blue: 0.1) // Dark green-tinted text
+    let textSecondary = Color(red: 0.25, green: 0.45, blue: 0.35) // Green-gray secondary text
+    let textTertiary = Color(red: 0.45, green: 0.65, blue: 0.55) // Lighter green-gray tertiary
+    let success = Color(red: 0.2, green: 0.8, blue: 0.4) // Fresh green for success
+    let warning = Color(red: 1.0, green: 0.6, blue: 0.0) // Warm orange for warnings
+    let error = Color(red: 0.9, green: 0.3, blue: 0.3) // Soft red for errors
+    let shadow = Color(red: 0.2, green: 0.7, blue: 0.6).opacity(0.12) // Green-tinted shadow
+    let border = Color(red: 0.7, green: 0.9, blue: 0.8).opacity(0.7) // Enhanced visibility green border
+    let borderSecondary = Color(red: 0.6, green: 0.85, blue: 0.75).opacity(0.8) // More visible green secondary border
+    let toggle = Color(red: 0.2, green: 0.7, blue: 0.6)
+    let progress = Color(red: 0.2, green: 0.8, blue: 0.6)
+    
+    var backgroundGradient: LinearGradient {
+        LinearGradient(
+            colors: [
+                Color(red: 0.98, green: 1.0, blue: 0.99),
+                Color(red: 0.95, green: 1.0, blue: 0.97)
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+    
+    var surfaceGradient: LinearGradient {
+        LinearGradient(
+            colors: [
+                Color.white,
+                Color(red: 0.98, green: 1.0, blue: 0.99)
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+    
+    var accentGradient: LinearGradient {
+        LinearGradient(
+            colors: [
+                Color(red: 0.2, green: 0.7, blue: 0.6),
+                Color(red: 0.1, green: 0.6, blue: 0.5)
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+    
+    var backgroundImage: String? {
+        nil
+    }
+    
+    var shadowStyle: ShadowStyle {
+        ShadowStyle(
+            color: Color(red: 0.2, green: 0.7, blue: 0.6).opacity(0.08),
+            radius: 4,
+            y: 2
+        )
+    }
+    
+    var cardShadowStyle: ShadowStyle {
+        ShadowStyle(
+            color: Color(red: 0.2, green: 0.7, blue: 0.6).opacity(0.12),
+            radius: 8,
+            y: 4
+        )
+    }
+    
+    var neumorphicStyle: NeumorphicShadowStyle {
+        NeumorphicShadowStyle(
+            lightShadow: ShadowStyle(
+                color: Color.white.opacity(0.9),
+                radius: 6,
+                x: -3,
+                y: -3
+            ),
+            darkShadow: ShadowStyle(
+                color: Color(red: 0.2, green: 0.7, blue: 0.6).opacity(0.15),
+                radius: 6,
+                x: 3,
+                y: 3
+            )
+        )
+    }
+    
+    var neumorphicButtonStyle: NeumorphicShadowStyle {
+        NeumorphicShadowStyle(
+            lightShadow: ShadowStyle(
+                color: Color.white.opacity(0.95),
+                radius: 4,
+                x: -2,
+                y: -2
+            ),
+            darkShadow: ShadowStyle(
+                color: Color(red: 0.2, green: 0.7, blue: 0.6).opacity(0.12),
+                radius: 4,
+                x: 2,
+                y: 2
+            )
+        )
+    }
+    
+    var neumorphicPressedStyle: NeumorphicShadowStyle {
+        NeumorphicShadowStyle(
+            lightShadow: ShadowStyle(
+                color: Color(red: 0.2, green: 0.7, blue: 0.6).opacity(0.12),
+                radius: 4,
+                x: 2,
+                y: 2
+            ),
+            darkShadow: ShadowStyle(
+                color: Color.white.opacity(0.7),
+                radius: 4,
+                x: -2,
+                y: -2
+            )
+        )
+    }
+}
+
 // MARK: - Light Blue Theme (Sophisticated Blue Accent)
 struct LightTheme: Theme {
     let primary = Color(red: 0.2, green: 0.4, blue: 0.8) // Sophisticated blue primary

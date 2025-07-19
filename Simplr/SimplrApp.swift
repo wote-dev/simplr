@@ -119,6 +119,8 @@ struct SimplrApp: App {
             return .light
         case .lightBlue:
             return .light // Light Blue theme uses light color scheme
+        case .lightGreen:
+            return .light // Light Green theme uses light color scheme
         case .dark:
             return .dark
         case .system:

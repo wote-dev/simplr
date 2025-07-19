@@ -25,6 +25,8 @@ extension Image {
             self.init("\(name)-light")
         case .lightBlue:
             self.init("\(name)-light") // Use same light icons for light blue theme
+        case .lightGreen:
+            self.init("\(name)-light") // Use same light icons for light green theme
         case .system:
             let isDarkMode = themeManager.isDarkMode
             self.init(isDarkMode ? "\(name)-dark" : "\(name)-light")
@@ -41,6 +43,8 @@ extension Image {
             self.init("bcs-light")
         case .lightBlue:
             self.init("bcs-light") // Use same light logo for light blue theme
+        case .lightGreen:
+            self.init("bcs-light") // Use same light logo for light green theme
         case .system:
             let isDarkMode = themeManager.isDarkMode
             self.init(isDarkMode ? "bcs-dark" : "bcs-light")

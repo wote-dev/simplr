@@ -245,6 +245,8 @@ struct ThemeOptionCard: View {
             return "Clean and minimal"
         case .lightBlue:
             return "Soft and calming"
+        case .lightGreen:
+            return "Fresh and natural"
         case .dark:
             return "Easy on the eyes"
         case .system:
