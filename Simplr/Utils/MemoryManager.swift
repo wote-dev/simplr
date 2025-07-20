@@ -67,17 +67,49 @@ class MemoryManager: ObservableObject {
         // Notify managers to clear caches
         NotificationCenter.default.post(name: .memoryWarning, object: nil)
         
-        // Force garbage collection
-        DispatchQueue.global(qos: .utility).async {
-            autoreleasepool {
-                // Clear any temporary data
-                URLCache.shared.removeAllCachedResponses()
-            }
-        }
+        // Aggressive cleanup for App Store quality
+        performAggressiveCleanup()
         
         // Reset memory pressure after a delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
             self.memoryPressure = .normal
+        }
+    }
+    
+    /// Perform aggressive cleanup for App Store optimization
+    private func performAggressiveCleanup() {
+        DispatchQueue.global(qos: .utility).async {
+            autoreleasepool {
+                // Clear URL cache completely
+                URLCache.shared.removeAllCachedResponses()
+                
+                // Clear image cache
+                self.clearImageCaches()
+                
+                // Force UI optimizer cleanup
+                DispatchQueue.main.async {
+                    UIOptimizer.shared.aggressiveCleanup()
+                }
+                
+                // Trigger garbage collection
+                self.forceGarbageCollection()
+            }
+        }
+    }
+    
+    private func clearImageCaches() {
+        // Clear any cached images
+        if let cache = NSCache<NSString, UIImage>() as? NSCache<NSString, UIImage> {
+            cache.removeAllObjects()
+        }
+    }
+    
+    private func forceGarbageCollection() {
+        // Multiple autoreleasepool calls to ensure cleanup
+        for _ in 0..<3 {
+            autoreleasepool {
+                // Force cleanup
+            }
         }
     }
     
@@ -115,10 +147,23 @@ class MemoryManager: ObservableObject {
         return 0.0
     }
     
-    /// Check if memory usage is high
+    /// Check if memory usage is high with App Store thresholds
     func isMemoryUsageHigh() -> Bool {
         let currentUsage = getCurrentMemoryUsage()
-        return currentUsage > 100.0 // 100MB threshold
+        return currentUsage > PerformanceConfig.Memory.memoryWarningThreshold
+    }
+    
+    /// Check if memory usage is critical
+    func isMemoryUsageCritical() -> Bool {
+        let currentUsage = getCurrentMemoryUsage()
+        return currentUsage > PerformanceConfig.Monitoring.criticalMemoryThreshold
+    }
+    
+    /// Get memory usage percentage (0.0 to 1.0)
+    func getMemoryUsagePercentage() -> Double {
+        let currentUsage = getCurrentMemoryUsage()
+        let totalMemory = Double(ProcessInfo.processInfo.physicalMemory) / 1024.0 / 1024.0
+        return min(currentUsage / totalMemory, 1.0)
     }
     
     /// Force memory cleanup

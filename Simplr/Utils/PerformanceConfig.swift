@@ -13,10 +13,12 @@ struct PerformanceConfig {
     
     // MARK: - Cache Settings
     struct Cache {
-        static let maxFilteredTasksCacheSize = 20
-        static let cacheValidityDuration: TimeInterval = 0.5
-        static let backgroundCacheSize = 5
+        static let maxFilteredTasksCacheSize = 30 // Increased for better performance
+        static let cacheValidityDuration: TimeInterval = 0.3 // Faster invalidation
+        static let backgroundCacheSize = 8 // Optimized for background efficiency
         static let memoryWarningCacheSize = 0
+        static let imageCacheSize = 50 * 1024 * 1024 // 50MB for images
+        static let urlCacheSize = 100 * 1024 * 1024 // 100MB for network cache
     }
     
     // MARK: - Animation Settings
@@ -36,12 +38,14 @@ struct PerformanceConfig {
     
     // MARK: - UI Settings
     struct UI {
-        static let searchDebounceDelay: TimeInterval = 0.2
-        static let batchUpdateDelay: TimeInterval = 0.1
+        static let searchDebounceDelay: TimeInterval = 0.15 // Faster response
+        static let batchUpdateDelay: TimeInterval = 0.05 // Quicker batching
         static let gestureThrottleInterval: TimeInterval = 0.016 // ~60fps
         static let highPerformanceThrottleInterval: TimeInterval = 0.008 // ~120fps
-        static let minimumSearchLength = 2
-        static let maxVisibleTasks = 100 // Limit for very large task lists
+        static let minimumSearchLength = 1 // More responsive search
+        static let maxVisibleTasks = 150 // Increased for better UX
+        static let lazyLoadingThreshold = 50 // Start lazy loading after 50 items
+        static let preloadBuffer = 10 // Preload 10 items ahead
     }
     
     // MARK: - Memory Settings
@@ -54,9 +58,15 @@ struct PerformanceConfig {
     
     // MARK: - Performance Monitoring
     struct Monitoring {
-        static let enablePerformanceLogging = false // Set to true for debugging
-        static let slowOperationThreshold: TimeInterval = 0.1 // 100ms
-        static let memoryCheckInterval: TimeInterval = 30.0 // 30 seconds
+        #if DEBUG
+        static let enablePerformanceLogging = true // Enable in debug for development
+        #else
+        static let enablePerformanceLogging = false // Disable in production for App Store
+        #endif
+        static let slowOperationThreshold: TimeInterval = 0.05 // 50ms for App Store quality
+        static let memoryCheckInterval: TimeInterval = 15.0 // More frequent monitoring
+        static let criticalMemoryThreshold: Double = 200.0 // MB - trigger aggressive cleanup
+        static let performanceReportingEnabled = false // Disable telemetry for privacy
     }
     
     // MARK: - Haptic Settings

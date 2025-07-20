@@ -98,9 +98,14 @@ struct SimplrApp: App {
                     // Perform initial cleanup when app starts
                     taskManager.performMaintenanceTasks()
                     
+                    // Initialize App Store optimizations
+                    AppStoreOptimizer.shared.optimizeAppLaunch()
+                    AppStoreOptimizer.shared.enableBatteryOptimizations()
+                    
                     // Handle quick action if app was launched via quick action
                     handleLaunchQuickAction()
                 }
+                .appStoreOptimized() // Apply App Store optimizations
                 .onContinueUserActivity(CSSearchableItemActionType) { userActivity in
                     handleSpotlightSearchResult(userActivity)
                 }
