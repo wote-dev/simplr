@@ -59,10 +59,8 @@ class AppStoreOptimizer: ObservableObject {
     // MARK: - Production Optimizations
     
     private func enableProductionOptimizations() {
-        // Disable debug features in production
-        #if !DEBUG
-        PerformanceConfig.Monitoring.enablePerformanceLogging = false
-        #endif
+        // Performance logging is automatically disabled in production via PerformanceConfig
+        // No need to assign to the let constant - it's handled by conditional compilation
         
         // Enable aggressive caching
         URLCache.shared.memoryCapacity = 50 * 1024 * 1024 // 50MB
