@@ -307,6 +307,8 @@ struct TaskRowView: View {
                                     ForEach(task.checklist) { item in
                                         HStack(spacing: 8) {
                                             Button(action: {
+                                                // Immediate haptic feedback for responsiveness
+                                                HapticManager.shared.buttonTap()
                                                 toggleChecklistItem(item)
                                             }) {
                                                 Image(systemName: item.isCompleted ? "checkmark.circle.fill" : "circle")
@@ -315,6 +317,17 @@ struct TaskRowView: View {
                                                     .animation(.easeInOut(duration: 0.2), value: item.isCompleted)
                                             }
                                             .buttonStyle(PlainButtonStyle())
+                                            .contentShape(Circle())
+                                            .frame(width: 24, height: 24)
+                                            .allowsHitTesting(true)
+                                            .highPriorityGesture(
+                                                TapGesture()
+                                                    .onEnded { _ in
+                                                        // Immediate haptic feedback for responsiveness
+                                                        HapticManager.shared.buttonTap()
+                                                        toggleChecklistItem(item)
+                                                    }
+                                            )
                                             
                                             Text(item.title)
                                                 .font(.caption)
@@ -1241,8 +1254,7 @@ struct TaskRowView: View {
                 // Update the task through the task manager (uses batch updates for performance)
                 taskManager.updateTask(updatedTask)
                 
-                // Provide haptic feedback
-                HapticManager.shared.buttonTap()
+                // Haptic feedback is now provided immediately in the UI layer for better responsiveness
             }
         }
     }

@@ -99,9 +99,8 @@ class MemoryManager: ObservableObject {
     
     private func clearImageCaches() {
         // Clear any cached images
-        if let cache = NSCache<NSString, UIImage>() as? NSCache<NSString, UIImage> {
-            cache.removeAllObjects()
-        }
+        let cache = NSCache<NSString, UIImage>()
+        cache.removeAllObjects()
     }
     
     private func forceGarbageCollection() {

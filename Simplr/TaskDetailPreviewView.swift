@@ -76,19 +76,39 @@ struct TaskDetailPreviewView: View {
                     .textCase(.uppercase)
             }
 
-            ForEach($task.checklist) { $item in
-                HStack {
-                    Toggle(isOn: $item.isCompleted) {
-                        Text(item.title)
-                            .strikethrough(item.isCompleted)
+            ForEach(task.checklist) { item in
+                HStack(spacing: 8) {
+                    Button(action: {
+                        // Immediate haptic feedback for responsiveness
+                        HapticManager.shared.buttonTap()
+                        toggleChecklistItem(item)
+                    }) {
+                        Image(systemName: item.isCompleted ? "checkmark.circle.fill" : "circle")
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundColor(item.isCompleted ? theme.success : theme.textTertiary)
+                            .animation(.easeInOut(duration: 0.2), value: item.isCompleted)
                     }
-                    .toggleStyle(CheckboxToggleStyle())
-                    .onChange(of: item.isCompleted) { oldValue, newValue in
-                        // Ensure the task is updated with the latest checklist state
-                        DispatchQueue.main.async {
-                            taskManager.updateTask(task)
-                        }
-                    }
+                    .buttonStyle(PlainButtonStyle())
+                    .contentShape(Circle())
+                    .frame(width: 24, height: 24)
+                    .allowsHitTesting(true)
+                    .highPriorityGesture(
+                        TapGesture()
+                            .onEnded { _ in
+                                // Immediate haptic feedback for responsiveness
+                                HapticManager.shared.buttonTap()
+                                toggleChecklistItem(item)
+                            }
+                    )
+                    
+                    Text(item.title)
+                        .font(.caption)
+                        .foregroundColor(item.isCompleted ? theme.textSecondary : theme.text)
+                        .strikethrough(item.isCompleted)
+                        .opacity(item.isCompleted ? 0.7 : 1.0)
+                        .animation(.easeInOut(duration: 0.2), value: item.isCompleted)
+                    
+                    Spacer()
                 }
             }
         }
@@ -346,6 +366,26 @@ struct TaskDetailPreviewView: View {
                             .foregroundColor(theme.success)
                     }
                 }
+            }
+        }
+    }
+    
+    // MARK: - Helper Methods
+    
+    private func toggleChecklistItem(_ item: ChecklistItem) {
+        // Optimized checklist item toggle with performance considerations
+        PerformanceMonitor.shared.measure("ChecklistItemToggle") {
+            // Create a mutable copy of the task
+            var updatedTask = task
+            
+            // Find and update the checklist item
+            if let index = updatedTask.checklist.firstIndex(where: { $0.id == item.id }) {
+                updatedTask.checklist[index].isCompleted.toggle()
+                
+                // Update the task through the task manager (uses batch updates for performance)
+                taskManager.updateTask(updatedTask)
+                
+                // Haptic feedback is provided immediately in the UI layer for better responsiveness
             }
         }
     }
