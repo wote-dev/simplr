@@ -360,18 +360,9 @@ struct UpcomingView: View {
             }
         }
         .background(
-            // Subtle background enhancement
+            // Consistent background with other views
             Rectangle()
-                .fill(
-                    LinearGradient(
-                        colors: [
-                            theme.background,
-                            theme.background.opacity(0.98)
-                        ],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                )
+                .fill(theme.backgroundGradient)
                 .ignoresSafeArea(edges: .top)
         )
     }

@@ -113,7 +113,8 @@ struct ThemeSelectorView: View {
         // Prevent rapid theme changes that could cause UI freezing
         guard !isChangingTheme else { return }
         
-        HapticManager.shared.buttonTap()
+        // Ultra-subtle haptic feedback for theme selection - optimized for minimal disruption
+        HapticManager.shared.themeChange()
         
         if mode.isPremium && !themeManager.canAccessTheme(mode) {
             // Show paywall for premium themes
@@ -127,12 +128,7 @@ struct ThemeSelectorView: View {
                 themeManager.setThemeMode(mode, checkPremium: false)
             }
             
-            // Provide success feedback and reset debounce flag
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                HapticManager.shared.successFeedback()
-            }
-            
-            // Reset debounce flag after animation completes
+            // Reset debounce flag after animation completes - removed duplicate haptic feedback
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
                 isChangingTheme = false
             }

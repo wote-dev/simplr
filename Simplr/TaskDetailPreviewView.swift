@@ -182,32 +182,77 @@ struct TaskDetailPreviewView: View {
                         .foregroundColor(.red)
                 } else {
                     Circle()
-                        .fill(themeManager.themeMode == .kawaii ? category.color.kawaiiGradient : category.color.gradient)
+                        .fill({
+                            switch themeManager.themeMode {
+                            case .kawaii:
+                                return category.color.kawaiiGradient
+                            case .serene:
+                                return category.color.sereneGradient
+                            default:
+                                return category.color.gradient
+                            }
+                        }())
                         .frame(width: 12, height: 12)
                         .overlay(
                             Circle()
                                 .stroke(
-                                    themeManager.themeMode == .kawaii ? category.color.kawaiiDarkColor : category.color.darkColor,
+                                    {
+                                        switch themeManager.themeMode {
+                                        case .kawaii:
+                                            return category.color.kawaiiDarkColor
+                                        case .serene:
+                                            return category.color.sereneDarkColor
+                                        default:
+                                            return category.color.darkColor
+                                        }
+                                    }(),
                                     lineWidth: 0
                                 )
-                                .opacity(0.3)
+                                .opacity(themeManager.themeMode == .serene ? 0.2 : 0.3)
                         )
                 }
                 
                 Text(category.name)
                     .font(.system(size: 16, weight: .medium, design: .rounded))
-                    .foregroundColor(themeManager.themeMode == .kawaii ? category.color.kawaiiDarkColor : category.color.darkColor)
+                    .foregroundColor({
+                        switch themeManager.themeMode {
+                        case .kawaii:
+                            return category.color.kawaiiDarkColor
+                        case .serene:
+                            return category.color.sereneDarkColor
+                        default:
+                            return category.color.darkColor
+                        }
+                    }())
                     .padding(.horizontal, 10)
                     .padding(.vertical, 4)
                     .background(
                         Capsule()
-                            .fill(themeManager.themeMode == .kawaii ? category.color.kawaiiLightColor : category.color.lightColor)
+                            .fill({
+                                switch themeManager.themeMode {
+                                case .kawaii:
+                                    return category.color.kawaiiLightColor
+                                case .serene:
+                                    return category.color.sereneLightColor
+                                default:
+                                    return category.color.lightColor
+                                }
+                            }())
                             .overlay(
                                 Capsule()
                                     .stroke(
-                                    (themeManager.themeMode == .kawaii ? category.color.kawaiiColor.opacity(0.2) : category.color.color.opacity(0.2)),
-                                    lineWidth: 0
-                                )
+                                        {
+                                            switch themeManager.themeMode {
+                                            case .kawaii:
+                                                return category.color.kawaiiColor.opacity(0.2)
+                                            case .serene:
+                                                return category.color.sereneColor.opacity(0.15)
+                                            default:
+                                                return category.color.color.opacity(0.2)
+                                            }
+                                        }(),
+                                        lineWidth: 0
+                                    )
                             )
                     )
             }

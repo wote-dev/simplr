@@ -25,10 +25,12 @@ struct CategoryPillView: View {
     private var categoryColor: Color {
         guard let category = category else { return theme.textSecondary }
         
-        // Use kawaii colors when in kawaii theme mode
-        if themeManager.themeMode == .kawaii {
+        switch themeManager.themeMode {
+        case .kawaii:
             return category.color.kawaiiColor
-        } else {
+        case .serene:
+            return category.color.sereneColor
+        default:
             return category.color.color
         }
     }
@@ -49,10 +51,12 @@ struct CategoryPillView: View {
         if isSelected {
             guard let category = category else { return theme.surface }
             
-            // Use kawaii light colors when in kawaii theme mode
-            if themeManager.themeMode == .kawaii {
+            switch themeManager.themeMode {
+            case .kawaii:
                 return category.color.kawaiiLightColor
-            } else {
+            case .serene:
+                return category.color.sereneLightColor
+            default:
                 return category.color.lightColor
             }
         } else {
@@ -64,10 +68,12 @@ struct CategoryPillView: View {
         if isSelected {
             guard let category = category else { return theme.text }
             
-            // Use kawaii dark colors when in kawaii theme mode
-            if themeManager.themeMode == .kawaii {
+            switch themeManager.themeMode {
+            case .kawaii:
                 return category.color.kawaiiDarkColor
-            } else {
+            case .serene:
+                return category.color.sereneDarkColor
+            default:
                 return category.color.darkColor
             }
         } else {
@@ -89,9 +95,7 @@ struct CategoryPillView: View {
                         // Warning triangle for urgent category
                         Image(systemName: "exclamationmark.triangle.fill")
                             .font(.system(size: 12, weight: .bold))
-                            .foregroundColor(
-                                themeManager.themeMode == .kawaii ? category.color.kawaiiColor : category.color.color
-                            )
+                            .foregroundColor(categoryColor)
                             .scaleEffect(isSelected ? 1.1 : 1.0)
                             .scaleEffect(pulsateScale)
                             .opacity(pulsateOpacity)
@@ -104,9 +108,7 @@ struct CategoryPillView: View {
                         // Exclamation point for important category
                         Image(systemName: "exclamationmark.circle.fill")
                             .font(.system(size: 12, weight: .bold))
-                            .foregroundColor(
-                                themeManager.themeMode == .kawaii ? category.color.kawaiiColor : category.color.color
-                            )
+                            .foregroundColor(categoryColor)
                             .scaleEffect(isSelected ? 1.1 : 1.0)
                             .scaleEffect(pulsateScale)
                             .opacity(pulsateOpacity)
@@ -118,15 +120,33 @@ struct CategoryPillView: View {
                     } else {
                         // Regular circle for other categories
                         Circle()
-                            .fill(themeManager.themeMode == .kawaii ? category.color.kawaiiGradient : category.color.gradient)
+                            .fill({
+                                switch themeManager.themeMode {
+                                case .kawaii:
+                                    return category.color.kawaiiGradient
+                                case .serene:
+                                    return category.color.sereneGradient
+                                default:
+                                    return category.color.gradient
+                                }
+                            }())
                             .frame(width: 12, height: 12)
                             .overlay(
                                 Circle()
                                     .stroke(
-                                        themeManager.themeMode == .kawaii ? category.color.kawaiiDarkColor : category.color.darkColor,
+                                        {
+                                            switch themeManager.themeMode {
+                                            case .kawaii:
+                                                return category.color.kawaiiDarkColor
+                                            case .serene:
+                                                return category.color.sereneDarkColor
+                                            default:
+                                                return category.color.darkColor
+                                            }
+                                        }(),
                                         lineWidth: 0.8
                                     )
-                                    .opacity(0.3)
+                                    .opacity(themeManager.themeMode == .serene ? 0.2 : 0.3)
                             )
                             .scaleEffect(isSelected ? 1.1 : 1.0)
                             .animation(.smoothSpring, value: isSelected)

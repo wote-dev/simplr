@@ -20,10 +20,13 @@ struct CategorySectionHeaderView: View {
     private var categoryColor: Color {
         guard let category = category else { return theme.textSecondary }
         
-        // Use kawaii colors when in kawaii theme mode
-        if themeManager.themeMode == .kawaii {
+        // Use theme-specific colors
+        switch themeManager.themeMode {
+        case .kawaii:
             return category.color.kawaiiColor
-        } else {
+        case .serene:
+            return category.color.sereneColor
+        default:
             return category.color.color
         }
     }
@@ -48,9 +51,7 @@ struct CategorySectionHeaderView: View {
                     // Warning triangle for urgent category
                     Image(systemName: "exclamationmark.triangle.fill")
                         .font(.system(size: 16, weight: .bold))
-                        .foregroundColor(
-                            themeManager.themeMode == .kawaii ? category.color.kawaiiColor : category.color.color
-                        )
+                        .foregroundColor(categoryColor)
                         .shadow(
                             color: categoryColor.opacity(0.3),
                             radius: 2,
@@ -61,9 +62,7 @@ struct CategorySectionHeaderView: View {
                     // Exclamation point for important category
                     Image(systemName: "exclamationmark.circle.fill")
                         .font(.system(size: 16, weight: .bold))
-                        .foregroundColor(
-                            themeManager.themeMode == .kawaii ? category.color.kawaiiColor : category.color.color
-                        )
+                        .foregroundColor(categoryColor)
                         .shadow(
                             color: categoryColor.opacity(0.3),
                             radius: 2,
@@ -73,21 +72,39 @@ struct CategorySectionHeaderView: View {
                 } else {
                     // Regular circle for other categories
                     Circle()
-                        .fill(themeManager.themeMode == .kawaii ? category.color.kawaiiGradient : category.color.gradient)
+                        .fill({
+                            switch themeManager.themeMode {
+                            case .kawaii:
+                                return category.color.kawaiiGradient
+                            case .serene:
+                                return category.color.sereneGradient
+                            default:
+                                return category.color.gradient
+                            }
+                        }())
                         .frame(width: 16, height: 16)
                         .overlay(
                             Circle()
                                 .stroke(
-                                    themeManager.themeMode == .kawaii ? category.color.kawaiiDarkColor : category.color.darkColor,
+                                    {
+                                        switch themeManager.themeMode {
+                                        case .kawaii:
+                                            return category.color.kawaiiDarkColor
+                                        case .serene:
+                                            return category.color.sereneDarkColor
+                                        default:
+                                            return category.color.darkColor
+                                        }
+                                    }(),
                                     lineWidth: 0.8
                                 )
-                                .opacity(0.3)
+                                .opacity(themeManager.themeMode == .serene ? 0.2 : 0.3)
                         )
                         .shadow(
-                            color: categoryColor.opacity(0.2),
-                            radius: 1,
+                            color: categoryColor.opacity(themeManager.themeMode == .serene ? 0.15 : 0.2),
+                            radius: themeManager.themeMode == .serene ? 0.5 : 1,
                             x: 0,
-                            y: 0.5
+                            y: themeManager.themeMode == .serene ? 0.3 : 0.5
                         )
                 }
             } else {

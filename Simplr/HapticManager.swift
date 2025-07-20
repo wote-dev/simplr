@@ -45,6 +45,12 @@ class HapticManager {
         impact.impactOccurred()
     }
     
+    /// Gentle haptic feedback for theme changes - balanced between noticeable and non-intrusive
+    func themeChange() {
+        let impact = UIImpactFeedbackGenerator(style: .soft)
+        impact.impactOccurred(intensity: 0.9)
+    }
+    
     /// Subtle haptic feedback for selection changes
     func selectionChange() {
         let selection = UISelectionFeedbackGenerator()
@@ -159,6 +165,9 @@ class HapticManager {
     func prepareForInteraction() {
         let impact = UIImpactFeedbackGenerator(style: .light)
         impact.prepare()
+        
+        let softImpact = UIImpactFeedbackGenerator(style: .soft)
+        softImpact.prepare()
         
         let notification = UINotificationFeedbackGenerator()
         notification.prepare()

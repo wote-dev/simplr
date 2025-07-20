@@ -154,6 +154,52 @@ enum CategoryColor: String, CaseIterable, Codable {
             endPoint: .bottomTrailing
         )
     }
+    
+    /// Subdued colors for serene theme - muted and calming
+    var sereneColor: Color {
+        switch self {
+        case .blue: return Color(red: 0.70, green: 0.78, blue: 0.88)     // Muted sky blue
+        case .green: return Color(red: 0.75, green: 0.85, blue: 0.78)    // Muted sage green
+        case .orange: return Color(red: 0.88, green: 0.80, blue: 0.72)   // Muted terracotta
+        case .red: return Color(red: 0.85, green: 0.72, blue: 0.75)      // Muted rose
+        case .purple: return Color(red: 0.80, green: 0.75, blue: 0.88)   // Muted lavender
+        case .indigo: return Color(red: 0.75, green: 0.78, blue: 0.88)   // Muted periwinkle
+        case .pink: return Color(red: 0.88, green: 0.75, blue: 0.82)     // Muted blush
+        case .teal: return Color(red: 0.70, green: 0.85, blue: 0.82)     // Muted aqua
+        case .yellow: return Color(red: 0.88, green: 0.85, blue: 0.72)   // Muted cream
+        case .gray: return Color(red: 0.78, green: 0.78, blue: 0.82)     // Muted silver
+        }
+    }
+    
+    /// Serene light color for backgrounds
+    var sereneLightColor: Color {
+        sereneColor.opacity(0.25)
+    }
+    
+    /// Serene dark color for text and borders
+    var sereneDarkColor: Color {
+        switch self {
+        case .blue: return Color(red: 0.55, green: 0.65, blue: 0.75)
+        case .green: return Color(red: 0.60, green: 0.72, blue: 0.65)
+        case .orange: return Color(red: 0.75, green: 0.65, blue: 0.58)
+        case .red: return Color(red: 0.72, green: 0.58, blue: 0.62)
+        case .purple: return Color(red: 0.65, green: 0.60, blue: 0.75)
+        case .indigo: return Color(red: 0.60, green: 0.65, blue: 0.75)
+        case .pink: return Color(red: 0.75, green: 0.60, blue: 0.68)
+        case .teal: return Color(red: 0.55, green: 0.72, blue: 0.68)
+        case .yellow: return Color(red: 0.75, green: 0.72, blue: 0.58)
+        case .gray: return Color(red: 0.65, green: 0.65, blue: 0.68)
+        }
+    }
+    
+    /// Serene gradient for subdued appearance
+    var sereneGradient: LinearGradient {
+        LinearGradient(
+            colors: [sereneColor, sereneDarkColor],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
 }
 
 

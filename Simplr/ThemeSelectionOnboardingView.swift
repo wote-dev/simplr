@@ -111,7 +111,8 @@ struct ThemeSelectionOnboardingView: View {
         // Prevent rapid theme changes that could cause UI freezing
         guard !isChangingTheme else { return }
         
-        HapticManager.shared.buttonTap()
+        // Ultra-subtle haptic feedback for theme selection - optimized for minimal disruption
+        HapticManager.shared.themeChange()
         
         if mode.isPremium && !themeManager.canAccessTheme(mode) {
             // Show paywall for premium themes

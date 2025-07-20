@@ -195,14 +195,36 @@ struct MainTabView: View {
             Rectangle()
                 .fill(
                     themeManager.themeMode == .kawaii ?
-                    Color(red: 243/255, green: 236/255, blue: 230/255) :
+                    LinearGradient(
+                        colors: [Color(red: 243/255, green: 236/255, blue: 230/255)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    ) :
                     (themeManager.themeMode == .serene ?
-                     theme.surfaceSecondary :
+                     theme.backgroundGradient :
                      (themeManager.isDarkMode ?
-                      Color.black :
-                      (themeManager.themeMode == .lightBlue ? Color(red: 245/255, green: 249/255, blue: 255/255) :
-                       (themeManager.themeMode == .lightGreen ? Color(red: 245/255, green: 255/255, blue: 249/255) :
-                        Color(red: 250/255, green: 250/255, blue: 250/255)))))
+                      LinearGradient(
+                          colors: [Color.black],
+                          startPoint: .top,
+                          endPoint: .bottom
+                      ) :
+                      (themeManager.themeMode == .lightBlue ? 
+                       LinearGradient(
+                           colors: [Color(red: 245/255, green: 249/255, blue: 255/255)],
+                           startPoint: .top,
+                           endPoint: .bottom
+                       ) :
+                       (themeManager.themeMode == .lightGreen ? 
+                        LinearGradient(
+                            colors: [Color(red: 245/255, green: 255/255, blue: 249/255)],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        ) :
+                        LinearGradient(
+                            colors: [Color(red: 250/255, green: 250/255, blue: 250/255)],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )))))
                 )
                 .ignoresSafeArea(.container, edges: .bottom)
         )
