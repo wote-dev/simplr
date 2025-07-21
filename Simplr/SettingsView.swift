@@ -99,6 +99,75 @@ struct SettingsView: View {
                         // Categories Section
                         settingsSection(title: "Categories", icon: "tag") {
                             VStack(spacing: 16) {
+                                // Category collapse controls
+                                VStack(spacing: 12) {
+                                    HStack {
+                                        Text("Category Display")
+                                            .font(.subheadline)
+                                            .fontWeight(.medium)
+                                            .foregroundColor(theme.text)
+                                        
+                                        Spacer()
+                                        
+                                        Text("\(categoryManager.collapsedCategories.count) collapsed")
+                                            .font(.caption)
+                                            .foregroundColor(theme.textSecondary)
+                                    }
+                                    
+                                    HStack(spacing: 12) {
+                                        // Expand All button
+                                        Button(action: {
+                                            withAnimation(.easeInOut(duration: 0.3)) {
+                                                categoryManager.expandAllCategories()
+                                            }
+                                            HapticManager.shared.buttonTap()
+                                        }) {
+                                            HStack(spacing: 6) {
+                                                Image(systemName: "chevron.down.circle")
+                                                    .font(.system(size: 14, weight: .medium))
+                                                Text("Expand All")
+                                                    .font(.system(size: 14, weight: .medium))
+                                            }
+                                            .foregroundColor(theme.accent)
+                                            .padding(.horizontal, 12)
+                                            .padding(.vertical, 8)
+                                            .background(
+                                                RoundedRectangle(cornerRadius: 8)
+                                                    .fill(theme.accent.opacity(0.1))
+                                            )
+                                        }
+                                        .animatedButton()
+                                        
+                                        // Collapse All button
+                                        Button(action: {
+                                            withAnimation(.easeInOut(duration: 0.3)) {
+                                                categoryManager.collapseAllCategories()
+                                            }
+                                            HapticManager.shared.buttonTap()
+                                        }) {
+                                            HStack(spacing: 6) {
+                                                Image(systemName: "chevron.right.circle")
+                                                    .font(.system(size: 14, weight: .medium))
+                                                Text("Collapse All")
+                                                    .font(.system(size: 14, weight: .medium))
+                                            }
+                                            .foregroundColor(theme.textSecondary)
+                                            .padding(.horizontal, 12)
+                                            .padding(.vertical, 8)
+                                            .background(
+                                                RoundedRectangle(cornerRadius: 8)
+                                                    .fill(theme.surfaceSecondary)
+                                            )
+                                        }
+                                        .animatedButton()
+                                        
+                                        Spacer()
+                                    }
+                                }
+                                
+                                Divider()
+                                    .background(theme.textSecondary.opacity(0.2))
+                                
                                 // Category list header
                                 HStack {
                                     Text("Manage Categories")
@@ -510,17 +579,22 @@ struct SettingsView: View {
 
     
     private func categoryInfoCard(_ category: TaskCategory) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
+        let isKawaii = themeManager.themeMode == .kawaii
+        let isCollapsed = categoryManager.isCategoryCollapsed(category)
+        let categoryGradient = isKawaii ? category.color.kawaiiGradient : category.color.gradient
+        let categoryStrokeColor = isKawaii ? category.color.kawaiiDarkColor : category.color.darkColor
+        let backgroundFillColor = isCollapsed ? theme.surfaceSecondary : (isKawaii ? category.color.kawaiiLightColor.opacity(0.3) : category.color.lightColor.opacity(0.3))
+        let strokeColor = isKawaii ? category.color.kawaiiColor.opacity(0.3) : category.color.color.opacity(0.3)
+        let statusColor = category.isCustom ? theme.warning : theme.success
+        
+        return VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {
                 Circle()
-                    .fill(themeManager.themeMode == .kawaii ? category.color.kawaiiGradient : category.color.gradient)
+                    .fill(categoryGradient)
                     .frame(width: 16, height: 16)
                     .overlay(
                         Circle()
-                            .stroke(
-                                themeManager.themeMode == .kawaii ? category.color.kawaiiDarkColor : category.color.darkColor,
-                                lineWidth: 0.8
-                            )
+                            .stroke(categoryStrokeColor, lineWidth: 0.8)
                             .opacity(0.3)
                     )
                 
@@ -530,6 +604,13 @@ struct SettingsView: View {
                     .lineLimit(1)
                 
                 Spacer()
+                
+                // Collapse indicator
+                if isCollapsed {
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundColor(theme.textSecondary)
+                }
                 
                 if category.isCustom {
                     Button(action: {
@@ -546,28 +627,29 @@ struct SettingsView: View {
             
             Text(category.isCustom ? "Custom" : "Built-in")
                 .font(.system(size: 10, weight: .medium, design: .rounded))
-                .foregroundColor(category.isCustom ? theme.warning : theme.success)
+                .foregroundColor(statusColor)
                 .padding(.horizontal, 6)
                 .padding(.vertical, 2)
                 .background(
                     Capsule()
-                        .fill((category.isCustom ? theme.warning : theme.success).opacity(0.15))
+                        .fill(statusColor.opacity(0.15))
                 )
         }
         .padding(12)
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(
-                    (themeManager.themeMode == .kawaii ? category.color.kawaiiLightColor.opacity(0.3) : category.color.lightColor.opacity(0.3))
-                )
+                .fill(backgroundFillColor)
                 .overlay(
                     RoundedRectangle(cornerRadius: 16)
-                        .stroke(
-                            (themeManager.themeMode == .kawaii ? category.color.kawaiiColor.opacity(0.3) : category.color.color.opacity(0.3)),
-                            lineWidth: 0.8
-                        )
+                        .stroke(strokeColor, lineWidth: 0.8)
                 )
         )
+        .onLongPressGesture {
+            withAnimation(.easeInOut(duration: 0.2)) {
+                categoryManager.toggleCategoryCollapse(category)
+            }
+            HapticManager.shared.buttonTap()
+        }
     }
 }
 

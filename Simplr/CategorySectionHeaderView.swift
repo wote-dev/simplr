@@ -10,8 +10,18 @@ import SwiftUI
 struct CategorySectionHeaderView: View {
     @Environment(\.theme) var theme
     @EnvironmentObject var themeManager: ThemeManager
+    @EnvironmentObject var categoryManager: CategoryManager
     let category: TaskCategory?
     let taskCount: Int
+    let onToggleCollapse: (() -> Void)?
+    
+    @State private var isPressed = false
+    
+    init(category: TaskCategory?, taskCount: Int, onToggleCollapse: (() -> Void)? = nil) {
+        self.category = category
+        self.taskCount = taskCount
+        self.onToggleCollapse = onToggleCollapse
+    }
     
     private var displayName: String {
         category?.name ?? "Uncategorized"
@@ -43,8 +53,29 @@ struct CategorySectionHeaderView: View {
         isUrgentCategory || isImportantCategory
     }
     
+    private var isCollapsed: Bool {
+        categoryManager.isCategoryCollapsed(category)
+    }
+    
     var body: some View {
-        HStack(spacing: 12) {
+        Button(action: {
+            withAnimation(.easeInOut(duration: 0.25)) {
+                if let onToggleCollapse = onToggleCollapse {
+                    onToggleCollapse()
+                } else {
+                    categoryManager.toggleCategoryCollapse(category)
+                }
+            }
+            HapticManager.shared.buttonTap()
+        }) {
+            HStack(spacing: 12) {
+                // Simple Collapse/Expand chevron with clean rotation
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(theme.textSecondary)
+                    .rotationEffect(.degrees(isCollapsed ? -90 : 0))
+                    .animation(.easeInOut(duration: 0.25), value: isCollapsed)
+                    .frame(width: 12, height: 12)
             // Category icon/indicator
             if let category = category {
                 if isUrgentCategory {
@@ -133,10 +164,21 @@ struct CategorySectionHeaderView: View {
                         .fill(theme.surfaceSecondary)
                 )
             
-            Spacer()
+                Spacer()
+            }
         }
+        .buttonStyle(PlainButtonStyle())
         .padding(.horizontal, 20)
         .padding(.vertical, 12)
+        .background(Color.clear)
+        .scaleEffect(isPressed ? 0.98 : 1.0)
+        .animation(.interpolatingSpring(stiffness: 500, damping: 30), value: isPressed)
+        .contentShape(Rectangle()) // Make entire area tappable
+        .onLongPressGesture(minimumDuration: 0, maximumDistance: .infinity, pressing: { pressing in
+            withAnimation(.interpolatingSpring(stiffness: 500, damping: 30)) {
+                isPressed = pressing
+            }
+        }, perform: {})
     }
 }
 

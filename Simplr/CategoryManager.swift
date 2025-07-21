@@ -13,10 +13,12 @@ import WidgetKit
 class CategoryManager: ObservableObject {
     @Published var categories: [TaskCategory] = []
     @Published var selectedCategoryFilter: UUID? = nil // nil means "All"
+    @Published var collapsedCategories: Set<String> = [] // Track collapsed categories by name
     
     private let userDefaults = UserDefaults(suiteName: "group.com.danielzverev.simplr") ?? UserDefaults.standard
     private let categoriesKey = "SavedCategories"
     private let selectedFilterKey = "SelectedCategoryFilter"
+    private let collapsedCategoriesKey = "CollapsedCategories"
     
     // Performance optimization: Cache category lookups
     private var categoryLookupCache: [UUID: TaskCategory] = [:]
@@ -39,11 +41,16 @@ class CategoryManager: ObservableObject {
     init() {
         loadCategories()
         loadSelectedFilter()
+        loadCollapsedCategories()
         rebuildCache()
         
         // Ensure all current predefined categories are available
         // This handles cases where new predefined categories are added
         refreshPredefinedCategories()
+        
+        // Performance optimization: Ensure categories are expanded by default
+        // This provides better UX as users expect to see their tasks immediately
+        ensureDefaultExpandedState()
     }
     
     // MARK: - Cache Management
@@ -126,6 +133,82 @@ class CategoryManager: ObservableObject {
         selectedCategoryFilter = nil
         saveSelectedFilter()
         HapticManager.shared.selectionChange()
+    }
+    
+    // MARK: - Category Collapse/Expand Management
+    
+    func toggleCategoryCollapse(_ category: TaskCategory?) {
+        let categoryName = category?.name ?? "Uncategorized"
+        
+        // Optimized toggle with single haptic feedback and immediate save for reliability
+        let wasCollapsed = collapsedCategories.contains(categoryName)
+        
+        if wasCollapsed {
+            collapsedCategories.remove(categoryName)
+        } else {
+            collapsedCategories.insert(categoryName)
+        }
+        
+        // Single haptic feedback for better performance
+        HapticManager.shared.selectionChange()
+        
+        // Immediate save for better state persistence reliability
+        // This ensures user preferences are never lost
+        saveCollapsedCategories()
+    }
+    
+    func isCategoryCollapsed(_ category: TaskCategory?) -> Bool {
+        let categoryName = category?.name ?? "Uncategorized"
+        // Categories are expanded by default for better UX
+        // Only return true if explicitly collapsed by user
+        return collapsedCategories.contains(categoryName)
+    }
+    
+    func expandAllCategories() {
+        collapsedCategories.removeAll()
+        saveCollapsedCategories()
+        HapticManager.shared.selectionChange()
+    }
+    
+    func collapseAllCategories(except excludedCategory: TaskCategory? = nil) {
+        let excludedName = excludedCategory?.name ?? "Uncategorized"
+        
+        // Add all category names except the excluded one
+        for category in categories {
+            if category.name != excludedName {
+                collapsedCategories.insert(category.name)
+            }
+        }
+        
+        // Also handle uncategorized if it's not the excluded category
+        if excludedName != "Uncategorized" {
+            collapsedCategories.insert("Uncategorized")
+        }
+        
+        saveCollapsedCategories()
+        HapticManager.shared.selectionChange()
+    }
+    
+    /// Ensures categories are expanded by default on first app launch
+    /// This provides better UX as users expect to see their tasks immediately
+    private func ensureDefaultExpandedState() {
+        // Check if this is the first time the app is launched with collapse state
+        let hasLaunchedBefore = userDefaults.bool(forKey: "HasLaunchedWithCollapseState")
+        
+        if !hasLaunchedBefore {
+            // First launch - ensure all categories start expanded
+            collapsedCategories.removeAll()
+            saveCollapsedCategories()
+            
+            // Mark that we've set the default state
+            userDefaults.set(true, forKey: "HasLaunchedWithCollapseState")
+        }
+        
+        // Performance optimization: If no collapsed categories are saved,
+        // ensure the set is empty for optimal performance
+        if collapsedCategories.isEmpty {
+            saveCollapsedCategories()
+        }
     }
     
     // MARK: - Category Lookup (Optimized with Caching)
@@ -346,6 +429,30 @@ class CategoryManager: ObservableObject {
            let filterId = UUID(uuidString: filterString) {
             selectedCategoryFilter = filterId
         }
+    }
+    
+    private func saveCollapsedCategories() {
+        let collapsedArray = Array(collapsedCategories)
+        userDefaults.set(collapsedArray, forKey: collapsedCategoriesKey)
+        
+        // Performance optimization: Synchronize immediately for better reliability
+        userDefaults.synchronize()
+    }
+    
+    private func loadCollapsedCategories() {
+        if let collapsedArray = userDefaults.array(forKey: collapsedCategoriesKey) as? [String] {
+            collapsedCategories = Set(collapsedArray)
+        } else {
+            // Default to empty set (all categories expanded) for better UX
+            collapsedCategories = Set<String>()
+        }
+    }
+    
+    /// Resets all categories to expanded state - useful for troubleshooting or user preference reset
+    func resetToExpandedState() {
+        collapsedCategories.removeAll()
+        saveCollapsedCategories()
+        HapticManager.shared.selectionChange()
     }
     
     // MARK: - Migration

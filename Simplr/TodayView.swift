@@ -465,18 +465,27 @@ struct TodayView: View {
                     if !categoryGroup.tasks.isEmpty {
                         VStack(spacing: 8) {
                             // Category section header
-                           CategorySectionHeaderView(
+                            CategorySectionHeaderView(
                                 category: categoryGroup.category ?? TaskCategory.uncategorized,
                                 taskCount: categoryGroup.tasks.count
                             )
-                            .padding(.horizontal, 20)
                             
-                            // Tasks in this category
-                            ForEach(categoryGroup.tasks, id: \.id) { task in
-                                taskRowWithEffects(task)
-                                    .id("task-\(task.id.uuidString)")
+                            // Tasks in this category with simple fade animation
+                            if !categoryManager.isCategoryCollapsed(categoryGroup.category) {
+                                LazyVStack(spacing: 8) {
+                                    ForEach(categoryGroup.tasks, id: \.id) { task in
+                                        taskRowWithEffects(task)
+                                            .id("task-\(task.id.uuidString)")
+                                    }
+                                }
+                                .padding(.top, 4)
+                                .padding(.bottom, 8)
+                                .padding(.horizontal, 8)
+                                .clipped() // Optimize rendering performance
+                                .transition(.opacity)
                             }
                         }
+                        .animation(.easeInOut(duration: 0.25), value: categoryManager.isCategoryCollapsed(categoryGroup.category))
                     }
                 }
             }
@@ -517,10 +526,7 @@ struct TodayView: View {
         )
         .environmentObject(taskManager)
         .padding(.horizontal, 20)
-        .transition(.asymmetric(
-            insertion: .scale(scale: 0.8).combined(with: .opacity).combined(with: .offset(x: 50)),
-            removal: .scale(scale: 0.8).combined(with: .opacity).combined(with: .offset(x: -50))
-        ))
+        .transition(.opacity)
         .matchedGeometryEffect(id: task.id, in: taskNamespace)
 
     }
