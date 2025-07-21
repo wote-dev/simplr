@@ -45,10 +45,15 @@ struct AddTaskView: View {
                 }
             
             ScrollView {
-                VStack(spacing: 24) {
+                VStack(spacing: 28) {
                     headerSection
+                    
                     taskFormSection
-                    Spacer(minLength: 100)
+                        .animation(.easeInOut(duration: 0.3), value: hasDueDate)
+                        .animation(.easeInOut(duration: 0.3), value: hasReminder)
+                        .animation(.easeInOut(duration: 0.3), value: checklistItems.count)
+                    
+                    Spacer(minLength: 120)
                 }
                 .padding(.horizontal, 20)
             }
@@ -106,132 +111,259 @@ struct AddTaskView: View {
     }
     
     private var taskFormSection: some View {
-        VStack(spacing: 20) {
-            // Title and Description
-            VStack(spacing: 16) {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Title")
-                        .font(.headline)
-                        .fontWeight(.semibold)
-                        .foregroundColor(theme.text)
+        VStack(spacing: 32) {
+            // MARK: - Basic Information Section
+            VStack(spacing: 0) {
+                // Section Header with enhanced styling
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Basic Information")
+                            .font(.system(size: 18, weight: .bold, design: .rounded))
+                            .foregroundColor(theme.text)
+                        
+                        Text("Task title and description")
+                            .font(.caption)
+                            .foregroundColor(theme.textSecondary)
+                    }
                     
-                    CustomTextField(text: $title, placeholder: "Enter task title", isFirstResponder: true)
-                        .frame(height: 48)
+                    Spacer()
+                    
+                    // Visual indicator
+                    Image(systemName: "doc.text")
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(theme.accent)
+                        .opacity(0.7)
                 }
+                .padding(.horizontal, 20)
+                .padding(.top, 16)
+                .padding(.bottom, 12)
                 
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Description")
-                        .font(.headline)
-                        .fontWeight(.semibold)
-                        .foregroundColor(theme.text)
+                // Subtle divider
+                Rectangle()
+                    .fill(theme.border.opacity(0.3))
+                    .frame(height: 1)
+                    .padding(.horizontal, 20)
+                
+                // Content
+                VStack(spacing: 16) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Title")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundColor(theme.text)
+                        
+                        CustomTextField(text: $title, placeholder: "Enter task title", isFirstResponder: true)
+                            .frame(height: 48)
+                    }
                     
-                    CustomTextField(text: $description, placeholder: "Add more details...", isMultiline: true)
-                        .frame(minHeight: 80)
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Description")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundColor(theme.text)
+                        
+                        CustomTextField(text: $description, placeholder: "Add more details...", isMultiline: true)
+                            .frame(minHeight: 80)
+                    }
                 }
+                .padding(.horizontal, 20)
+                .padding(.bottom, 20)
+                .padding(.top, 16)
             }
-            .padding(20)
             .background(
-                RoundedRectangle(cornerRadius: 16)
+                RoundedRectangle(cornerRadius: 18)
                     .fill(theme.surface)
-                    .shadow(color: theme.shadow, radius: 8, x: 0, y: 4)
+                    .shadow(color: theme.shadow.opacity(0.15), radius: 12, x: 0, y: 6)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 18)
+                            .stroke(theme.border.opacity(0.1), lineWidth: 1)
+                    )
             )
             
-            // Category Selection
-            VStack(alignment: .leading, spacing: 12) {
-                Text("Category")
-                    .font(.headline)
-                    .fontWeight(.semibold)
-                    .foregroundColor(theme.text)
+            // MARK: - Category Selection Section
+            VStack(spacing: 0) {
+                // Section Header
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Category")
+                            .font(.system(size: 18, weight: .bold, design: .rounded))
+                            .foregroundColor(theme.text)
+                        
+                        Text("Organize your task")
+                            .font(.caption)
+                            .foregroundColor(theme.textSecondary)
+                    }
+                    
+                    Spacer()
+                    
+                    // Visual indicator
+                    Image(systemName: "folder")
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(theme.accent)
+                        .opacity(0.7)
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 16)
+                .padding(.bottom, 12)
                 
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 12) {
-                        // No category option
-                        CategoryPill(
-                            title: "None",
-                            color: .gray,
-                            isSelected: selectedCategory == nil
-                        ) {
-                            selectedCategory = nil
+                // Subtle divider
+                Rectangle()
+                    .fill(theme.border.opacity(0.3))
+                    .frame(height: 1)
+                    .padding(.horizontal, 20)
+                
+                // Content
+                VStack(alignment: .leading, spacing: 12) {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 12) {
+                            // No category option
+                            CategoryPill(
+                                title: "None",
+                                color: .gray,
+                                isSelected: selectedCategory == nil
+                            ) {
+                                selectedCategory = nil
+                            }
+                            
+                            // Category options
+                            ForEach(categoryManager.categories) { category in
+                                CategoryPill(
+                                    title: category.name,
+                                    color: category.color.color,
+                                    isSelected: selectedCategory?.id == category.id
+                                ) {
+                                    selectedCategory = selectedCategory?.id == category.id ? nil : category
+                                }
+                            }
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 8)
+                    }
+                    .clipped()
+                }
+                .padding(.bottom, 20)
+                .padding(.top, 16)
+            }
+            .background(
+                RoundedRectangle(cornerRadius: 18)
+                    .fill(theme.surface)
+                    .shadow(color: theme.shadow.opacity(0.15), radius: 12, x: 0, y: 6)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 18)
+                            .stroke(theme.border.opacity(0.1), lineWidth: 1)
+                    )
+            )
+            
+            // MARK: - Checklist Section
+            VStack(spacing: 0) {
+                // Section Header
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Checklist")
+                            .font(.system(size: 18, weight: .bold, design: .rounded))
+                            .foregroundColor(theme.text)
+                        
+                        Text("Break down your task")
+                            .font(.caption)
+                            .foregroundColor(theme.textSecondary)
+                    }
+                    
+                    Spacer()
+                    
+                    // Visual indicator with item count
+                    HStack(spacing: 6) {
+                        if !checklistItems.isEmpty {
+                            Text("\(checklistItems.count)")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundColor(theme.accent)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(
+                                    Capsule()
+                                        .fill(theme.accent.opacity(0.15))
+                                )
                         }
                         
-                        // Category options
-                        ForEach(categoryManager.categories) { category in
-                            CategoryPill(
-                                title: category.name,
-                                color: category.color.color,
-                                isSelected: selectedCategory?.id == category.id
-                            ) {
-                                selectedCategory = selectedCategory?.id == category.id ? nil : category
+                        Image(systemName: "checklist")
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundColor(theme.accent)
+                            .opacity(0.7)
+                    }
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 16)
+                .padding(.bottom, 12)
+                
+                // Subtle divider
+                Rectangle()
+                    .fill(theme.border.opacity(0.3))
+                    .frame(height: 1)
+                    .padding(.horizontal, 20)
+                
+                // Content
+                VStack(alignment: .leading, spacing: 12) {
+                    ForEach($checklistItems) { $item in
+                        HStack {
+                            CustomTextField(
+                                text: $item.title, 
+                                placeholder: "Checklist item"
+                            )
+                            .frame(height: 48)
+                            Button(action: {
+                                if let index = checklistItems.firstIndex(where: { $0.id == item.id }) {
+                                    withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                                        checklistItems.remove(at: index)
+                                    }
+                                }
+                            }) {
+                                Image(systemName: "trash")
+                                    .font(.system(size: 16, weight: .medium))
+                                    .foregroundColor(.red)
+                                    .padding(8)
+                                    .background(
+                                        Circle()
+                                            .fill(.red.opacity(0.1))
+                                    )
                             }
                         }
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 8)
-                }
-                .clipped()
-            }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 20)
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(theme.surface)
-                    .shadow(color: theme.shadow, radius: 8, x: 0, y: 4)
-            )
-            
-            // Checklist Section
-            VStack(alignment: .leading, spacing: 12) {
-                Text("Checklist")
-                    .font(.headline)
-                    .fontWeight(.semibold)
-                    .foregroundColor(theme.text)
 
-                ForEach($checklistItems) { $item in
                     HStack {
                         CustomTextField(
-                            text: $item.title, 
-                            placeholder: "Checklist item"
+                            text: $newChecklistItemTitle, 
+                            placeholder: "Add new item",
+                            onCommit: addChecklistItem
                         )
                         .frame(height: 48)
-                        Button(action: {
-                            if let index = checklistItems.firstIndex(where: { $0.id == item.id }) {
-                                checklistItems.remove(at: index)
-                            }
-                        }) {
-                            Image(systemName: "trash")
-                                .foregroundColor(.red)
+                        
+                        Button(action: addChecklistItem) {
+                            Image(systemName: "plus.circle.fill")
+                                .font(.system(size: 20, weight: .medium))
+                                .foregroundColor(theme.accent)
                         }
+                        .disabled(newChecklistItemTitle.isEmpty)
+                        .opacity(newChecklistItemTitle.isEmpty ? 0.5 : 1.0)
                     }
                 }
-
-                HStack {
-                    CustomTextField(
-                        text: $newChecklistItemTitle, 
-                        placeholder: "Add new item",
-                        onCommit: addChecklistItem
-                    )
-                    .frame(height: 48)
-                    
-                    Button(action: addChecklistItem) {
-                        Image(systemName: "plus.circle.fill")
-                            .foregroundColor(theme.accent)
-                    }
-                    .disabled(newChecklistItemTitle.isEmpty)
-                }
+                .padding(.horizontal, 20)
+                .padding(.bottom, 20)
+                .padding(.top, 16)
             }
-            .padding(20)
             .background(
-                RoundedRectangle(cornerRadius: 16)
+                RoundedRectangle(cornerRadius: 18)
                     .fill(theme.surface)
-                    .shadow(color: theme.shadow, radius: 8, x: 0, y: 4)
+                    .shadow(color: theme.shadow.opacity(0.15), radius: 12, x: 0, y: 6)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 18)
+                            .stroke(theme.border.opacity(0.1), lineWidth: 1)
+                    )
             )
 
-            // Due Date
-            VStack(spacing: 16) {
+            // MARK: - Due Date Section
+            VStack(spacing: 0) {
+                // Section Header
                 HStack {
-                    VStack(alignment: .leading, spacing: 4) {
+                    VStack(alignment: .leading, spacing: 2) {
                         Text("Due Date")
-                            .font(.headline)
-                            .fontWeight(.semibold)
+                            .font(.system(size: 18, weight: .bold, design: .rounded))
                             .foregroundColor(theme.text)
                         
                         Text("Set a deadline for this task")
@@ -241,31 +373,64 @@ struct AddTaskView: View {
                     
                     Spacer()
                     
-                    Toggle("", isOn: $hasDueDate)
-                        .toggleStyle(SwitchToggleStyle(tint: theme.accent))
+                    // Visual indicator and toggle
+                    HStack(spacing: 12) {
+                        if hasDueDate {
+                            Image(systemName: "calendar.badge.clock")
+                                .font(.system(size: 16, weight: .medium))
+                                .foregroundColor(theme.accent)
+                                .opacity(0.7)
+                        } else {
+                            Image(systemName: "calendar")
+                                .font(.system(size: 16, weight: .medium))
+                                .foregroundColor(theme.textSecondary)
+                                .opacity(0.5)
+                        }
+                        
+                        Toggle("", isOn: $hasDueDate)
+                            .toggleStyle(SwitchToggleStyle(tint: theme.accent))
+                    }
                 }
+                .padding(.horizontal, 20)
+                .padding(.top, 16)
+                .padding(.bottom, 12)
                 
-                if hasDueDate {
-                    DatePicker("Due date", selection: $dueDate, displayedComponents: [.date, .hourAndMinute])
-                        .datePickerStyle(.compact)
-                        .foregroundColor(theme.text)
-                        .transition(.opacity.combined(with: .scale))
+                // Subtle divider
+                Rectangle()
+                    .fill(theme.border.opacity(0.3))
+                    .frame(height: 1)
+                    .padding(.horizontal, 20)
+                
+                // Content
+                VStack(spacing: 16) {
+                    if hasDueDate {
+                        DatePicker("Due date", selection: $dueDate, displayedComponents: [.date, .hourAndMinute])
+                            .datePickerStyle(.compact)
+                            .foregroundColor(theme.text)
+                            .transition(.opacity.combined(with: .scale))
+                    }
                 }
+                .padding(.horizontal, 20)
+                .padding(.bottom, hasDueDate ? 20 : 8)
+                .padding(.top, 16)
             }
-            .padding(20)
             .background(
-                RoundedRectangle(cornerRadius: 16)
+                RoundedRectangle(cornerRadius: 18)
                     .fill(theme.surface)
-                    .shadow(color: theme.shadow, radius: 8, x: 0, y: 4)
+                    .shadow(color: theme.shadow.opacity(0.15), radius: 12, x: 0, y: 6)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 18)
+                            .stroke(theme.border.opacity(0.1), lineWidth: 1)
+                    )
             )
             
-            // Reminder
-            VStack(spacing: 16) {
+            // MARK: - Reminder Section
+            VStack(spacing: 0) {
+                // Section Header
                 HStack {
-                    VStack(alignment: .leading, spacing: 4) {
+                    VStack(alignment: .leading, spacing: 2) {
                         Text("Reminder")
-                            .font(.headline)
-                            .fontWeight(.semibold)
+                            .font(.system(size: 18, weight: .bold, design: .rounded))
                             .foregroundColor(theme.text)
                         
                         Text("Get notified about this task")
@@ -275,22 +440,55 @@ struct AddTaskView: View {
                     
                     Spacer()
                     
-                    Toggle("", isOn: $hasReminder)
-                        .toggleStyle(SwitchToggleStyle(tint: theme.accent))
+                    // Visual indicator and toggle
+                    HStack(spacing: 12) {
+                        if hasReminder {
+                            Image(systemName: "bell.badge")
+                                .font(.system(size: 16, weight: .medium))
+                                .foregroundColor(theme.accent)
+                                .opacity(0.7)
+                        } else {
+                            Image(systemName: "bell")
+                                .font(.system(size: 16, weight: .medium))
+                                .foregroundColor(theme.textSecondary)
+                                .opacity(0.5)
+                        }
+                        
+                        Toggle("", isOn: $hasReminder)
+                            .toggleStyle(SwitchToggleStyle(tint: theme.accent))
+                    }
                 }
+                .padding(.horizontal, 20)
+                .padding(.top, 16)
+                .padding(.bottom, 12)
                 
-                if hasReminder {
-                    DatePicker("Reminder time", selection: $reminderDate, displayedComponents: [.date, .hourAndMinute])
-                        .datePickerStyle(.compact)
-                        .foregroundColor(theme.text)
-                        .transition(.opacity.combined(with: .scale))
+                // Subtle divider
+                Rectangle()
+                    .fill(theme.border.opacity(0.3))
+                    .frame(height: 1)
+                    .padding(.horizontal, 20)
+                
+                // Content
+                VStack(spacing: 16) {
+                    if hasReminder {
+                        DatePicker("Reminder time", selection: $reminderDate, displayedComponents: [.date, .hourAndMinute])
+                            .datePickerStyle(.compact)
+                            .foregroundColor(theme.text)
+                            .transition(.opacity.combined(with: .scale))
+                    }
                 }
+                .padding(.horizontal, 20)
+                .padding(.bottom, hasReminder ? 20 : 8)
+                .padding(.top, 16)
             }
-            .padding(20)
             .background(
-                RoundedRectangle(cornerRadius: 16)
+                RoundedRectangle(cornerRadius: 18)
                     .fill(theme.surface)
-                    .shadow(color: theme.shadow, radius: 8, x: 0, y: 4)
+                    .shadow(color: theme.shadow.opacity(0.15), radius: 12, x: 0, y: 6)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 18)
+                            .stroke(theme.border.opacity(0.1), lineWidth: 1)
+                    )
             )
             
 
