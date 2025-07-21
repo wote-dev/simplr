@@ -22,7 +22,7 @@ struct TaskRowView: View {
     @State private var isPressed = false
     @State private var showCompletionParticles = false
     @State private var completionScale: CGFloat = 1.0
-    @State private var checkmarkScale: CGFloat = 0.1
+
     @State private var showCheckmark = false
 
     
@@ -188,27 +188,14 @@ struct TaskRowView: View {
                     performCompletionToggle()
                 }) {
                     ZStack {
-                        // Base circle
-                        Circle()
-                            .fill(task.isCompleted ? theme.success : theme.surface)
-                            .frame(width: 32, height: 32)
-                            .overlay(
-                                Circle()
-                                    .stroke(task.isCompleted ? theme.success : theme.textTertiary, lineWidth: 2)
-                            )
+                        // Use the same visual style as checklist items for consistency
+                        Image(systemName: (task.isCompleted || showCheckmark) ? "checkmark.circle.fill" : "circle")
+                            .font(.system(size: 32, weight: .medium))
+                            .foregroundColor((task.isCompleted || showCheckmark) ? theme.success : theme.textTertiary)
                             .scaleEffect(completionScale)
-                            .animation(Animation.adaptiveElastic, value: completionScale)
-                        
-                        // Checkmark with smooth animation
-                        if task.isCompleted || showCheckmark {
-                            Image(systemName: "checkmark")
-                                .font(.system(size: 14, weight: .bold))
-                                .foregroundColor(getIconColor(for: theme.success))
-                                .scaleEffect(task.isCompleted ? 1.0 : checkmarkScale)
-                                .opacity(task.isCompleted ? 1.0 : 0.8)
-                                .animation(.interpolatingSpring(stiffness: 600, damping: 20), value: task.isCompleted)
-                                .matchedGeometryEffect(id: "\(task.id)-checkmark", in: namespace)
-                        }
+                            .animation(.interpolatingSpring(stiffness: 600, damping: 20), value: task.isCompleted)
+                            .animation(.interpolatingSpring(stiffness: 600, damping: 20), value: showCheckmark)
+                            .matchedGeometryEffect(id: "\(task.id)-completion", in: namespace)
                         
                         // Particle effect for completion
                         if showCompletionParticles {
@@ -1007,25 +994,24 @@ struct TaskRowView: View {
         // Prepare haptic feedback for better responsiveness
         HapticManager.shared.prepareForInteraction()
         
-        // High-performance completion animation
-        withAnimation(.interactiveSpring(response: 0.4, dampingFraction: 0.6, blendDuration: 0)) {
+        // Immediate visual feedback with optimized animation
+        withAnimation(.interactiveSpring(response: 0.3, dampingFraction: 0.7, blendDuration: 0)) {
             if !task.isCompleted {
-                // Animate completion
-                completionScale = 1.3
+                // Animate completion - show green filled circle immediately
+                completionScale = 1.2
                 showCompletionParticles = true
                 showCheckmark = true
-                checkmarkScale = 1.0
                 HapticManager.shared.taskCompleted()
             } else {
-                // Animate un-completion
+                // Animate un-completion - show empty circle immediately
                 showCheckmark = false
-                checkmarkScale = 0.1
+                completionScale = 1.1
                 HapticManager.shared.taskUncompleted()
             }
         }
         
-        // Trigger the actual completion toggle after a brief delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+        // Trigger the actual completion toggle with minimal delay for immediate feedback
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
             onToggleCompletion()
             
             // Stop URGENT pulsating animation if task is being completed
@@ -1034,14 +1020,14 @@ struct TaskRowView: View {
             }
             // Restart URGENT pulsating animation if task is being uncompleted
             else if isUrgentTask && task.isCompleted {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
                     startUrgentPulsatingAnimation()
                 }
             }
         }
         
-        // Reset animation states with high-performance animation
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+        // Reset animation states with smooth transition
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
             withAnimation(.interactiveSpring(response: 0.3, dampingFraction: 0.8, blendDuration: 0)) {
                 completionScale = 1.0
                 showCompletionParticles = false

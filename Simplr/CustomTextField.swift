@@ -14,6 +14,7 @@ struct CustomTextField: UIViewRepresentable {
     var isFirstResponder: Bool = false
     var isMultiline: Bool = false
     var onCommit: (() -> Void)?
+    var allowsTextSelection: Bool = true
     
     @Environment(\.theme) private var theme
 
@@ -28,6 +29,12 @@ struct CustomTextField: UIViewRepresentable {
             textView.isUserInteractionEnabled = true
             textView.backgroundColor = .clear
             textView.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+            
+            // Enhanced text selection configuration
+            textView.isSelectable = allowsTextSelection
+            textView.dataDetectorTypes = []
+            textView.textDragInteraction?.isEnabled = allowsTextSelection
+            textView.textContainer.lineFragmentPadding = 0
             
             // Add border styling
             textView.layer.borderWidth = 1.0
@@ -64,6 +71,12 @@ struct CustomTextField: UIViewRepresentable {
             textField.placeholder = placeholder
             textField.addTarget(context.coordinator, action: #selector(Coordinator.textFieldDidChange(_:)), for: .editingChanged)
             textField.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+            
+            // Enhanced text selection configuration
+            textField.isUserInteractionEnabled = true
+            // Enable text selection and editing capabilities
+            textField.isEnabled = true
+            // Text field inherently supports becoming first responder when enabled
             
             // Add border styling
             textField.layer.borderWidth = 1.0
@@ -123,6 +136,7 @@ struct CustomTextField: UIViewRepresentable {
         var placeholderLabel: UILabel?
         var internalText: String
         var currentInputView: UIView?
+        private var isTextSelectionActive = false
 
         init(_ textField: CustomTextField) {
             self.parent = textField
@@ -182,7 +196,38 @@ struct CustomTextField: UIViewRepresentable {
 
         func textViewDidEndEditing(_ textView: UITextView) {
             updateBorderForFocusState(textView, isFocused: false)
+            isTextSelectionActive = false
             parent.onCommit?()
+        }
+        
+        // MARK: - Enhanced Text Selection Support
+        
+        func textViewDidChangeSelection(_ textView: UITextView) {
+            // Track when text selection is active to prevent gesture interference
+            let hasSelection = textView.selectedRange.length > 0
+            isTextSelectionActive = hasSelection
+        }
+        
+        // MARK: - Modern Text Interaction Support (iOS 17+)
+        
+        @available(iOS 17.0, *)
+        func textView(_ textView: UITextView, menuConfigurationFor textItem: UITextItem, defaultMenu: UIMenu) -> UITextItem.MenuConfiguration? {
+            // Return nil to use default behavior when text selection is allowed
+            return parent.allowsTextSelection ? nil : UITextItem.MenuConfiguration(menu: UIMenu(children: []))
+        }
+        
+        // Fallback for iOS 16 and earlier
+        @available(iOS, deprecated: 17.0, message: "Use textView(_:menuConfigurationFor:defaultMenu:) instead")
+        func textView(_ textView: UITextView, shouldInteractWith textAttachment: NSTextAttachment, in characterRange: NSRange, interaction: UITextItemInteraction) -> Bool {
+            return parent.allowsTextSelection
+        }
+        
+        func textFieldDidChangeSelection(_ textField: UITextField) {
+            // Track when text selection is active for UITextField
+            if let selectedRange = textField.selectedTextRange {
+                let hasSelection = !selectedRange.isEmpty
+                isTextSelectionActive = hasSelection
+            }
         }
     }
 }

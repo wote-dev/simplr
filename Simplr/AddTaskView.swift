@@ -25,6 +25,8 @@ struct AddTaskView: View {
     @State private var newChecklistItemTitle = ""
     @FocusState private var isTitleFocused: Bool
     @State private var showingSuccess = false
+    @State private var isTextFieldActive = false
+    @State private var lastTapLocation: CGPoint = .zero
 
     
     let taskToEdit: Task?
@@ -38,10 +40,14 @@ struct AddTaskView: View {
         ZStack {
             theme.backgroundGradient
                 .ignoresSafeArea()
-                .onTapGesture {
-                    // Dismiss keyboard when tapping background
-                    isTitleFocused = false
-                    hideKeyboard()
+                .contentShape(Rectangle())
+                .onTapGesture { location in
+                    lastTapLocation = location
+                    // Only dismiss keyboard if tapping outside text fields
+                    if !isTextFieldActive {
+                        isTitleFocused = false
+                        hideKeyboard()
+                    }
                 }
             
             ScrollView {
@@ -58,11 +64,15 @@ struct AddTaskView: View {
                 .padding(.horizontal, 20)
             }
             .simultaneousGesture(
-                DragGesture(minimumDistance: 10)
-                    .onChanged { _ in
-                        // Dismiss keyboard when scrolling
-                        isTitleFocused = false
-                        hideKeyboard()
+                DragGesture(minimumDistance: 20, coordinateSpace: .global)
+                    .onChanged { value in
+                        // Only dismiss keyboard for significant scroll gestures
+                        // and not when text selection might be happening
+                        let velocity = sqrt(pow(value.velocity.width, 2) + pow(value.velocity.height, 2))
+                        if velocity > 300 && !isTextFieldActive {
+                            isTitleFocused = false
+                            hideKeyboard()
+                        }
                     }
             )
         }
@@ -151,8 +161,24 @@ struct AddTaskView: View {
                             .font(.system(size: 15, weight: .semibold))
                             .foregroundColor(theme.text)
                         
-                        CustomTextField(text: $title, placeholder: "Enter task title", isFirstResponder: true)
-                            .frame(height: 48)
+                        CustomTextField(
+                            text: $title, 
+                            placeholder: "Enter task title", 
+                            isFirstResponder: true,
+                            allowsTextSelection: true
+                        )
+                        .frame(height: 48)
+                        .onTapGesture {
+                            isTextFieldActive = true
+                        }
+                        .onReceive(NotificationCenter.default.publisher(for: UITextField.textDidBeginEditingNotification)) { _ in
+                            isTextFieldActive = true
+                        }
+                        .onReceive(NotificationCenter.default.publisher(for: UITextField.textDidEndEditingNotification)) { _ in
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                isTextFieldActive = false
+                            }
+                        }
                     }
                     
                     VStack(alignment: .leading, spacing: 8) {
@@ -160,8 +186,24 @@ struct AddTaskView: View {
                             .font(.system(size: 15, weight: .semibold))
                             .foregroundColor(theme.text)
                         
-                        CustomTextField(text: $description, placeholder: "Add more details...", isMultiline: true)
-                            .frame(minHeight: 80)
+                        CustomTextField(
+                            text: $description, 
+                            placeholder: "Add more details...", 
+                            isMultiline: true,
+                            allowsTextSelection: true
+                        )
+                        .frame(minHeight: 80)
+                        .onTapGesture {
+                            isTextFieldActive = true
+                        }
+                        .onReceive(NotificationCenter.default.publisher(for: UITextView.textDidBeginEditingNotification)) { _ in
+                            isTextFieldActive = true
+                        }
+                        .onReceive(NotificationCenter.default.publisher(for: UITextView.textDidEndEditingNotification)) { _ in
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                isTextFieldActive = false
+                            }
+                        }
                     }
                 }
                 .padding(.horizontal, 20)
@@ -304,9 +346,13 @@ struct AddTaskView: View {
                         HStack {
                             CustomTextField(
                                 text: $item.title, 
-                                placeholder: "Checklist item"
+                                placeholder: "Checklist item",
+                                allowsTextSelection: true
                             )
                             .frame(height: 48)
+                            .onTapGesture {
+                                isTextFieldActive = true
+                            }
                             Button(action: {
                                 if let index = checklistItems.firstIndex(where: { $0.id == item.id }) {
                                     withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
@@ -330,9 +376,13 @@ struct AddTaskView: View {
                         CustomTextField(
                             text: $newChecklistItemTitle, 
                             placeholder: "Add new item",
-                            onCommit: addChecklistItem
+                            onCommit: addChecklistItem,
+                            allowsTextSelection: true
                         )
                         .frame(height: 48)
+                        .onTapGesture {
+                            isTextFieldActive = true
+                        }
                         
                         Button(action: addChecklistItem) {
                             Image(systemName: "plus.circle.fill")
