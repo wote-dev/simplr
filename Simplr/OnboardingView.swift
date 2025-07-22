@@ -18,33 +18,23 @@ struct OnboardingView: View {
     private let steps = [
         OnboardingStep(
             icon: "checkmark.circle.fill",
-            title: "Welcome to Simplr",
-            description: "Your beautiful, powerful task manager designed for iOS. Stay organized with an interface that feels right at home."
+            title: "Welcome to Simplr"
         ),
         OnboardingStep(
             icon: "bell.fill",
-            title: "Smart Reminders",
-            description: "Set custom reminders for any time - 15 minutes before, 1 hour before, or pick your perfect moment with our beautiful scheduler."
-        ),
-        OnboardingStep(
-            icon: "rectangle.3.group.fill",
-            title: "Home Screen Widgets",
-            description: "Add Simplr widgets to your home screen and lock screen. Complete tasks, see your progress, and stay on top of deadlines without opening the app."
-        ),
-        OnboardingStep(
-            icon: "magnifyingglass",
-            title: "Spotlight Integration",
-            description: "Search for your tasks directly from iOS Spotlight. Your tasks are indexed and searchable system-wide for instant access."
+            title: "Smart Reminders"
         ),
         OnboardingStep(
             icon: "folder.fill",
-            title: "Categories & Themes",
-            description: "Organize tasks with colorful categories and choose from beautiful themes. Customize Simplr to match your style and workflow."
+            title: "Categories & Themes"
         ),
         OnboardingStep(
-            icon: "hand.tap.fill",
-            title: "Quick Actions",
-            description: "Access quick actions from your home screen. Add tasks instantly or jump to today's view with convenient shortcuts."
+            icon: "rectangle.3.group.fill",
+            title: "Home Screen Widgets"
+        ),
+        OnboardingStep(
+            icon: "arrow.right.circle.fill",
+            title: "Let's Get Started"
         )
     ]
     
@@ -53,27 +43,27 @@ struct OnboardingView: View {
             theme.background
                 .ignoresSafeArea()
             
-            VStack(spacing: 40) {
-                Spacer(minLength: 20)
+            VStack(spacing: 50) {
+                Spacer(minLength: 30)
                 
                 // App icon and title
-                VStack(spacing: 20) {
+                VStack(spacing: 24) {
                     Image(themedIcon: "simplr", themeManager: themeManager)
                         .resizable()
-                        .frame(width: 70, height: 70)
+                        .frame(width: 80, height: 80)
                     
                     Text("Simplr")
-                        .font(.title2)
-                        .fontWeight(.semibold)
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
                         .foregroundColor(theme.text)
                 }
                 
                 // Step content with swipe gesture
-                VStack(spacing: 30) {
+                VStack(spacing: 40) {
                     let step = steps[currentStep]
                     
                     Image(systemName: step.icon)
-                        .font(.system(size: 60, weight: .light))
+                        .font(.system(size: 80, weight: .light))
                         .foregroundColor(theme.accent)
                         .scaleEffect(1.0)
                         .transition(.asymmetric(
@@ -82,33 +72,15 @@ struct OnboardingView: View {
                         ))
                         .animation(.spring(response: 0.6, dampingFraction: 0.8), value: currentStep)
                     
-                    VStack(spacing: 16) {
-                        Text(step.title)
-                            .font(.title3)
-                            .fontWeight(.semibold)
-                            .foregroundColor(theme.text)
-                            .multilineTextAlignment(.center)
-                            .transition(.asymmetric(
-                                insertion: .move(edge: .trailing).combined(with: .opacity),
-                                removal: .move(edge: .leading).combined(with: .opacity)
-                            ))
-                        
-                        ScrollView {
-                            Text(step.description)
-                                .font(.callout)
-                                .foregroundColor(theme.textSecondary)
-                                .multilineTextAlignment(.center)
-                                .padding(.horizontal, 24)
-                                .lineLimit(nil)
-                                .lineSpacing(3)
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
-                        .frame(maxHeight: 120)
+                    Text(step.title)
+                        .font(.title2)
+                        .fontWeight(.semibold)
+                        .foregroundColor(theme.text)
+                        .multilineTextAlignment(.center)
                         .transition(.asymmetric(
                             insertion: .move(edge: .trailing).combined(with: .opacity),
                             removal: .move(edge: .leading).combined(with: .opacity)
                         ))
-                    }
                 }
                 .id(currentStep) // Force view recreation for smooth transitions
                 .gesture(
@@ -125,10 +97,10 @@ struct OnboardingView: View {
                         }
                 )
                 
-                Spacer(minLength: 20)
+                Spacer(minLength: 40)
                 
                 // Bottom section
-                VStack(spacing: 24) {
+                VStack(spacing: 32) {
                     // Step indicator
                     HStack(spacing: 8) {
                         ForEach(0..<steps.count, id: \.self) { index in
@@ -176,7 +148,7 @@ struct OnboardingView: View {
                             }
                         } label: {
                             HStack(spacing: 8) {
-                                Text(currentStep < steps.count - 1 ? "Continue" : "Start Organizing")
+                                Text(currentStep < steps.count - 1 ? "Continue" : "Get Started")
                                     .font(.system(size: 17, weight: .medium))
                                 if currentStep < steps.count - 1 {
                                     Image(systemName: "chevron.right")
@@ -250,7 +222,6 @@ struct OnboardingView: View {
 struct OnboardingStep {
     let icon: String
     let title: String
-    let description: String
 }
 
 #Preview {
