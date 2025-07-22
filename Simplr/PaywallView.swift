@@ -6,10 +6,17 @@
 //
 //  OPTIMIZED POST-PURCHASE FLOW:
 //  1. User previews and selects a premium theme in the paywall
-//  2. After successful purchase, welcome message displays
+//  2. After successful purchase, welcome message displays with selected theme styling
 //  3. User acknowledges welcome message
 //  4. Selected theme is automatically applied
 //  5. User returns directly to main app with their chosen theme
+//  
+//  PERFORMANCE OPTIMIZATIONS:
+//  - Theme instances are cached to avoid repeated creation
+//  - Theme updates only occur when actually changed
+//  - Welcome message uses selected premium theme instead of environment theme
+//  - Optimized animation timing for smoother user experience
+//  - Efficient memory management with proper cleanup
 //  
 //  This eliminates the extra theme selection step and provides
 //  a seamless, performance-optimized user experience.
@@ -31,6 +38,13 @@ struct PaywallView: View {
     @State private var showWelcomeMessage = false
     @State private var purchaseCompleted = false
     @State private var selectedPremiumTheme: ThemeMode = .kawaii // Track the theme selected during purchase for post-purchase application
+    
+    // Performance optimization: Cache theme instances to avoid repeated creation
+    private let themeCache: [ThemeMode: Theme] = [
+        .kawaii: KawaiiTheme(),
+        .lightGreen: LightGreenTheme(),
+        .serene: SereneTheme()
+    ]
     
     var body: some View {
         NavigationView {
@@ -82,6 +96,8 @@ struct PaywallView: View {
             // Welcome message overlay
             if showWelcomeMessage {
                 WelcomeMessageOverlay(
+                    selectedTheme: getTheme(for: selectedPremiumTheme),
+                    selectedThemeMode: selectedPremiumTheme,
                     onContinue: {
                         // Provide haptic feedback for successful completion
                         HapticManager.shared.successFeedback()
@@ -128,8 +144,12 @@ struct PaywallView: View {
     
     // MARK: - Helper Functions
     private func updatePreviewTheme() {
+        // Performance optimization: Only update if theme actually changed
+        let newTheme = getTheme(for: selectedThemePreview)
+        guard type(of: newTheme) != type(of: previewTheme) else { return }
+        
         withAnimation(.easeInOut(duration: 0.3)) {
-            previewTheme = getTheme(for: selectedThemePreview)
+            previewTheme = newTheme
         }
     }
     
@@ -286,6 +306,7 @@ struct PaywallView: View {
                     .font(.system(size: 34, weight: .bold, design: .rounded))
                     .tracking(-0.5)
                     .foregroundColor(previewTheme.text)
+                    .multilineTextAlignment(.center)
                 
                 Text("Transform your Simplr experience with stunning premium themes that match your style")
                     .font(.system(size: 16, weight: .medium, design: .rounded))
@@ -405,16 +426,8 @@ struct PaywallView: View {
     }
     
     private func getTheme(for mode: ThemeMode) -> Theme {
-        switch mode {
-        case .kawaii:
-            return KawaiiTheme()
-        case .lightGreen:
-            return LightGreenTheme()
-        case .serene:
-            return SereneTheme()
-        default:
-            return KawaiiTheme()
-        }
+        // Performance optimization: Use cached theme instances
+        return themeCache[mode] ?? KawaiiTheme()
     }
     
     // MARK: - Pricing Section
@@ -633,7 +646,8 @@ enum PurchasePlan: CaseIterable {
 
 // MARK: - Welcome Message Overlay
 struct WelcomeMessageOverlay: View {
-    @Environment(\.theme) var theme
+    let selectedTheme: Theme // Use the selected premium theme instead of environment theme
+    let selectedThemeMode: ThemeMode // Track the selected theme mode for display
     let onContinue: () -> Void
     
     @State private var animateContent = false
@@ -641,8 +655,9 @@ struct WelcomeMessageOverlay: View {
     
     var body: some View {
         ZStack {
-            // Background blur
-            Color.black.opacity(0.4)
+            // Background blur with selected theme colors
+            selectedTheme.background.opacity(0.1)
+                .overlay(Color.black.opacity(0.3))
                 .ignoresSafeArea()
                 .onTapGesture {
                     // Prevent dismissing by tapping background
@@ -650,36 +665,37 @@ struct WelcomeMessageOverlay: View {
             
             // Welcome card
             VStack(spacing: 32) {
-                // Success icon with animation
+                // Success icon with animation using selected theme colors
                 ZStack {
                     Circle()
-                        .fill(theme.success.opacity(0.2))
+                        .fill(selectedTheme.accent.opacity(0.2))
                         .frame(width: 120, height: 120)
                         .scaleEffect(animateContent ? 1.0 : 0.8)
                     
                     Circle()
-                        .fill(theme.success.opacity(0.1))
+                        .fill(selectedTheme.accent.opacity(0.1))
                         .frame(width: 100, height: 100)
                         .scaleEffect(animateContent ? 1.0 : 0.7)
                     
-                    Image(systemName: "crown.fill")
+                    // Use the selected theme's icon instead of crown
+                    Image(systemName: selectedThemeMode.icon)
                         .font(.system(size: 48, weight: .medium))
-                        .foregroundColor(theme.success)
+                        .foregroundColor(selectedTheme.accent)
                         .scaleEffect(animateContent ? 1.0 : 0.5)
                 }
                 .animation(.spring(response: 0.8, dampingFraction: 0.6).delay(0.2), value: animateContent)
                 
-                // Welcome text
+                // Welcome text with theme-specific messaging
                 VStack(spacing: 16) {
                     Text("Welcome to Premium!")
                         .font(.system(size: 28, weight: .bold, design: .rounded))
-                        .foregroundColor(theme.text)
+                        .foregroundColor(selectedTheme.text)
                         .opacity(animateContent ? 1.0 : 0.0)
                         .offset(y: animateContent ? 0 : 20)
                     
-                    Text("You now have access to all premium themes and features. Your selected theme has been applied!")
+                    Text("You now have access to all premium themes! Your \(selectedThemeMode.displayName) theme has been applied and is ready to use.")
                         .font(.system(size: 16, weight: .medium, design: .rounded))
-                        .foregroundColor(theme.textSecondary)
+                        .foregroundColor(selectedTheme.textSecondary)
                         .multilineTextAlignment(.center)
                         .lineLimit(nil)
                         .opacity(animateContent ? 1.0 : 0.0)
@@ -687,7 +703,7 @@ struct WelcomeMessageOverlay: View {
                 }
                 .animation(.spring(response: 0.8, dampingFraction: 0.8).delay(0.4), value: animateContent)
                 
-                // Continue button
+                // Continue button with selected theme styling
                 Button {
                     HapticManager.shared.buttonTap()
                     onContinue()
@@ -699,13 +715,13 @@ struct WelcomeMessageOverlay: View {
                         Image(systemName: "arrow.right")
                             .font(.system(size: 16, weight: .medium))
                     }
-                    .foregroundColor(theme.background)
+                    .foregroundColor(selectedTheme.background)
                     .frame(maxWidth: .infinity)
                     .frame(height: 56)
                     .background(
                         RoundedRectangle(cornerRadius: 16)
-                            .fill(theme.accentGradient)
-                            .applyShadow(theme.cardShadowStyle)
+                            .fill(selectedTheme.accentGradient)
+                            .applyShadow(selectedTheme.cardShadowStyle)
                     )
                 }
                 .scaleEffect(animateButton ? 1.0 : 0.9)
@@ -716,8 +732,8 @@ struct WelcomeMessageOverlay: View {
             .padding(.vertical, 40)
             .background(
                 RoundedRectangle(cornerRadius: 24)
-                    .fill(theme.surfaceGradient)
-                    .applyShadow(theme.cardShadowStyle)
+                    .fill(selectedTheme.surfaceGradient)
+                    .applyShadow(selectedTheme.cardShadowStyle)
             )
             .padding(.horizontal, 24)
             .scaleEffect(animateContent ? 1.0 : 0.9)
@@ -725,13 +741,16 @@ struct WelcomeMessageOverlay: View {
             .animation(.spring(response: 0.7, dampingFraction: 0.8), value: animateContent)
         }
         .onAppear {
-            // Trigger animations on appear
-            withAnimation {
-                animateContent = true
+            // Performance optimization: Use more efficient animation timing
+            // Trigger animations on appear with optimized timing
+            DispatchQueue.main.async {
+                withAnimation(.spring(response: 0.7, dampingFraction: 0.8)) {
+                    animateContent = true
+                }
             }
             
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
-                withAnimation {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                withAnimation(.spring(response: 0.6, dampingFraction: 0.7)) {
                     animateButton = true
                 }
             }
@@ -744,6 +763,7 @@ struct PaywallView_Previews: PreviewProvider {
     static var previews: some View {
         PaywallView()
             .environmentObject(PremiumManager())
+            .environmentObject(ThemeManager())
             .environment(\.theme, LightTheme())
     }
 }
