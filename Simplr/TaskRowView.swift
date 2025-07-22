@@ -502,6 +502,10 @@ struct TaskRowView: View {
             taskDetailPreview
         }
         .onAppear {
+            // Synchronize showCheckmark with actual task completion state on appear
+            // This fixes the issue where undone tasks show the checkmark tick
+            showCheckmark = task.isCompleted
+            
             // Initial animation when task appears
             withAnimation(.easeInOut(duration: 0.3).delay(0.1)) {
                 completionOpacity = 1.0
@@ -514,6 +518,12 @@ struct TaskRowView: View {
         }
 
         .onChange(of: task.isCompleted) { _, newValue in
+            // Synchronize showCheckmark when task completion state changes externally
+            // This ensures visual consistency when tasks are updated from other views
+            if !isDragging && !gestureCompleted {
+                showCheckmark = newValue
+            }
+            
             // Handle URGENT animation based on completion state
             if isUrgentTask {
                 if newValue {
@@ -1032,6 +1042,9 @@ struct TaskRowView: View {
                 completionScale = 1.0
                 showCompletionParticles = false
             }
+            
+            // Reset gestureCompleted flag to allow external state synchronization
+            gestureCompleted = false
         }
     }
     
