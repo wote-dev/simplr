@@ -157,9 +157,10 @@ struct MainTabView: View {
     }
     
      private var backgroundView: some View {
-        // Use themedBackground to support background images
+        // Use themedBackground to support background images with full coverage
         Color.clear
             .themedBackground(theme)
+            .ignoresSafeArea(.container, edges: .bottom)
     }
     
     // MARK: - Optimized Tab Content Display
@@ -189,46 +190,15 @@ struct MainTabView: View {
             }
         }
         .padding(.horizontal, 16)
-        .padding(.top, 16)
+        .padding(.top, 8)
         .padding(.bottom, 8)
         .background(
-            Rectangle()
-                .fill(
-                    themeManager.themeMode == .kawaii ?
-                    LinearGradient(
-                        colors: [Color(red: 243/255, green: 236/255, blue: 230/255)],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    ) :
-                    (themeManager.themeMode == .serene ?
-                     theme.backgroundGradient :
-                     (themeManager.isDarkMode ?
-                      LinearGradient(
-                          colors: [Color.black],
-                          startPoint: .top,
-                          endPoint: .bottom
-                      ) :
-                      (themeManager.themeMode == .lightBlue ? 
-                       LinearGradient(
-                           colors: [Color(red: 245/255, green: 249/255, blue: 255/255)],
-                           startPoint: .top,
-                           endPoint: .bottom
-                       ) :
-                       (themeManager.themeMode == .lightGreen ? 
-                        LinearGradient(
-                            colors: [Color(red: 245/255, green: 255/255, blue: 249/255)],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        ) :
-                        LinearGradient(
-                            colors: [Color(red: 250/255, green: 250/255, blue: 250/255)],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )))))
-                )
-                .ignoresSafeArea(.container, edges: .bottom)
+            // Completely transparent background for seamless blending
+            Color.clear
         )
     }
+    
+
     
 
     
