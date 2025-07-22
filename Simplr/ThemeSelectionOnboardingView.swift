@@ -97,9 +97,13 @@ struct ThemeSelectionOnboardingView: View {
         .onAppear {
             // Set initial selected theme to current theme
             selectedTheme = themeManager.themeMode
+            
+            // Refresh premium status to ensure themes are properly unlocked
+            // This is especially important when coming from a successful purchase
+            premiumManager.refreshSubscriptionStatus()
         }
         .sheet(isPresented: $showingPaywall) {
-            PaywallView(targetFeature: .kawaiiTheme)
+            PaywallView()
                 .environmentObject(premiumManager)
         }
         .onChange(of: premiumManager.showingPaywall) { _, newValue in
@@ -116,7 +120,7 @@ struct ThemeSelectionOnboardingView: View {
         
         if mode.isPremium && !themeManager.canAccessTheme(mode) {
             // Show paywall for premium themes
-            premiumManager.showPaywall(for: .kawaiiTheme)
+            premiumManager.showPaywall()
         } else {
             // Set debounce flag to prevent rapid changes
             isChangingTheme = true

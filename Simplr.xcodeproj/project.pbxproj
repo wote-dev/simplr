@@ -183,6 +183,7 @@
 			);
 			name = Simplr;
 			packageProductDependencies = (
+				37RC001B2E1A080000509E4E /* RevenueCat */,
 			);
 			productName = Simplr;
 			productReference = 37B517B82E14DD1400041BB3 /* Simplr.app */;
@@ -291,6 +292,9 @@
 			);
 			mainGroup = 37B517AF2E14DD1400041BB3;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				37RC001A2E1A080000509E4E /* XCRemoteSwiftPackageReference "purchases-ios" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 37B517B92E14DD1400041BB3 /* Products */;
 			projectDirPath = "";
@@ -747,6 +751,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		37RC001A2E1A080000509E4E /* XCRemoteSwiftPackageReference "purchases-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/RevenueCat/purchases-ios";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		37RC001B2E1A080000509E4E /* RevenueCat */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 37RC001A2E1A080000509E4E /* XCRemoteSwiftPackageReference "purchases-ios" */;
+			productName = RevenueCat;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 37B517B02E14DD1400041BB3 /* Project object */;
 }

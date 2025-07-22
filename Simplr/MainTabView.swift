@@ -156,7 +156,7 @@ struct MainTabView: View {
         }
     }
     
-    private var backgroundView: some View {
+     private var backgroundView: some View {
         // Use themedBackground to support background images
         Color.clear
             .themedBackground(theme)

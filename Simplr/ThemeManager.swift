@@ -47,10 +47,10 @@ enum ThemeMode: String, CaseIterable {
     
     var isPremium: Bool {
         switch self {
-        case .light, .lightBlue, .lightGreen, .minimal, .dark, .system, .serene:
+        case .light, .lightBlue, .minimal, .dark, .system:
             return false
-        case .kawaii:
-            return false // Temporarily disabled premium requirement - can be changed back to true later
+        case .lightGreen, .kawaii, .serene:
+            return true
         }
     }
 }
@@ -140,9 +140,23 @@ class ThemeManager: ObservableObject {
         case .lightBlue:
             newTheme = LightTheme()
         case .lightGreen:
-            newTheme = LightGreenTheme()
+            // Check if user has access to Light Green theme
+            if let premiumManager = premiumManager,
+               premiumManager.hasAccess(to: .premiumAccess) {
+                newTheme = LightGreenTheme()
+            } else {
+                // Fallback to light theme if no access, but preserve the theme selection
+                newTheme = PlainLightTheme()
+            }
         case .serene:
-            newTheme = SereneTheme()
+            // Check if user has access to Serene theme
+            if let premiumManager = premiumManager,
+               premiumManager.hasAccess(to: .premiumAccess) {
+                newTheme = SereneTheme()
+            } else {
+                // Fallback to light theme if no access, but preserve the theme selection
+                newTheme = PlainLightTheme()
+            }
         case .minimal:
             newTheme = MinimalTheme()
         case .dark:
@@ -150,22 +164,16 @@ class ThemeManager: ObservableObject {
         case .system:
             newTheme = isDarkMode ? DarkTheme() : PlainLightTheme()
         case .kawaii:
-            // Kawaii theme is now available to all users
-            newTheme = KawaiiTheme()
-            
-            // Premium check code preserved for future use:
-            /*
             // Check if user has access to Kawaii theme
             if let premiumManager = premiumManager,
-               premiumManager.hasAccess(to: .kawaiiTheme) {
+               premiumManager.hasAccess(to: .premiumAccess) {
                 newTheme = KawaiiTheme()
             } else {
                 // Fallback to light theme if no access, but preserve the kawaii theme selection
                 // This allows the theme choice to persist when the user gains premium access
-                newTheme = LightTheme()
+                newTheme = PlainLightTheme()
                 // Don't reset the theme mode - keep it as kawaii so it persists
             }
-            */
         }
         
         withAnimation(.easeInOut(duration: 0.3)) {
@@ -187,27 +195,29 @@ class ThemeManager: ObservableObject {
         
         guard let premiumManager = premiumManager else { return }
         
-        // Observe changes to premium status and purchased features
-        premiumObservationCancellable = Publishers.CombineLatest(
-            premiumManager.$isPremium,
-            premiumManager.$purchasedFeatures
-        )
-        .sink { [weak self] _, _ in
-            // When premium status changes, update the theme
-            // This ensures the kawaii theme is applied immediately when purchased
-            DispatchQueue.main.async {
-                self?.updateTheme()
+        // Observe changes to premium status
+        premiumObservationCancellable = premiumManager.$isPremium
+            .sink { [weak self] _ in
+                // When premium status changes, update the theme
+                // This ensures premium themes are applied immediately when purchased
+                DispatchQueue.main.async {
+                    self?.updateTheme()
+                }
             }
-        }
     }
     
     func setThemeMode(_ mode: ThemeMode, checkPremium: Bool = true) {
         // Check if theme requires premium access
         if checkPremium && mode.isPremium {
-            guard let premiumManager = premiumManager,
-                  premiumManager.hasAccess(to: .kawaiiTheme) else {
+            guard let premiumManager = premiumManager else {
+                return
+            }
+            
+            let requiredFeature: PremiumFeature = .premiumAccess
+            
+            guard premiumManager.hasAccess(to: requiredFeature) else {
                 // Show paywall for premium theme
-                premiumManager?.showPaywall(for: .kawaiiTheme)
+                premiumManager.showPaywall()
                 return
             }
         }
@@ -222,20 +232,13 @@ class ThemeManager: ObservableObject {
             return true
         }
         
-        // Kawaii and Serene themes are now free for all users
-        if mode == .kawaii || mode == .serene {
-            return true
-        }
-        
         guard let premiumManager = premiumManager else {
             return false
         }
         
         switch mode {
-        case .kawaii, .serene:
-            return true // Always allow kawaii and serene theme access
-            // Premium check preserved for future use:
-            // return premiumManager.hasAccess(to: .kawaiiTheme)
+        case .kawaii, .lightGreen, .serene:
+            return premiumManager.hasAccess(to: .premiumAccess)
         default:
             return true
         }

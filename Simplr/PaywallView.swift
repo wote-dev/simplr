@@ -4,49 +4,51 @@
 //
 //  Created by Daniel Zverev on 2/7/2025.
 //
+//  OPTIMIZED POST-PURCHASE FLOW:
+//  1. User previews and selects a premium theme in the paywall
+//  2. After successful purchase, welcome message displays
+//  3. User acknowledges welcome message
+//  4. Selected theme is automatically applied
+//  5. User returns directly to main app with their chosen theme
+//  
+//  This eliminates the extra theme selection step and provides
+//  a seamless, performance-optimized user experience.
+//
 
 import SwiftUI
+import RevenueCat
 
 struct PaywallView: View {
     @EnvironmentObject var premiumManager: PremiumManager
+    @EnvironmentObject var themeManager: ThemeManager
     @Environment(\.theme) var theme
     @Environment(\.dismiss) var dismiss
     
-    let targetFeature: PremiumFeature?
-    
-    @State private var selectedPlan: PurchasePlan = .kawaiiTheme
-    @State private var showingFeatureDetail = false
-    
-    init(targetFeature: PremiumFeature? = nil) {
-        self.targetFeature = targetFeature
-    }
+    @State private var selectedPlan: PurchasePlan = .premiumAnnual
+    @State private var offerings: Offerings?
+    @State private var selectedThemePreview: ThemeMode = .kawaii
+    @State private var previewTheme: Theme = KawaiiTheme()
+    @State private var showWelcomeMessage = false
+    @State private var purchaseCompleted = false
+    @State private var selectedPremiumTheme: ThemeMode = .kawaii // Track the theme selected during purchase for post-purchase application
     
     var body: some View {
         NavigationView {
             ZStack {
-                // Kawaii inspired gradient background
-                LinearGradient(
-                    colors: [
-                        Color(red: 1.0, green: 0.95, blue: 0.97),
-                        Color(red: 1.0, green: 0.88, blue: 0.93),
-                        Color(red: 1.0, green: 0.82, blue: 0.89)
-                    ],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                .ignoresSafeArea()
+                // Dynamic background based on selected theme preview
+                previewTheme.backgroundGradient
+                    .ignoresSafeArea()
                 
                 ScrollView {
                     VStack(spacing: 32) {
                         // Header
                         headerSection
                         
-                        // Feature showcase
-                        if let feature = targetFeature {
-                            featuredThemeSection(feature)
-                        } else {
-                            allFeaturesSection
-                        }
+                        // Theme preview section
+                        themePreviewSection
+                        
+                        // Premium themes showcase
+                        premiumThemesSection
                         
                         // Pricing plans
                         pricingSection
@@ -64,7 +66,7 @@ struct PaywallView: View {
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(Color.white.opacity(0.95), for: .navigationBar)
+            .toolbarBackground(previewTheme.surface.opacity(0.95), for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -72,188 +74,375 @@ struct PaywallView: View {
                         dismiss()
                         HapticManager.shared.buttonTap()
                     }
-                    .foregroundColor(Color(red: 1.0, green: 0.2, blue: 0.6))
+                    .foregroundColor(previewTheme.accent)
                 }
             }
         }
-        .onAppear {
-            if let feature = targetFeature, feature == .kawaiiTheme {
-                selectedPlan = .kawaiiTheme
+        .overlay {
+            // Welcome message overlay
+            if showWelcomeMessage {
+                WelcomeMessageOverlay(
+                    onContinue: {
+                        // Provide haptic feedback for successful completion
+                        HapticManager.shared.successFeedback()
+                        
+                        // Apply the selected premium theme only if it's different from current
+                        if themeManager.themeMode != selectedPremiumTheme {
+                            themeManager.setThemeMode(selectedPremiumTheme, checkPremium: false)
+                        }
+                        
+                        // Dismiss welcome message with animation
+                        withAnimation(.easeInOut(duration: 0.4)) {
+                            showWelcomeMessage = false
+                        }
+                        
+                        // Small delay before dismissing paywall to return to main app
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            dismiss()
+                        }
+                    }
+                )
+                .transition(.asymmetric(
+                    insertion: .opacity.combined(with: .scale(scale: 0.9)),
+                    removal: .opacity.combined(with: .scale(scale: 1.1))
+                ))
+                .zIndex(1000)
             }
         }
+        // Theme selector is no longer needed in post-purchase flow
+        // Users will return directly to the main app with their selected theme
+        .onAppear {
+            selectedPlan = .premiumAnnual
+            loadOfferings()
+            updatePreviewTheme()
+            // Initialize the selected premium theme to match the preview
+            selectedPremiumTheme = selectedThemePreview
+        }
+        .onChange(of: selectedThemePreview) { _, newTheme in
+            updatePreviewTheme()
+            // Track the selected theme for post-purchase application
+            selectedPremiumTheme = newTheme
+        }
+        // showThemeSelector onChange handler removed - no longer needed in optimized flow
+    }
+    
+    // MARK: - Helper Functions
+    private func updatePreviewTheme() {
+        withAnimation(.easeInOut(duration: 0.3)) {
+            previewTheme = getTheme(for: selectedThemePreview)
+        }
+    }
+    
+    // MARK: - Pricing Logic
+    private func getDisplayPrice(for plan: PurchasePlan) -> String {
+        guard let offerings = offerings,
+              let currentOffering = offerings.current else {
+            // Fallback prices when no offerings available
+            return plan.fallbackPrice
+        }
+        
+        switch plan {
+        case .premiumMonthly:
+            // First try the standard monthly package
+            if let package = currentOffering.monthly {
+                return package.storeProduct.localizedPriceString
+            }
+            // Fallback: search all packages for monthly product ID
+            if let package = currentOffering.availablePackages.first(where: { 
+                $0.storeProduct.productIdentifier == "simplr.premium.monthly.sub" 
+            }) {
+                return package.storeProduct.localizedPriceString
+            }
+            return plan.fallbackPrice
+            
+        case .premiumAnnual:
+            // First try the standard annual package
+            if let package = currentOffering.annual {
+                return package.storeProduct.localizedPriceString
+            }
+            // Fallback: search all packages for annual product ID
+            if let package = currentOffering.availablePackages.first(where: { 
+                $0.storeProduct.productIdentifier == "simplr.premium.annual.sub" 
+            }) {
+                return package.storeProduct.localizedPriceString
+            }
+            return plan.fallbackPrice
+        }
+    }
+    
+    // MARK: - Purchase Logic
+    private func initiatePurchase(for plan: PurchasePlan) {
+        guard let offerings = offerings,
+              let currentOffering = offerings.current else {
+            print("Error: No offerings available")
+            return
+        }
+        
+        let packageToPurchase: Package?
+        
+        switch plan {
+        case .premiumAnnual:
+            // First try the standard annual package
+            packageToPurchase = currentOffering.annual ??
+                currentOffering.availablePackages.first(where: {
+                    $0.storeProduct.productIdentifier == "simplr.premium.annual.sub"
+                })
+        case .premiumMonthly:
+            // First try the standard monthly package
+            packageToPurchase = currentOffering.monthly ??
+                currentOffering.availablePackages.first(where: {
+                    $0.storeProduct.productIdentifier == "simplr.premium.monthly.sub"
+                })
+        }
+        
+        guard let package = packageToPurchase else {
+            print("Error: Package not found for plan \(plan)")
+            return
+        }
+        
+        premiumManager.isLoading = true
+        
+        // --- THIS IS THE UPDATED AND SAFER PURCHASE LOGIC ---
+        Purchases.shared.purchase(package: package) { [weak premiumManager] transaction, customerInfo, error, userCancelled in
+            DispatchQueue.main.async {
+                premiumManager?.isLoading = false
+                
+                if userCancelled {
+                    print("Purchase cancelled by user.")
+                    return
+                }
+
+                if let error = error {
+                    print("Purchase error: \(error.localizedDescription)")
+                    return
+                }
+                
+                guard let customerInfo = customerInfo else {
+                    print("Error: CustomerInfo is missing after purchase.")
+                    return
+                }
+
+                // Explicitly check if the 'premium' entitlement is now active.
+                if customerInfo.entitlements["premium"]?.isActive == true {
+                    
+                    // The user is officially premium. NOW we can show the welcome message.
+                    print("✅ Purchase successful! User has 'premium' entitlement.")
+                    HapticManager.shared.successFeedback()
+                    
+                    self.purchaseCompleted = true
+                    
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
+                            self.showWelcomeMessage = true
+                        }
+                    }
+                    
+                } else {
+                    // This is a rare but important edge case.
+                    // The purchase succeeded, but for some reason, the entitlement isn't active.
+                    print("❌ Purchase succeeded, but entitlement 'premium' is not active. Check RevenueCat dashboard setup.")
+                }
+            }
+        }
+    }
+    
+    // MARK: - RevenueCat Integration
+    private func loadOfferings() {
+        Purchases.shared.getOfferings { [self] offerings, error in
+            DispatchQueue.main.async {
+                if let error = error {
+                    print("Error loading offerings: \(error.localizedDescription)")
+                } else if let offerings = offerings {
+                    self.offerings = offerings
+                    print("✅ Loaded offerings successfully")
+                }
+            }
+        }
+    }
+    
+    // MARK: - Restore Purchases
+    private func restorePurchases() {
+        premiumManager.restorePurchases()
+        HapticManager.shared.buttonTap()
     }
     
     // MARK: - Header Section
     private var headerSection: some View {
         VStack(spacing: 16) {
-            // Cute icon
+            // Dynamic icon based on selected theme
             ZStack {
                 Circle()
-                    .fill(
-                        LinearGradient(
-                            colors: [
-                                Color(red: 1.0, green: 0.2, blue: 0.6),
-                                Color(red: 1.0, green: 0.4, blue: 0.7),
-                                Color(red: 1.0, green: 0.6, blue: 0.8)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
+                    .fill(previewTheme.accentGradient)
                     .frame(width: 80, height: 80)
-                    .shadow(
-                        color: Color(red: 1.0, green: 0.4, blue: 0.7).opacity(0.3),
-                        radius: 15,
-                        y: 8
-                    )
+                    .applyShadow(previewTheme.cardShadowStyle)
                 
-                Image(systemName: "heart.fill")
+                Image(systemName: selectedThemePreview.icon)
                     .font(.system(size: 36, weight: .bold))
-                    .foregroundColor(.white)
+                    .foregroundColor(previewTheme.background)
             }
             
             VStack(spacing: 8) {
-                Text("Unlock Premium Themes")
+                Text("Unlock Beautiful Themes")
                     .font(.system(size: 34, weight: .bold, design: .rounded))
                     .tracking(-0.5)
-                    .foregroundColor(Color(red: 0.4, green: 0.2, blue: 0.3))
+                    .foregroundColor(previewTheme.text)
                 
-                Text("Transform your Simplr experience with adorable themes and exclusive features")
+                Text("Transform your Simplr experience with stunning premium themes that match your style")
                     .font(.system(size: 16, weight: .medium, design: .rounded))
-                    .foregroundColor(Color(red: 0.6, green: 0.4, blue: 0.5))
+                    .foregroundColor(previewTheme.textSecondary)
                     .multilineTextAlignment(.center)
                     .lineLimit(nil)
             }
         }
     }
     
-    // MARK: - Featured Theme Section
-    private func featuredThemeSection(_ feature: PremiumFeature) -> some View {
+    // MARK: - Theme Preview Section
+    private var themePreviewSection: some View {
         VStack(spacing: 20) {
-            Text("✨ " + feature.displayName)
+            Text("Live Preview")
                 .font(.system(size: 22, weight: .bold, design: .rounded))
                 .tracking(-0.3)
-                .foregroundColor(Color(red: 1.0, green: 0.2, blue: 0.6))
+                .foregroundColor(previewTheme.text)
             
-            // Theme preview card
-            VStack(spacing: 16) {
+            // Mock task card preview
+            VStack(spacing: 12) {
                 HStack {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Kawaii Theme")
-                            .font(.system(size: 18, weight: .semibold, design: .rounded))
-                            .foregroundColor(Color(red: 0.4, green: 0.2, blue: 0.3))
-                        
-                        Text("Adorable pink gradients with cute aesthetics")
-                            .font(.system(size: 12, weight: .medium, design: .rounded))
-                            .foregroundColor(Color(red: 0.6, green: 0.4, blue: 0.5))
-                    }
-                    
+                    Text("Today")
+                        .font(.system(size: 18, weight: .semibold, design: .rounded))
+                        .foregroundColor(previewTheme.text)
                     Spacer()
-                    
-                    Image(systemName: "heart.fill")
-                            .font(.system(size: 22, weight: .medium, design: .rounded))
-                            .foregroundColor(Color(red: 1.0, green: 0.4, blue: 0.7))
+                    Text("3 tasks")
+                        .font(.system(size: 14, weight: .medium, design: .rounded))
+                        .foregroundColor(previewTheme.textSecondary)
                 }
                 
-                // Mini preview
-                HStack(spacing: 8) {
-                    ForEach(0..<3) { _ in
-                        RoundedRectangle(cornerRadius: 16)
-                            .fill(
-                                LinearGradient(
-                                    colors: [
-                                        Color(red: 1.0, green: 0.98, blue: 0.99),
-                                        Color(red: 1.0, green: 0.92, blue: 0.95)
-                                    ],
-                                    startPoint: .top,
-                                    endPoint: .bottom
-                                )
-                            )
-                            .frame(height: 40)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 16)
-                                    .stroke(Color(red: 1.0, green: 0.4, blue: 0.7).opacity(0.3), lineWidth: 0.8)
-                            )
-                    }
+                VStack(spacing: 8) {
+                    mockTaskRow("Review quarterly goals", isCompleted: false)
+                    mockTaskRow("Team standup meeting", isCompleted: true)
+                    mockTaskRow("Update project timeline", isCompleted: false)
                 }
             }
             .padding(20)
             .background(
                 RoundedRectangle(cornerRadius: 16)
-                    .fill(Color.white)
-                    .shadow(
-                        color: Color(red: 1.0, green: 0.4, blue: 0.7).opacity(0.15),
-                        radius: 12,
-                        y: 6
-                    )
+                    .fill(previewTheme.surfaceGradient)
+                    .applyShadow(previewTheme.cardShadowStyle)
             )
         }
     }
     
-    // MARK: - All Features Section
-    private var allFeaturesSection: some View {
+    private func mockTaskRow(_ title: String, isCompleted: Bool) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: isCompleted ? "checkmark.circle.fill" : "circle")
+                .font(.system(size: 20, weight: .medium))
+                .foregroundColor(isCompleted ? previewTheme.success : previewTheme.accent)
+            
+            Text(title)
+                .font(.system(size: 16, weight: .medium, design: .rounded))
+                .foregroundColor(isCompleted ? previewTheme.textSecondary : previewTheme.text)
+                .strikethrough(isCompleted)
+            
+            Spacer()
+        }
+        .padding(.vertical, 4)
+    }
+    
+    // MARK: - Premium Themes Section
+    private var premiumThemesSection: some View {
         VStack(spacing: 16) {
-            Text("Premium Features")
+            Text("Choose Your Style")
                 .font(.system(size: 22, weight: .bold, design: .rounded))
                 .tracking(-0.3)
-                .foregroundColor(Color(red: 0.4, green: 0.2, blue: 0.3))
+                .foregroundColor(previewTheme.text)
             
-            VStack(spacing: 12) {
-                ForEach(PremiumFeature.allCases, id: \.self) { feature in
-                    featureRow(feature)
+            HStack(spacing: 12) {
+                ForEach([ThemeMode.kawaii, ThemeMode.lightGreen, ThemeMode.serene], id: \.self) { themeMode in
+                    themePreviewCard(themeMode)
                 }
             }
         }
     }
     
-    private func featureRow(_ feature: PremiumFeature) -> some View {
-        HStack(spacing: 16) {
-            Image(systemName: feature.icon)
-                .font(.title3)
-                .foregroundColor(Color(red: 1.0, green: 0.2, blue: 0.6))
-                .frame(width: 24)
-            
-            VStack(alignment: .leading, spacing: 4) {
-                Text(feature.displayName)
-                    .font(.system(size: 16, weight: .semibold, design: .rounded))
-                    .foregroundColor(Color(red: 0.4, green: 0.2, blue: 0.3))
-                
-                Text(feature.description)
-                    .font(.system(size: 12, weight: .medium, design: .rounded))
-                    .foregroundColor(Color(red: 0.6, green: 0.4, blue: 0.5))
-                    .lineLimit(2)
+    private func themePreviewCard(_ themeMode: ThemeMode) -> some View {
+        let isSelected = selectedThemePreview == themeMode
+        let cardTheme = getTheme(for: themeMode)
+        
+        return Button {
+            withAnimation(.easeInOut(duration: 0.3)) {
+                selectedThemePreview = themeMode
             }
-            
-            Spacer()
+            HapticManager.shared.buttonTap()
+        } label: {
+            VStack(spacing: 8) {
+                // Theme color preview
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(cardTheme.accentGradient)
+                    .frame(height: 40)
+                    .overlay(
+                        Image(systemName: themeMode.icon)
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundColor(cardTheme.background)
+                    )
+                
+                Text(themeMode.displayName)
+                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                    .foregroundColor(previewTheme.text)
+                    .lineLimit(1)
+            }
+            .padding(12)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(previewTheme.surface)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(isSelected ? previewTheme.accent : Color.clear, lineWidth: 2)
+                    )
+                    .applyShadow(isSelected ? previewTheme.cardShadowStyle : previewTheme.shadowStyle)
+            )
         }
-        .padding(16)
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color.white.opacity(0.8))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(Color(red: 1.0, green: 0.4, blue: 0.7).opacity(0.2), lineWidth: 0.8)
-                )
-        )
+        .scaleEffect(isSelected ? 1.05 : 1.0)
+        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isSelected)
+    }
+    
+    private func getTheme(for mode: ThemeMode) -> Theme {
+        switch mode {
+        case .kawaii:
+            return KawaiiTheme()
+        case .lightGreen:
+            return LightGreenTheme()
+        case .serene:
+            return SereneTheme()
+        default:
+            return KawaiiTheme()
+        }
     }
     
     // MARK: - Pricing Section
     private var pricingSection: some View {
         VStack(spacing: 16) {
-            Text("Choose Your Plan")
+            Text("Unlock All Themes")
                 .font(.system(size: 22, weight: .bold, design: .rounded))
                 .tracking(-0.3)
-                .foregroundColor(Color(red: 0.4, green: 0.2, blue: 0.3))
+                .foregroundColor(previewTheme.text)
+            
+            Text("Get unlimited access to all premium themes and future releases")
+                .font(.system(size: 16, weight: .medium, design: .rounded))
+                .foregroundColor(previewTheme.textSecondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
             
             VStack(spacing: 12) {
-                pricingCard(.kawaiiTheme)
-                pricingCard(.premiumMonthly)
+                ForEach(PurchasePlan.allCases, id: \.self) { plan in
+                    pricingCard(plan)
+                }
             }
         }
     }
     
     private func pricingCard(_ plan: PurchasePlan) -> some View {
-        Button {
+        let isSelected = selectedPlan == plan
+        
+        return Button {
             selectedPlan = plan
             HapticManager.shared.buttonTap()
         } label: {
@@ -262,17 +451,17 @@ struct PaywallView: View {
                     HStack {
                         Text(plan.title)
                             .font(.system(size: 18, weight: .semibold, design: .rounded))
-                            .foregroundColor(Color(red: 0.4, green: 0.2, blue: 0.3))
+                            .foregroundColor(previewTheme.text)
                         
                         if plan.isPopular {
                             Text("POPULAR")
                                 .font(.system(size: 10, weight: .bold, design: .rounded))
-                                .foregroundColor(.white)
+                                .foregroundColor(previewTheme.background)
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 4)
                                 .background(
                                     Capsule()
-                                        .fill(Color(red: 1.0, green: 0.2, blue: 0.6))
+                                        .fill(previewTheme.accent)
                                 )
                         }
                         
@@ -281,48 +470,40 @@ struct PaywallView: View {
                     
                     Text(plan.description)
                         .font(.system(size: 12, weight: .medium, design: .rounded))
-                        .foregroundColor(Color(red: 0.6, green: 0.4, blue: 0.5))
+                        .foregroundColor(previewTheme.textSecondary)
                         .lineLimit(2)
                 }
                 
                 Spacer()
                 
                 VStack(alignment: .trailing, spacing: 4) {
-                    Text(plan.price)
+                    Text(getDisplayPrice(for: plan))
                         .font(.system(size: 20, weight: .bold, design: .rounded))
-                        .foregroundColor(Color(red: 1.0, green: 0.2, blue: 0.6))
+                        .foregroundColor(previewTheme.accent)
                     
-                    if !plan.period.isEmpty {
-                        Text(plan.period)
-                            .font(.system(size: 10, weight: .medium, design: .rounded))
-                            .foregroundColor(Color(red: 0.6, green: 0.4, blue: 0.5))
-                    }
+                    Text(plan.period)
+                        .font(.system(size: 10, weight: .medium, design: .rounded))
+                        .foregroundColor(previewTheme.textSecondary)
                 }
                 
                 Image(systemName: selectedPlan == plan ? "checkmark.circle.fill" : "circle")
                     .font(.title3)
-                    .foregroundColor(selectedPlan == plan ? Color(red: 1.0, green: 0.2, blue: 0.6) : Color(red: 0.7, green: 0.5, blue: 0.6))
+                    .foregroundColor(selectedPlan == plan ? previewTheme.accent : previewTheme.textSecondary)
             }
             .padding(20)
             .background(
                 RoundedRectangle(cornerRadius: 16)
-                    .fill(Color.white)
+                    .fill(previewTheme.surface)
                     .overlay(
                         RoundedRectangle(cornerRadius: 16)
                             .stroke(
                                 selectedPlan == plan ? 
-                                Color(red: 1.0, green: 0.2, blue: 0.6) : 
-                                Color(red: 1.0, green: 0.4, blue: 0.7).opacity(0.3),
-                                lineWidth: 0.8
+                                previewTheme.accent : 
+                                previewTheme.accent.opacity(0.3),
+                                lineWidth: isSelected ? 2 : 0.8
                             )
                     )
-                    .shadow(
-                        color: selectedPlan == plan ? 
-                        Color(red: 1.0, green: 0.2, blue: 0.6).opacity(0.2) : 
-                        Color(red: 1.0, green: 0.4, blue: 0.7).opacity(0.1),
-                        radius: selectedPlan == plan ? 12 : 6,
-                        y: selectedPlan == plan ? 6 : 3
-                    )
+                    .applyShadow(isSelected ? previewTheme.cardShadowStyle : previewTheme.shadowStyle)
             )
         }
         .buttonStyle(PlainButtonStyle())
@@ -334,41 +515,29 @@ struct PaywallView: View {
     private var purchaseSection: some View {
         VStack(spacing: 16) {
             Button {
-                purchaseSelected()
+                initiatePurchase(for: selectedPlan)
+                HapticManager.shared.buttonTap()
             } label: {
                 HStack {
                     if premiumManager.isLoading {
                         ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            .progressViewStyle(CircularProgressViewStyle(tint: previewTheme.background))
                             .scaleEffect(0.8)
                     } else {
                         Image(systemName: "heart.fill")
                             .font(.system(size: 18, weight: .medium, design: .rounded))
                     }
                     
-                    Text(premiumManager.isLoading ? "Processing..." : "Unlock \(selectedPlan.title)")
+                    Text(premiumManager.isLoading ? "Processing..." : "Unlock All Themes")
                         .font(.system(size: 18, weight: .semibold, design: .rounded))
                 }
-                .foregroundColor(.white)
+                .foregroundColor(previewTheme.background)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
                 .background(
                     RoundedRectangle(cornerRadius: 16)
-                        .fill(
-                            LinearGradient(
-                                colors: [
-                                    Color(red: 1.0, green: 0.2, blue: 0.6),
-                                    Color(red: 1.0, green: 0.4, blue: 0.7)
-                                ],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
-                        .shadow(
-                            color: Color(red: 1.0, green: 0.2, blue: 0.6).opacity(0.4),
-                            radius: 12,
-                            y: 6
-                        )
+                        .fill(previewTheme.accentGradient)
+                        .applyShadow(previewTheme.cardShadowStyle)
                 )
             }
             .disabled(premiumManager.isLoading)
@@ -376,11 +545,11 @@ struct PaywallView: View {
             .animation(.spring(response: 0.3, dampingFraction: 0.7), value: premiumManager.isLoading)
             
             Button {
-                premiumManager.restorePurchases()
+                restorePurchases()
             } label: {
                 Text("Restore Purchases")
                     .font(.system(size: 16, weight: .medium, design: .rounded))
-                    .foregroundColor(Color(red: 0.6, green: 0.4, blue: 0.5))
+                    .foregroundColor(previewTheme.textSecondary)
             }
             .disabled(premiumManager.isLoading)
         }
@@ -391,7 +560,7 @@ struct PaywallView: View {
         VStack(spacing: 12) {
             Text("• Cancel anytime • Secure payment • Instant access")
                 .font(.system(size: 12, weight: .medium, design: .rounded))
-                .foregroundColor(Color(red: 0.6, green: 0.4, blue: 0.5))
+                .foregroundColor(previewTheme.textSecondary)
                 .multilineTextAlignment(.center)
             
             HStack(spacing: 16) {
@@ -399,77 +568,173 @@ struct PaywallView: View {
                     // Handle terms
                 }
                 .font(.system(size: 12, weight: .medium, design: .rounded))
-                .foregroundColor(Color(red: 0.6, green: 0.4, blue: 0.5))
+                .foregroundColor(previewTheme.textSecondary)
                 
                 Button("Privacy") {
                     // Handle privacy
                 }
                 .font(.system(size: 12, weight: .medium, design: .rounded))
-                .foregroundColor(Color(red: 0.6, green: 0.4, blue: 0.5))
+                .foregroundColor(previewTheme.textSecondary)
             }
-        }
-    }
-    
-    // MARK: - Actions
-    private func purchaseSelected() {
-        HapticManager.shared.buttonTap()
-        
-        switch selectedPlan {
-        case .kawaiiTheme:
-            premiumManager.purchaseFeature(.kawaiiTheme)
-        case .premiumMonthly:
-            premiumManager.purchasePremium()
         }
     }
 }
 
 // MARK: - Purchase Plans
 enum PurchasePlan: CaseIterable {
-    case kawaiiTheme
     case premiumMonthly
+    case premiumAnnual
     
     var title: String {
         switch self {
-        case .kawaiiTheme:
-            return "Kawaii Theme"
         case .premiumMonthly:
             return "Premium Monthly"
+        case .premiumAnnual:
+            return "Premium Annual"
         }
     }
     
     var description: String {
         switch self {
-        case .kawaiiTheme:
-            return "Unlock the adorable kawaii theme with pink gradients"
         case .premiumMonthly:
             return "All premium themes and features included"
+        case .premiumAnnual:
+            return "All premium themes and features included - Best Value!"
         }
     }
     
-    var price: String {
+    var fallbackPrice: String {
         switch self {
-        case .kawaiiTheme:
-            return "$2.99"
         case .premiumMonthly:
-            return "$4.99"
+            return "$1.99"
+        case .premiumAnnual:
+            return "$14.99"
         }
     }
     
     var period: String {
         switch self {
-        case .kawaiiTheme:
-            return "one-time"
         case .premiumMonthly:
             return "per month"
+        case .premiumAnnual:
+            return "per year"
         }
     }
     
     var isPopular: Bool {
         switch self {
-        case .kawaiiTheme:
-            return true
         case .premiumMonthly:
             return false
+        case .premiumAnnual:
+            return true // Annual plan is most popular
+        }
+    }
+}
+
+// MARK: - Welcome Message Overlay
+struct WelcomeMessageOverlay: View {
+    @Environment(\.theme) var theme
+    let onContinue: () -> Void
+    
+    @State private var animateContent = false
+    @State private var animateButton = false
+    
+    var body: some View {
+        ZStack {
+            // Background blur
+            Color.black.opacity(0.4)
+                .ignoresSafeArea()
+                .onTapGesture {
+                    // Prevent dismissing by tapping background
+                }
+            
+            // Welcome card
+            VStack(spacing: 32) {
+                // Success icon with animation
+                ZStack {
+                    Circle()
+                        .fill(theme.success.opacity(0.2))
+                        .frame(width: 120, height: 120)
+                        .scaleEffect(animateContent ? 1.0 : 0.8)
+                    
+                    Circle()
+                        .fill(theme.success.opacity(0.1))
+                        .frame(width: 100, height: 100)
+                        .scaleEffect(animateContent ? 1.0 : 0.7)
+                    
+                    Image(systemName: "crown.fill")
+                        .font(.system(size: 48, weight: .medium))
+                        .foregroundColor(theme.success)
+                        .scaleEffect(animateContent ? 1.0 : 0.5)
+                }
+                .animation(.spring(response: 0.8, dampingFraction: 0.6).delay(0.2), value: animateContent)
+                
+                // Welcome text
+                VStack(spacing: 16) {
+                    Text("Welcome to Premium!")
+                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .foregroundColor(theme.text)
+                        .opacity(animateContent ? 1.0 : 0.0)
+                        .offset(y: animateContent ? 0 : 20)
+                    
+                    Text("You now have access to all premium themes and features. Your selected theme has been applied!")
+                        .font(.system(size: 16, weight: .medium, design: .rounded))
+                        .foregroundColor(theme.textSecondary)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(nil)
+                        .opacity(animateContent ? 1.0 : 0.0)
+                        .offset(y: animateContent ? 0 : 20)
+                }
+                .animation(.spring(response: 0.8, dampingFraction: 0.8).delay(0.4), value: animateContent)
+                
+                // Continue button
+                Button {
+                    HapticManager.shared.buttonTap()
+                    onContinue()
+                } label: {
+                    HStack(spacing: 12) {
+                        Text("Continue to App")
+                            .font(.system(size: 18, weight: .semibold, design: .rounded))
+                        
+                        Image(systemName: "arrow.right")
+                            .font(.system(size: 16, weight: .medium))
+                    }
+                    .foregroundColor(theme.background)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 56)
+                    .background(
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(theme.accentGradient)
+                            .applyShadow(theme.cardShadowStyle)
+                    )
+                }
+                .scaleEffect(animateButton ? 1.0 : 0.9)
+                .opacity(animateButton ? 1.0 : 0.0)
+                .animation(.spring(response: 0.6, dampingFraction: 0.7).delay(0.8), value: animateButton)
+            }
+            .padding(.horizontal, 32)
+            .padding(.vertical, 40)
+            .background(
+                RoundedRectangle(cornerRadius: 24)
+                    .fill(theme.surfaceGradient)
+                    .applyShadow(theme.cardShadowStyle)
+            )
+            .padding(.horizontal, 24)
+            .scaleEffect(animateContent ? 1.0 : 0.9)
+            .opacity(animateContent ? 1.0 : 0.0)
+            .animation(.spring(response: 0.7, dampingFraction: 0.8), value: animateContent)
+        }
+        .onAppear {
+            // Trigger animations on appear
+            withAnimation {
+                animateContent = true
+            }
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                withAnimation {
+                    animateButton = true
+                }
+            }
         }
     }
 }
@@ -477,7 +742,7 @@ enum PurchasePlan: CaseIterable {
 // MARK: - Preview
 struct PaywallView_Previews: PreviewProvider {
     static var previews: some View {
-        PaywallView(targetFeature: .kawaiiTheme)
+        PaywallView()
             .environmentObject(PremiumManager())
             .environment(\.theme, LightTheme())
     }

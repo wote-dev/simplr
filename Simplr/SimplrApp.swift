@@ -9,6 +9,7 @@ import SwiftUI
 import UserNotifications
 import CoreSpotlight
 import UIKit
+import RevenueCat
 
 @main
 struct SimplrApp: App {
@@ -30,6 +31,10 @@ struct SimplrApp: App {
     }
     
     init() {
+        // Configure RevenueCat
+        Purchases.logLevel = .debug
+        Purchases.configure(withAPIKey: "appl_RGXidiAkFqiTrNXFrpRQrYgZvTY")
+        
         // Request notification permissions on app launch
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { granted, error in
             if let error = error {

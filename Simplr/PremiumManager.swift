@@ -7,157 +7,220 @@
 
 import SwiftUI
 import StoreKit
+import RevenueCat
 
 // MARK: - Premium Features
 enum PremiumFeature: String, CaseIterable {
-    case kawaiiTheme = "kawaii_theme"
-    case additionalThemes = "additional_themes"
-    case advancedFeatures = "advanced_features"
+    case premiumAccess = "premium"
     
     var displayName: String {
-        switch self {
-        case .kawaiiTheme:
-            return "Kawaii Theme"
-        case .additionalThemes:
-            return "Premium Themes"
-        case .advancedFeatures:
-            return "Advanced Features"
-        }
+        return "Premium Access"
     }
     
     var description: String {
-        switch self {
-        case .kawaiiTheme:
-            return "Adorable kawaii inspired theme with pink gradients and cute aesthetics"
-        case .additionalThemes:
-            return "Access to exclusive premium themes"
-        case .advancedFeatures:
-            return "Unlock advanced productivity features"
-        }
+        return "Unlock all premium themes and advanced features"
     }
     
     var icon: String {
-        switch self {
-        case .kawaiiTheme:
-            return "heart.fill"
-        case .additionalThemes:
-            return "paintbrush.pointed.fill"
-        case .advancedFeatures:
-            return "star.fill"
-        }
+        return "star.fill"
     }
 }
 
 // MARK: - Premium Manager
-class PremiumManager: ObservableObject {
+class PremiumManager: NSObject, ObservableObject, PurchasesDelegate {
     @Published var isPremium: Bool = false
-    @Published var purchasedFeatures: Set<PremiumFeature> = []
     @Published var isLoading: Bool = false
     @Published var showingPaywall: Bool = false
     
     private let userDefaults = UserDefaults.standard
     private let premiumKey = "isPremium"
-    private let featuresKey = "purchasedFeatures"
     
     // Product IDs for App Store
     private let productIDs: [String] = [
-        "com.danielzverev.simplr.kawaii_theme",
-        "com.danielzverev.simplr.premium_themes",
-        "com.danielzverev.simplr.premium_monthly"
+        "simplr.premium.monthly.sub",
+        "simplr.premium.annual.sub"
     ]
     
-    init() {
+    override init() {
+        super.init()
         loadPremiumStatus()
+        setupRevenueCat()
+        checkSubscriptionStatus()
+    }
+    
+    private func setupRevenueCat() {
+        // Configure RevenueCat with the provided API key
+        Purchases.configure(withAPIKey: "appl_RGXidiAkFqiTrNXFrpRQrYgZvTY")
         
-        // For development/testing - uncomment to simulate premium access
-        // Temporarily enable kawaii theme access for testing theme persistence
-        isPremium = true
-        purchasedFeatures = Set(PremiumFeature.allCases)
+        // Set up delegate to listen for subscription changes
+        Purchases.shared.delegate = self
+    }
+    
+    private func checkSubscriptionStatus() {
+        Purchases.shared.getCustomerInfo { [weak self] customerInfo, error in
+            DispatchQueue.main.async {
+                guard let self = self, let customerInfo = customerInfo, error == nil else {
+                    return
+                }
+                
+                self.updatePremiumStatus(from: customerInfo)
+            }
+        }
+    }
+    
+    // Public method to refresh subscription status
+    func refreshSubscriptionStatus() {
+        checkSubscriptionStatus()
+    }
+    
+    private func updatePremiumStatus(from customerInfo: CustomerInfo) {
+        // Simplified entitlement check - only check for the single 'premium' entitlement
+        isPremium = customerInfo.entitlements["premium"]?.isActive == true
+        savePremiumStatus()
     }
     
     // MARK: - Premium Status Management
     
     func loadPremiumStatus() {
         isPremium = userDefaults.bool(forKey: premiumKey)
-        
-        if let featuresData = userDefaults.data(forKey: featuresKey),
-           let features = try? JSONDecoder().decode(Set<PremiumFeature>.self, from: featuresData) {
-            purchasedFeatures = features
-        }
     }
     
     private func savePremiumStatus() {
         userDefaults.set(isPremium, forKey: premiumKey)
-        
-        if let featuresData = try? JSONEncoder().encode(purchasedFeatures) {
-            userDefaults.set(featuresData, forKey: featuresKey)
-        }
     }
     
     // MARK: - Feature Access
     
     func hasAccess(to feature: PremiumFeature) -> Bool {
-        return isPremium || purchasedFeatures.contains(feature)
+        return isPremium
     }
     
     func requiresPremium(for feature: PremiumFeature) -> Bool {
-        return !hasAccess(to: feature)
+        return !isPremium
     }
     
     // MARK: - Purchase Management
     
     func purchaseFeature(_ feature: PremiumFeature) {
+        guard let productId = getProductId(for: feature) else { return }
+        
         isLoading = true
         
-        // Simulate purchase process
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-            self.isLoading = false
-            
-            // For demo purposes, always succeed
-            // In production, integrate with StoreKit
-            self.purchasedFeatures.insert(feature)
-            
-            if feature == .kawaiiTheme || self.purchasedFeatures.count >= 2 {
-                self.isPremium = true
+        Purchases.shared.getOfferings { [weak self] offerings, error in
+            guard let self = self, let offerings = offerings, error == nil else {
+                DispatchQueue.main.async {
+                    self?.isLoading = false
+                }
+                return
             }
             
-            self.savePremiumStatus()
-            self.showingPaywall = false
+            // Find the package for this product
+            var packageToPurchase: Package?
+            for offering in offerings.all.values {
+                if let package = offering.availablePackages.first(where: { $0.storeProduct.productIdentifier == productId }) {
+                    packageToPurchase = package
+                    break
+                }
+            }
             
-            // Show success feedback
-            HapticManager.shared.successFeedback()
+            guard let package = packageToPurchase else {
+                DispatchQueue.main.async {
+                    self.isLoading = false
+                }
+                return
+            }
+            
+            Purchases.shared.purchase(package: package) { [weak self] transaction, customerInfo, error, userCancelled in
+                DispatchQueue.main.async {
+                    guard let self = self else { return }
+                    
+                    self.isLoading = false
+                    
+                    if let customerInfo = customerInfo, error == nil, !userCancelled {
+                        self.updatePremiumStatus(from: customerInfo)
+                        self.showingPaywall = false
+                        HapticManager.shared.successFeedback()
+                    }
+                }
+            }
         }
     }
     
+    private func getProductId(for feature: PremiumFeature) -> String? {
+        return "simplr.premium.monthly.sub"
+    }
+    
+    // Get product ID for annual subscription
+    private func getAnnualProductId() -> String {
+        return "simplr.premium.annual.sub"
+    }
+    
     func purchasePremium() {
+        // Purchase the premium monthly subscription
+        purchaseFeature(.premiumAccess)
+    }
+    
+    func purchaseAnnualPremium() {
+        // Purchase the premium annual subscription
         isLoading = true
         
-        // Simulate premium purchase
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-            self.isLoading = false
-            self.isPremium = true
-            self.purchasedFeatures = Set(PremiumFeature.allCases)
-            self.savePremiumStatus()
-            self.showingPaywall = false
+        let productId = getAnnualProductId()
+        
+        Purchases.shared.getOfferings { [weak self] offerings, error in
+            guard let self = self, let offerings = offerings, error == nil else {
+                DispatchQueue.main.async {
+                    self?.isLoading = false
+                }
+                return
+            }
             
-            // Show success feedback
-            HapticManager.shared.successFeedback()
+            // Find the package for the annual subscription
+            var packageToPurchase: Package?
+            for offering in offerings.all.values {
+                if let package = offering.availablePackages.first(where: { $0.storeProduct.productIdentifier == productId }) {
+                    packageToPurchase = package
+                    break
+                }
+            }
+            
+            guard let package = packageToPurchase else {
+                DispatchQueue.main.async {
+                    self.isLoading = false
+                }
+                return
+            }
+            
+            Purchases.shared.purchase(package: package) { [weak self] transaction, customerInfo, error, userCancelled in
+                DispatchQueue.main.async {
+                    guard let self = self else { return }
+                    
+                    self.isLoading = false
+                    
+                    if let customerInfo = customerInfo, error == nil, !userCancelled {
+                        self.updatePremiumStatus(from: customerInfo)
+                        self.showingPaywall = false
+                        HapticManager.shared.successFeedback()
+                    }
+                }
+            }
         }
     }
     
     func restorePurchases() {
         isLoading = true
         
-        // Simulate restore process
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-            self.isLoading = false
-            
-            // For demo purposes, restore some features
-            // In production, query StoreKit for actual purchases
-            self.purchasedFeatures.insert(.kawaiiTheme)
-            self.savePremiumStatus()
-            
-            HapticManager.shared.buttonTap()
+        Purchases.shared.restorePurchases { [weak self] customerInfo, error in
+            DispatchQueue.main.async {
+                guard let self = self else { return }
+                
+                self.isLoading = false
+                
+                if let customerInfo = customerInfo, error == nil {
+                    self.updatePremiumStatus(from: customerInfo)
+                }
+                
+                HapticManager.shared.buttonTap()
+            }
         }
     }
     
@@ -175,6 +238,26 @@ class PremiumManager: ObservableObject {
 
 // MARK: - Premium Feature Extensions
 extension PremiumFeature: Codable {}
+
+// MARK: - PurchasesDelegate
+extension PremiumManager {
+    func purchases(_ purchases: Purchases, receivedUpdated customerInfo: CustomerInfo) {
+        DispatchQueue.main.async {
+            self.updatePremiumStatus(from: customerInfo)
+        }
+    }
+    
+    func purchases(_ purchases: Purchases, readyForPromotedProduct product: StoreProduct, purchase startPurchase: @escaping StartPurchaseBlock) {
+        // Handle promoted purchases if needed
+        startPurchase { [weak self] transaction, customerInfo, error, userCancelled in
+            DispatchQueue.main.async {
+                if let customerInfo = customerInfo, error == nil, !userCancelled {
+                    self?.updatePremiumStatus(from: customerInfo)
+                }
+            }
+        }
+    }
+}
 
 // MARK: - View Extensions
 extension View {

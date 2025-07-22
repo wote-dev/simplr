@@ -101,7 +101,7 @@ struct ThemeSelectorView: View {
             }
         }
         .sheet(isPresented: $showingPaywall) {
-            PaywallView(targetFeature: .kawaiiTheme)
+            PaywallView()
                 .environmentObject(premiumManager)
         }
         .onChange(of: premiumManager.showingPaywall) { _, newValue in
@@ -118,7 +118,7 @@ struct ThemeSelectorView: View {
         
         if mode.isPremium && !themeManager.canAccessTheme(mode) {
             // Show paywall for premium themes
-            premiumManager.showPaywall(for: .kawaiiTheme)
+            premiumManager.showPaywall()
         } else {
             // Set debounce flag to prevent rapid changes
             isChangingTheme = true
