@@ -694,14 +694,14 @@ struct KawaiiTheme: Theme {
     let text = Color(red: 0.15, green: 0.05, blue: 0.1) // Even darker text for better readability
     let textSecondary = Color(red: 0.35, green: 0.25, blue: 0.3) // Darker secondary text
     let textTertiary = Color(red: 0.55, green: 0.45, blue: 0.5) // Improved tertiary text contrast
-    let success = Color(red: 0.7, green: 0.95, blue: 0.8) // Mint green success
+    let success = Color(red: 0.85, green: 0.45, blue: 0.55) // Kawaii pink for success - matches theme accent
     let warning = Color(red: 1.0, green: 0.85, blue: 0.6) // Soft peach warning
     let error = Color(red: 1.0, green: 0.71, blue: 0.76) // Hello Kitty pink error
     let shadow = Color(red: 0.98, green: 0.85, blue: 0.88).opacity(0.2) // Stronger shadow for better definition
     let border = Color(red: 0.85, green: 0.75, blue: 0.78).opacity(0.8) // Enhanced visibility kawaii border
     let borderSecondary = Color(red: 0.8, green: 0.7, blue: 0.73).opacity(0.9) // More visible kawaii secondary border
     let toggle = Color(red: 0.85, green: 0.45, blue: 0.55)
-    let progress = Color(red: 0.7, green: 0.95, blue: 0.8) // Mint green to match the theme's success color
+    let progress = Color(red: 0.85, green: 0.45, blue: 0.55) // Kawaii pink progress color - matches theme aesthetic
     
     var backgroundGradient: LinearGradient {
         LinearGradient(
