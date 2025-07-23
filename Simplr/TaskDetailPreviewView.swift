@@ -270,11 +270,11 @@ struct TaskDetailPreviewView: View {
                                             case .kawaii:
                                                 return category.color.kawaiiColor.opacity(0.2)
                                             case .serene:
-                                                return category.color.sereneColor.opacity(0.15)
+                                                return category.color.sereneColor.opacity(0.25) // Enhanced visibility for serene theme
                                             default:
                                                 // Check if current theme is coffee theme for subdued colors
                                                 if theme is CoffeeTheme {
-                                                    return category.color.coffeeColor.opacity(0.15)
+                                                    return category.color.coffeeColor.opacity(0.25) // Enhanced visibility for coffee theme
                                                 }
                                                 return category.color.color.opacity(0.2)
                                             }

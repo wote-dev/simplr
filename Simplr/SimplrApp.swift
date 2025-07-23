@@ -84,10 +84,23 @@ struct SimplrApp: App {
                     // Perform maintenance tasks when app becomes active
                     taskManager.performMaintenanceTasks()
                     
+                    // Force immediate badge update when app becomes active
+                    // This ensures badge is always current after app switching
+                    taskManager.updateBadgeImmediately()
+                    
                     // App became active
                 }
                 .onReceive(NotificationCenter.default.publisher(for: UIApplication.willResignActiveNotification)) { _ in
-                    // App going to background
+                    // App going to background - ensure badge is updated before backgrounding
+                    taskManager.updateBadgeImmediately()
+                }
+                .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
+                    // App coming back from background - refresh badge immediately
+                    taskManager.updateBadgeImmediately()
+                }
+                .onReceive(NotificationCenter.default.publisher(for: .badgeCountDidUpdate)) { _ in
+                    // Badge count was updated - log for debugging
+                    print("Badge count updated successfully")
                 }
                 .onReceive(NotificationCenter.default.publisher(for: .quickActionTriggered)) { notification in
                     // Handle quick action triggered from AppDelegate
@@ -109,6 +122,9 @@ struct SimplrApp: App {
                     
                     // Handle quick action if app was launched via quick action
                     handleLaunchQuickAction()
+                    
+                    // Ensure badge is updated when app first appears
+                    taskManager.updateBadgeImmediately()
                 }
                 .appStoreOptimized() // Apply App Store optimizations
                 .onContinueUserActivity(CSSearchableItemActionType) { userActivity in
@@ -284,6 +300,12 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         if let shortcutItem = launchOptions?[UIApplication.LaunchOptionsKey.shortcutItem] as? UIApplicationShortcutItem {
             launchShortcutItem = shortcutItem
         }
+        
+        // Post notification to trigger badge update after app launch
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            NotificationCenter.default.post(name: .badgeUpdateRequested, object: nil)
+        }
+        
         return true
     }
     
@@ -306,4 +328,5 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 
 extension Notification.Name {
     static let quickActionTriggered = Notification.Name("quickActionTriggered")
+    static let badgeCountDidUpdate = Notification.Name("badgeCountDidUpdate")
 }

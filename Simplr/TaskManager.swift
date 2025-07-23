@@ -157,6 +157,22 @@ class TaskManager: ObservableObject {
         }
     }
     
+    /// Force immediate badge update with current task data (most reliable method)
+    func updateBadgeImmediately() {
+        _Concurrency.Task { @MainActor in
+            await badgeManager.updateBadgeCountWithTasks(tasks)
+        }
+    }
+    
+    /// Post notification to request badge update with current tasks
+    func requestBadgeUpdate() {
+        NotificationCenter.default.post(
+            name: .badgeUpdateRequested,
+            object: nil,
+            userInfo: ["tasks": tasks]
+        )
+    }
+    
     /// Update the entire Spotlight index with current tasks
     func updateSpotlightIndex() {
         let categories = categoryManager?.categories ?? []
@@ -209,12 +225,7 @@ class TaskManager: ObservableObject {
     func addTask(_ task: Task) {
         tasks.append(task)
         invalidateCache()
-        saveTasks()
-        
-        // Update app icon badge
-        _Concurrency.Task { @MainActor in
-            badgeManager.updateBadgeCount()
-        }
+        saveTasksWithImmediateBadgeUpdate()
         
         // Index the new task in Spotlight
         let categories = categoryManager?.categories ?? []
@@ -305,12 +316,7 @@ class TaskManager: ObservableObject {
         
         // Perform batch operations
         invalidateCache()
-        saveTasks()
-        
-        // Update app icon badge
-        _Concurrency.Task { @MainActor in
-                badgeManager.updateBadgeCount()
-            }
+        saveTasksWithImmediateBadgeUpdate()
         
         // Update Spotlight index for all updated tasks
         let categories = categoryManager?.categories ?? []
@@ -351,12 +357,7 @@ class TaskManager: ObservableObject {
         
         tasks.removeAll { $0.id == task.id }
         invalidateCache()
-        saveTasks()
-        
-        // Update app icon badge
-        _Concurrency.Task { @MainActor in
-            badgeManager.updateBadgeCount()
-        }
+        saveTasksWithImmediateBadgeUpdate()
         
         // Haptic feedback for deleting a task
         HapticManager.shared.taskDeleted()
@@ -384,12 +385,7 @@ class TaskManager: ObservableObject {
             SpotlightManager.shared.indexTask(tasks[index], categories: categories)
             
             invalidateCache()
-            saveTasks()
-            
-            // Update app icon badge
-            _Concurrency.Task { @MainActor in
-                badgeManager.updateBadgeCount()
-            }
+            saveTasksWithImmediateBadgeUpdate()
         }
     }
     
@@ -418,6 +414,30 @@ class TaskManager: ObservableObject {
         PerformanceMonitor.shared.measure(PerformanceMonitor.MeasurementPoint.taskSaving) {
             if let encoded = try? JSONEncoder().encode(tasks) {
                 userDefaults.set(encoded, forKey: tasksKey)
+                
+                // Force immediate synchronization to ensure data is persisted
+                // This is critical for badge updates to work correctly
+                userDefaults.synchronize()
+                
+                // Trigger immediate widget update
+                WidgetCenter.shared.reloadAllTimelines()
+            }
+        }
+    }
+    
+    /// Enhanced save method that ensures immediate badge update synchronization
+    private func saveTasksWithImmediateBadgeUpdate() {
+        PerformanceMonitor.shared.measure(PerformanceMonitor.MeasurementPoint.taskSaving) {
+            if let encoded = try? JSONEncoder().encode(tasks) {
+                userDefaults.set(encoded, forKey: tasksKey)
+                
+                // Force immediate synchronization to ensure data is persisted
+                userDefaults.synchronize()
+                
+                // Update badge immediately with current task data to avoid race conditions
+                _Concurrency.Task { @MainActor in
+                    await badgeManager.updateBadgeCountWithTasks(tasks)
+                }
                 
                 // Trigger immediate widget update
                 WidgetCenter.shared.reloadAllTimelines()
@@ -829,7 +849,7 @@ class TaskManager: ObservableObject {
         
         if hasChanges {
             invalidateCache()
-            saveTasks()
+            saveTasksWithImmediateBadgeUpdate()
             updateSpotlightIndex()
         }
     }
@@ -888,7 +908,7 @@ class TaskManager: ObservableObject {
             }
             
             invalidateCache()
-            saveTasks()
+            saveTasksWithImmediateBadgeUpdate()
             
             // Haptic feedback for clearing tasks
             HapticManager.shared.successFeedback()
@@ -904,9 +924,9 @@ class TaskManager: ObservableObject {
         // Refresh Spotlight index to ensure it's up to date
         updateSpotlightIndex()
         
-        // Update app icon badge after maintenance
+        // Update app icon badge after maintenance with immediate update
         _Concurrency.Task { @MainActor in
-            badgeManager.updateBadgeCount()
+            await badgeManager.updateBadgeCountWithTasks(tasks)
         }
     }
 }

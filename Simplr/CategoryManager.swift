@@ -140,21 +140,25 @@ class CategoryManager: ObservableObject {
     func toggleCategoryCollapse(_ category: TaskCategory?) {
         let categoryName = category?.name ?? "Uncategorized"
         
+        // Defensive programming: Ensure we have a valid category name
+        guard !categoryName.isEmpty else { return }
+        
         // Optimized toggle with single haptic feedback and immediate save for reliability
         let wasCollapsed = collapsedCategories.contains(categoryName)
         
+        // Perform the toggle operation atomically
         if wasCollapsed {
             collapsedCategories.remove(categoryName)
         } else {
             collapsedCategories.insert(categoryName)
         }
         
-        // Single haptic feedback for better performance
-        HapticManager.shared.selectionChange()
-        
         // Immediate save for better state persistence reliability
         // This ensures user preferences are never lost
         saveCollapsedCategories()
+        
+        // Single haptic feedback for better performance (after state change)
+        HapticManager.shared.selectionChange()
     }
     
     func isCategoryCollapsed(_ category: TaskCategory?) -> Bool {

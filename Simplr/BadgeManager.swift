@@ -96,6 +96,26 @@ class BadgeManager: ObservableObject {
         }
     }
     
+    /// Update badge count with provided task data to avoid UserDefaults race conditions
+    /// This method is optimized for immediate updates when tasks are modified
+    func updateBadgeCountWithTasks(_ tasks: [Simplr.Task]) async {
+        guard isBadgeEnabled else {
+            clearBadge()
+            return
+        }
+        
+        updateTimer?.invalidate()
+        
+        let badgeCount = calculateBadgeCount(from: tasks)
+        setBadgeCount(badgeCount)
+        
+        // Update cache with the calculated count
+        lastCalculatedCount = badgeCount
+        lastCalculationTime = Date()
+        
+        logger.debug("Updated badge count with provided tasks: \(badgeCount)")
+    }
+    
     /// Clear the app icon badge
     func clearBadge() {
         setBadgeCount(0)
@@ -104,13 +124,13 @@ class BadgeManager: ObservableObject {
     // MARK: - Private Methods
     
     private func setupNotificationObservers() {
-        // Update badge when app becomes active
+        // Update badge when app becomes active with immediate update
         NotificationCenter.default.addObserver(
             forName: UIApplication.didBecomeActiveNotification,
             object: nil,
             queue: .main
         ) { [weak self] _ in
-            self?.updateBadgeCount()
+            self?.updateBadgeCountImmediately()
         }
         
         // Clear cache when app goes to background
@@ -129,6 +149,21 @@ class BadgeManager: ObservableObject {
             queue: .main
         ) { [weak self] _ in
             self?.invalidateCache()
+        }
+        
+        // Listen for task updates to ensure immediate badge updates
+        NotificationCenter.default.addObserver(
+            forName: .badgeUpdateRequested,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            if let tasks = notification.userInfo?["tasks"] as? [Simplr.Task] {
+                _Concurrency.Task { @MainActor in
+                    await self?.updateBadgeCountWithTasks(tasks)
+                }
+            } else {
+                self?.updateBadgeCountImmediately()
+            }
         }
     }
     
@@ -151,6 +186,18 @@ class BadgeManager: ObservableObject {
             return 0
         }
         
+        let pendingCount = calculateBadgeCount(from: tasks)
+        
+        // Cache the result
+        lastCalculatedCount = pendingCount
+        lastCalculationTime = now
+        
+        logger.debug("Calculated badge count from UserDefaults: \(pendingCount)")
+        return pendingCount
+    }
+    
+    /// Calculate badge count from provided task array (optimized for immediate updates)
+    private func calculateBadgeCount(from tasks: [Simplr.Task]) -> Int {
         // Calculate pending tasks count (incomplete tasks that are due today, overdue, or have no due date)
         let calendar = Calendar.current
         let today = Date()
@@ -170,11 +217,6 @@ class BadgeManager: ObservableObject {
             }
         }.count
         
-        // Cache the result
-        lastCalculatedCount = pendingCount
-        lastCalculationTime = now
-        
-        logger.debug("Calculated badge count: \(pendingCount)")
         return pendingCount
     }
     
@@ -188,24 +230,47 @@ class BadgeManager: ObservableObject {
         }
         
         // Only update if the count has changed
-        guard count != currentBadgeCount else { return }
+        guard count != currentBadgeCount else { 
+            logger.debug("Badge count unchanged: \(count)")
+            return 
+        }
         
-        // Update the app icon badge
-        UNUserNotificationCenter.current().setBadgeCount(count) { error in
-            if let error = error {
-                self.logger.error("Error setting badge count: \(error.localizedDescription)")
+        // Update the app icon badge with enhanced error handling
+        UNUserNotificationCenter.current().setBadgeCount(count) { [weak self] error in
+            DispatchQueue.main.async {
+                if let error = error {
+                    self?.logger.error("Error setting badge count: \(error.localizedDescription)")
+                    // Retry once after a short delay
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        UNUserNotificationCenter.current().setBadgeCount(count) { retryError in
+                            if let retryError = retryError {
+                                self?.logger.error("Retry failed for badge count: \(retryError.localizedDescription)")
+                            } else {
+                                self?.logger.info("Badge count set successfully on retry: \(count)")
+                                self?.currentBadgeCount = count
+                                // Post notification for successful retry
+                                NotificationCenter.default.post(
+                                    name: .badgeCountDidUpdate,
+                                    object: nil,
+                                    userInfo: ["badgeCount": count]
+                                )
+                            }
+                        }
+                    }
+                } else {
+                    self?.logger.info("Badge count set successfully: \(count)")
+                    self?.currentBadgeCount = count
+                    // Post notification for successful badge update
+                    NotificationCenter.default.post(
+                        name: .badgeCountDidUpdate,
+                        object: nil,
+                        userInfo: ["badgeCount": count]
+                    )
+                }
             }
         }
-        currentBadgeCount = count
         
         logger.info("Updated app icon badge to: \(count)")
-        
-        // Post notification for other parts of the app that might be interested
-        NotificationCenter.default.post(
-            name: .badgeCountDidUpdate,
-            object: nil,
-            userInfo: ["badgeCount": count]
-        )
     }
     
     private func invalidateCache() {
@@ -217,7 +282,7 @@ class BadgeManager: ObservableObject {
 // MARK: - Notification Names
 
 extension Notification.Name {
-    static let badgeCountDidUpdate = Notification.Name("badgeCountDidUpdate")
+    static let badgeUpdateRequested = Notification.Name("badgeUpdateRequested")
 }
 
 // MARK: - Badge Count Extensions

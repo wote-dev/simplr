@@ -155,19 +155,19 @@ enum CategoryColor: String, CaseIterable, Codable {
         )
     }
     
-    /// Subdued colors for serene theme - muted and calming
+    /// Enhanced pastel colors for serene theme - more apparent yet still calming
     var sereneColor: Color {
         switch self {
-        case .blue: return Color(red: 0.70, green: 0.78, blue: 0.88)     // Muted sky blue
-        case .green: return Color(red: 0.75, green: 0.85, blue: 0.78)    // Muted sage green
-        case .orange: return Color(red: 0.88, green: 0.80, blue: 0.72)   // Muted terracotta
-        case .red: return Color(red: 0.85, green: 0.72, blue: 0.75)      // Muted rose
-        case .purple: return Color(red: 0.80, green: 0.75, blue: 0.88)   // Muted lavender
-        case .indigo: return Color(red: 0.75, green: 0.78, blue: 0.88)   // Muted periwinkle
-        case .pink: return Color(red: 0.88, green: 0.75, blue: 0.82)     // Muted blush
-        case .teal: return Color(red: 0.70, green: 0.85, blue: 0.82)     // Muted aqua
-        case .yellow: return Color(red: 0.88, green: 0.85, blue: 0.72)   // Muted cream
-        case .gray: return Color(red: 0.78, green: 0.78, blue: 0.82)     // Muted silver
+        case .blue: return Color(red: 0.65, green: 0.75, blue: 0.90)     // Enhanced serene blue
+        case .green: return Color(red: 0.70, green: 0.88, blue: 0.75)    // Enhanced serene sage
+        case .orange: return Color(red: 0.92, green: 0.78, blue: 0.68)   // Enhanced serene terracotta
+        case .red: return Color(red: 0.88, green: 0.68, blue: 0.72)      // Enhanced serene rose
+        case .purple: return Color(red: 0.78, green: 0.70, blue: 0.92)   // Enhanced serene lavender
+        case .indigo: return Color(red: 0.70, green: 0.75, blue: 0.90)   // Enhanced serene periwinkle
+        case .pink: return Color(red: 0.92, green: 0.70, blue: 0.80)     // Enhanced serene blush
+        case .teal: return Color(red: 0.65, green: 0.88, blue: 0.80)     // Enhanced serene aqua
+        case .yellow: return Color(red: 0.92, green: 0.88, blue: 0.68)   // Enhanced serene cream
+        case .gray: return Color(red: 0.75, green: 0.75, blue: 0.85)     // Enhanced serene silver
         }
     }
     
@@ -176,19 +176,19 @@ enum CategoryColor: String, CaseIterable, Codable {
         sereneColor.opacity(0.25)
     }
     
-    /// Serene dark color for text and borders
+    /// Enhanced serene dark color for text and borders
     var sereneDarkColor: Color {
         switch self {
-        case .blue: return Color(red: 0.55, green: 0.65, blue: 0.75)
-        case .green: return Color(red: 0.60, green: 0.72, blue: 0.65)
-        case .orange: return Color(red: 0.75, green: 0.65, blue: 0.58)
-        case .red: return Color(red: 0.72, green: 0.58, blue: 0.62)
-        case .purple: return Color(red: 0.65, green: 0.60, blue: 0.75)
-        case .indigo: return Color(red: 0.60, green: 0.65, blue: 0.75)
-        case .pink: return Color(red: 0.75, green: 0.60, blue: 0.68)
-        case .teal: return Color(red: 0.55, green: 0.72, blue: 0.68)
-        case .yellow: return Color(red: 0.75, green: 0.72, blue: 0.58)
-        case .gray: return Color(red: 0.65, green: 0.65, blue: 0.68)
+        case .blue: return Color(red: 0.50, green: 0.62, blue: 0.78)
+        case .green: return Color(red: 0.55, green: 0.75, blue: 0.62)
+        case .orange: return Color(red: 0.78, green: 0.62, blue: 0.52)
+        case .red: return Color(red: 0.75, green: 0.52, blue: 0.58)
+        case .purple: return Color(red: 0.62, green: 0.55, blue: 0.78)
+        case .indigo: return Color(red: 0.55, green: 0.62, blue: 0.78)
+        case .pink: return Color(red: 0.78, green: 0.55, blue: 0.65)
+        case .teal: return Color(red: 0.50, green: 0.75, blue: 0.68)
+        case .yellow: return Color(red: 0.78, green: 0.75, blue: 0.52)
+        case .gray: return Color(red: 0.62, green: 0.62, blue: 0.72)
         }
     }
     
@@ -201,19 +201,19 @@ enum CategoryColor: String, CaseIterable, Codable {
         )
     }
     
-    /// Subdued colors for coffee theme - warm, muted tones that blend with coffee aesthetic
+    /// Enhanced warm pastel colors for coffee theme - more apparent yet still warm and cozy
     var coffeeColor: Color {
         switch self {
-        case .blue: return Color(red: 0.72, green: 0.76, blue: 0.82)     // Muted coffee-blue
-        case .green: return Color(red: 0.76, green: 0.80, blue: 0.72)    // Muted coffee-sage
-        case .orange: return Color(red: 0.82, green: 0.76, blue: 0.68)   // Muted coffee-terracotta
-        case .red: return Color(red: 0.80, green: 0.70, blue: 0.68)      // Muted coffee-rose
-        case .purple: return Color(red: 0.78, green: 0.72, blue: 0.80)   // Muted coffee-lavender
-        case .indigo: return Color(red: 0.74, green: 0.76, blue: 0.82)   // Muted coffee-periwinkle
-        case .pink: return Color(red: 0.82, green: 0.72, blue: 0.76)     // Muted coffee-blush
-        case .teal: return Color(red: 0.70, green: 0.80, blue: 0.78)     // Muted coffee-aqua
-        case .yellow: return Color(red: 0.82, green: 0.80, blue: 0.68)   // Muted coffee-cream
-        case .gray: return Color(red: 0.76, green: 0.74, blue: 0.72)     // Muted coffee-silver
+        case .blue: return Color(red: 0.68, green: 0.75, blue: 0.85)     // Enhanced coffee-blue
+        case .green: return Color(red: 0.72, green: 0.85, blue: 0.68)    // Enhanced coffee-sage
+        case .orange: return Color(red: 0.88, green: 0.72, blue: 0.62)   // Enhanced coffee-terracotta
+        case .red: return Color(red: 0.85, green: 0.65, blue: 0.62)      // Enhanced coffee-rose
+        case .purple: return Color(red: 0.80, green: 0.68, blue: 0.85)   // Enhanced coffee-lavender
+        case .indigo: return Color(red: 0.70, green: 0.75, blue: 0.85)   // Enhanced coffee-periwinkle
+        case .pink: return Color(red: 0.88, green: 0.68, blue: 0.75)     // Enhanced coffee-blush
+        case .teal: return Color(red: 0.65, green: 0.85, blue: 0.78)     // Enhanced coffee-aqua
+        case .yellow: return Color(red: 0.88, green: 0.82, blue: 0.62)   // Enhanced coffee-cream
+        case .gray: return Color(red: 0.78, green: 0.75, blue: 0.72)     // Enhanced coffee-silver
         }
     }
     
@@ -222,19 +222,19 @@ enum CategoryColor: String, CaseIterable, Codable {
         coffeeColor.opacity(0.25)
     }
     
-    /// Coffee dark color for text and borders
+    /// Enhanced coffee dark color for text and borders
     var coffeeDarkColor: Color {
         switch self {
-        case .blue: return Color(red: 0.58, green: 0.62, blue: 0.68)
-        case .green: return Color(red: 0.62, green: 0.68, blue: 0.58)
-        case .orange: return Color(red: 0.68, green: 0.62, blue: 0.54)
-        case .red: return Color(red: 0.68, green: 0.56, blue: 0.54)
-        case .purple: return Color(red: 0.64, green: 0.58, blue: 0.68)
-        case .indigo: return Color(red: 0.60, green: 0.62, blue: 0.68)
-        case .pink: return Color(red: 0.68, green: 0.58, blue: 0.62)
-        case .teal: return Color(red: 0.56, green: 0.68, blue: 0.64)
-        case .yellow: return Color(red: 0.68, green: 0.66, blue: 0.54)
-        case .gray: return Color(red: 0.62, green: 0.60, blue: 0.58)
+        case .blue: return Color(red: 0.52, green: 0.62, blue: 0.72)
+        case .green: return Color(red: 0.58, green: 0.72, blue: 0.52)
+        case .orange: return Color(red: 0.72, green: 0.58, blue: 0.48)
+        case .red: return Color(red: 0.72, green: 0.50, blue: 0.48)
+        case .purple: return Color(red: 0.65, green: 0.52, blue: 0.72)
+        case .indigo: return Color(red: 0.55, green: 0.62, blue: 0.72)
+        case .pink: return Color(red: 0.72, green: 0.52, blue: 0.62)
+        case .teal: return Color(red: 0.50, green: 0.72, blue: 0.65)
+        case .yellow: return Color(red: 0.72, green: 0.68, blue: 0.48)
+        case .gray: return Color(red: 0.65, green: 0.62, blue: 0.58)
         }
     }
     

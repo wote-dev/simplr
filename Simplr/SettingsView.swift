@@ -628,7 +628,7 @@ struct SettingsView: View {
             } else if isSerene {
                 return category.color.sereneColor.opacity(0.25)
             } else if isCoffee {
-                return category.color.coffeeColor.opacity(0.2)
+                return category.color.coffeeColor.opacity(0.25) // Enhanced visibility for coffee theme
             } else {
                 return category.color.color.opacity(0.3)
             }

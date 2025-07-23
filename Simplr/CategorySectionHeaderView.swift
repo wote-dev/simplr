@@ -62,24 +62,14 @@ struct CategorySectionHeaderView: View {
     }
     
     var body: some View {
-        Button(action: {
-            withAnimation(.easeInOut(duration: 0.25)) {
-                if let onToggleCollapse = onToggleCollapse {
-                    onToggleCollapse()
-                } else {
-                    categoryManager.toggleCategoryCollapse(category)
-                }
-            }
-            HapticManager.shared.buttonTap()
-        }) {
-            HStack(spacing: 12) {
-                // Simple Collapse/Expand chevron with clean rotation
-                Image(systemName: "chevron.down")
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundColor(theme.textSecondary)
-                    .rotationEffect(.degrees(isCollapsed ? -90 : 0))
-                    .animation(.easeInOut(duration: 0.25), value: isCollapsed)
-                    .frame(width: 12, height: 12)
+        HStack(spacing: 12) {
+            // Simple Collapse/Expand chevron with clean rotation
+            Image(systemName: "chevron.down")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundColor(theme.textSecondary)
+                .rotationEffect(.degrees(isCollapsed ? -90 : 0))
+                .animation(.easeInOut(duration: 0.25), value: isCollapsed)
+                .frame(width: 12, height: 12)
             // Category icon/indicator
             if let category = category {
                 if isUrgentCategory {
@@ -143,9 +133,9 @@ struct CategorySectionHeaderView: View {
                                 )
                                 .opacity({
                                     if themeManager.themeMode == .serene {
-                                        return 0.2
+                                        return 0.35 // Enhanced visibility for serene theme
                                     } else if theme is CoffeeTheme {
-                                        return 0.25 // Slightly more subdued for coffee theme
+                                        return 0.4 // Enhanced visibility for coffee theme
                                     } else {
                                         return 0.3
                                     }
@@ -154,9 +144,9 @@ struct CategorySectionHeaderView: View {
                         .shadow(
                             color: categoryColor.opacity({
                                 if themeManager.themeMode == .serene {
-                                    return 0.15
+                                    return 0.25 // Enhanced shadow visibility for serene theme
                                 } else if theme is CoffeeTheme {
-                                    return 0.12 // More subdued shadow for coffee theme
+                                    return 0.22 // Enhanced shadow visibility for coffee theme
                                 } else {
                                     return 0.2
                                 }
@@ -208,32 +198,33 @@ struct CategorySectionHeaderView: View {
                         .fill(theme.surfaceSecondary)
                 )
             
-                Spacer()
-            }
+            Spacer()
         }
-        .buttonStyle(PlainButtonStyle())
         .padding(.horizontal, 20)
         .padding(.vertical, 12)
         .background(Color.clear)
         .scaleEffect(isPressed ? 0.98 : 1.0)
         .animation(.interpolatingSpring(stiffness: 500, damping: 30), value: isPressed)
         .contentShape(Rectangle()) // Make entire area tappable
-        .allowsHitTesting(true)
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 0)
-                .onChanged { _ in
-                    if !isPressed {
-                        withAnimation(.interpolatingSpring(stiffness: 500, damping: 30)) {
-                            isPressed = true
-                        }
-                    }
+        .onTapGesture {
+            // Immediate state change for better responsiveness
+            withAnimation(.easeInOut(duration: 0.25)) {
+                if let onToggleCollapse = onToggleCollapse {
+                    onToggleCollapse()
+                } else {
+                    categoryManager.toggleCategoryCollapse(category)
                 }
-                .onEnded { _ in
-                    withAnimation(.interpolatingSpring(stiffness: 500, damping: 30)) {
-                        isPressed = false
-                    }
-                }
-        )
+            }
+            
+            // Haptic feedback
+            HapticManager.shared.buttonTap()
+        }
+        .onLongPressGesture(minimumDuration: 0, maximumDistance: .infinity, pressing: { pressing in
+            // Handle press state for visual feedback
+            withAnimation(.interpolatingSpring(stiffness: 500, damping: 30)) {
+                isPressed = pressing
+            }
+        }, perform: {})
     }
 }
 

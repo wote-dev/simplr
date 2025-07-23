@@ -472,12 +472,14 @@ struct TodayView: View {
                         VStack(spacing: 8) {
                             // Category section header
                             CategorySectionHeaderView(
-                                category: categoryGroup.category ?? TaskCategory.uncategorized,
+                                category: categoryGroup.category,
                                 taskCount: categoryGroup.tasks.count
                             )
                             
-                            // Tasks in this category with simple fade animation
-                            if !categoryManager.isCategoryCollapsed(categoryGroup.category) {
+                            // Tasks in this category with optimized animation
+                            let isCollapsed = categoryManager.isCategoryCollapsed(categoryGroup.category)
+                            
+                            if !isCollapsed {
                                 LazyVStack(spacing: 8) {
                                     ForEach(categoryGroup.tasks, id: \.id) { task in
                                         taskRowWithEffects(task)
@@ -488,10 +490,13 @@ struct TodayView: View {
                                 .padding(.bottom, 8)
                                 .padding(.horizontal, 8)
                                 .clipped() // Optimize rendering performance
-                                .transition(.opacity)
+                                .transition(.asymmetric(
+                                    insertion: .opacity.combined(with: .scale(scale: 0.95, anchor: .top)),
+                                    removal: .opacity.combined(with: .scale(scale: 0.95, anchor: .top))
+                                ))
+                                .animation(.easeInOut(duration: 0.25), value: isCollapsed)
                             }
                         }
-                        .animation(.easeInOut(duration: 0.25), value: categoryManager.isCategoryCollapsed(categoryGroup.category))
                     }
                 }
             }

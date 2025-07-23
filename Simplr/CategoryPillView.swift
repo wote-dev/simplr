@@ -156,9 +156,9 @@ struct CategoryPillView: View {
                                     )
                                     .opacity({
                                         if themeManager.themeMode == .serene {
-                                            return 0.2
+                                            return 0.35 // Enhanced visibility for serene theme
                                         } else if theme is CoffeeTheme {
-                                            return 0.25 // Slightly more subtle for coffee theme
+                                            return 0.4 // Enhanced visibility for coffee theme
                                         } else {
                                             return 0.3
                                         }
