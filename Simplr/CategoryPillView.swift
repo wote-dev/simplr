@@ -366,8 +366,15 @@ struct CreateCategoryView: View {
                         .textSelection(.enabled)
                         .selectionDisabled(false)
                         .onSubmit {
-                            if isValidName {
-                                createCategory()
+                            // Smooth keyboard dismissal with gentle spring animation
+                            UIView.animate(withDuration: 0.45, delay: 0, usingSpringWithDamping: 0.9, initialSpringVelocity: 0.3, options: [.curveEaseInOut, .allowUserInteraction, .beginFromCurrentState]) {
+                                isNameFocused = false
+                                UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                            } completion: { _ in
+                                if isValidName {
+                                    createCategory()
+                                }
+                                HapticManager.shared.buttonTap()
                             }
                         }
                         .padding(16)
@@ -432,7 +439,7 @@ struct CreateCategoryView: View {
             }
             .navigationTitle("New Category")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbarColorScheme(theme.background == .black || theme.background == Color(red: 0.02, green: 0.02, blue: 0.02) ? .dark : .light, for: .navigationBar)
+            .toolbarColorScheme(theme.background == .black || theme.background == Color(red: 0.02, green: 0.02, blue: 0.02) || theme.background == Color(red: 0.08, green: 0.05, blue: 0.15) || theme.background == Color(red: 0.05, green: 0.08, blue: 0.15) ? .dark : .light, for: .navigationBar)
             .toolbarBackground(theme.surface.opacity(0.95), for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
@@ -469,7 +476,13 @@ struct CreateCategoryView: View {
     }
     
     private func hideKeyboard() {
-        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+        // Smooth keyboard dismissal with gentle spring animation for consistency
+        UIView.animate(withDuration: 0.45, delay: 0, usingSpringWithDamping: 0.9, initialSpringVelocity: 0.3, options: [.curveEaseInOut, .allowUserInteraction, .beginFromCurrentState]) {
+            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+        } completion: { _ in
+            // Subtle haptic feedback for smooth user experience
+            HapticManager.shared.buttonTap()
+        }
     }
 }
 

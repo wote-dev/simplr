@@ -370,12 +370,7 @@ struct UpcomingView: View {
                     .animation(.adaptiveSmooth.delay(0.1), value: upcomingTasks.isEmpty)
             }
         }
-        .background(
-            // Consistent background with other views
-            Rectangle()
-                .fill(theme.backgroundGradient)
-                .ignoresSafeArea(edges: .top)
-        )
+        // Remove background completely for seamless blending
     }
     
     private var emptyStateView: some View {

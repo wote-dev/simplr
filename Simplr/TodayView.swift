@@ -407,21 +407,7 @@ struct TodayView: View {
                     .animation(.adaptiveSmooth.delay(0.1), value: todayTasks.isEmpty)
             }
         }
-        .background(
-            // Subtle background enhancement
-            Rectangle()
-                .fill(
-                    LinearGradient(
-                        colors: [
-                            theme.background,
-                            theme.background.opacity(0.98)
-                        ],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                )
-                .ignoresSafeArea(edges: .top)
-        )
+        // Remove background completely for seamless blending
     }
     
     private var emptyStateView: some View {

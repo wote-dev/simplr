@@ -274,7 +274,7 @@ struct SettingsView: View {
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.large)
             .navigationBarBackButtonHidden(true)
-            .toolbarColorScheme(theme.background == .black || theme.background == Color(red: 0.02, green: 0.02, blue: 0.02) ? .dark : .light, for: .navigationBar)
+            .toolbarColorScheme(theme.background == .black || theme.background == Color(red: 0.02, green: 0.02, blue: 0.02) || theme.background == Color(red: 0.08, green: 0.05, blue: 0.15) || theme.background == Color(red: 0.05, green: 0.08, blue: 0.15) ? .dark : .light, for: .navigationBar)
             .toolbarBackground(theme.surface.opacity(0.95), for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {

@@ -62,6 +62,100 @@ class UIOptimizer: ObservableObject {
         }
     }
     
+    /// Optimized spring animation for form sections with performance considerations
+    static func formSectionAnimation() -> Animation {
+        if PerformanceConfig.shouldUseReducedAnimations {
+            return .easeInOut(duration: 0.2)
+        }
+        
+        let devicePerformance = getDevicePerformanceLevel()
+        switch devicePerformance {
+        case .high:
+            return PerformanceConfig.Animation.optimizedFormSection
+        case .medium:
+            return .spring(
+                response: PerformanceConfig.Animation.formSectionResponse + 0.05, 
+                dampingFraction: PerformanceConfig.Animation.formSectionDamping + 0.05, 
+                blendDuration: 0.05
+            )
+        case .low:
+            return .easeInOut(duration: 0.25)
+        }
+    }
+    
+    /// Optimized animation for date picker transitions with smooth performance
+    static func datePickerAnimation() -> Animation {
+        if PerformanceConfig.shouldUseReducedAnimations {
+            return .easeInOut(duration: 0.15)
+        }
+        
+        let devicePerformance = getDevicePerformanceLevel()
+        switch devicePerformance {
+        case .high:
+            return PerformanceConfig.Animation.optimizedDatePicker
+        case .medium:
+            return .spring(
+                response: PerformanceConfig.Animation.datePickerResponse + 0.05, 
+                dampingFraction: PerformanceConfig.Animation.datePickerDamping - 0.05, 
+                blendDuration: 0.05
+            )
+        case .low:
+            return .easeInOut(duration: 0.2)
+        }
+    }
+    
+    /// Optimized animation for toggle switches and micro-interactions
+    static func toggleAnimation() -> Animation {
+        if PerformanceConfig.shouldUseReducedAnimations {
+            return .easeInOut(duration: 0.1)
+        }
+        
+        let devicePerformance = getDevicePerformanceLevel()
+        switch devicePerformance {
+        case .high:
+            return PerformanceConfig.Animation.optimizedToggle
+        case .medium:
+            return .spring(
+                response: PerformanceConfig.Animation.toggleResponse + 0.05, 
+                dampingFraction: PerformanceConfig.Animation.toggleDamping, 
+                blendDuration: 0.02
+            )
+        case .low:
+            return .easeInOut(duration: 0.15)
+        }
+    }
+    
+    /// High-performance transition for content appearance/disappearance
+    static func contentTransition() -> AnyTransition {
+        if PerformanceConfig.shouldUseReducedAnimations {
+            return AnyTransition.opacity
+        }
+        
+        let devicePerformance = getDevicePerformanceLevel()
+        switch devicePerformance {
+        case .high:
+            return AnyTransition.asymmetric(
+                insertion: .scale(scale: 0.95, anchor: .top)
+                    .combined(with: .opacity)
+                    .combined(with: .move(edge: .top))
+                    .animation(formSectionAnimation()),
+                removal: .scale(scale: 0.95, anchor: .top)
+                    .combined(with: .opacity)
+                    .combined(with: .move(edge: .top))
+                    .animation(datePickerAnimation())
+            )
+        case .medium:
+            return AnyTransition.asymmetric(
+                insertion: .opacity.combined(with: .scale(scale: 0.98))
+                    .animation(formSectionAnimation()),
+                removal: .opacity.combined(with: .scale(scale: 0.98))
+                    .animation(datePickerAnimation())
+            )
+        case .low:
+            return AnyTransition.opacity.animation(.easeInOut(duration: 0.2))
+        }
+    }
+    
     /// Determine device performance level for optimization
     private static func getDevicePerformanceLevel() -> DevicePerformance {
         let processorCount = ProcessInfo.processInfo.processorCount

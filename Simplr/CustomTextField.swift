@@ -160,8 +160,12 @@ struct CustomTextField: UIViewRepresentable {
         }
 
         func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-            textField.resignFirstResponder()
-            parent.onCommit?()
+            // Smooth keyboard dismissal with gentle spring animation
+            UIView.animate(withDuration: 0.45, delay: 0, usingSpringWithDamping: 0.9, initialSpringVelocity: 0.3, options: [.curveEaseInOut, .allowUserInteraction, .beginFromCurrentState]) {
+                textField.resignFirstResponder()
+            } completion: { _ in
+                self.parent.onCommit?()
+            }
             return true
         }
         
@@ -198,6 +202,21 @@ struct CustomTextField: UIViewRepresentable {
             updateBorderForFocusState(textView, isFocused: false)
             isTextSelectionActive = false
             parent.onCommit?()
+        }
+        
+        // Handle return key for multiline text views
+        func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
+            // Check if return key was pressed
+            if text == "\n" {
+                // For single-line behavior, dismiss keyboard smoothly with gentle animation
+                UIView.animate(withDuration: 0.45, delay: 0, usingSpringWithDamping: 0.9, initialSpringVelocity: 0.3, options: [.curveEaseInOut, .allowUserInteraction, .beginFromCurrentState]) {
+                    textView.resignFirstResponder()
+                } completion: { _ in
+                    self.parent.onCommit?()
+                }
+                return false // Prevent the newline from being added
+            }
+            return true
         }
         
         // MARK: - Enhanced Text Selection Support

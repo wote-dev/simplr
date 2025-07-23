@@ -15,6 +15,8 @@ enum ThemeMode: String, CaseIterable {
     case lightGreen = "lightGreen"
     case minimal = "minimal"
     case dark = "dark"
+    case darkBlue = "darkBlue"
+    case darkPurple = "darkPurple"
     case system = "system"
     case kawaii = "kawaii"
     case serene = "serene"
@@ -27,6 +29,8 @@ enum ThemeMode: String, CaseIterable {
         case .lightGreen: return "Light Green"
         case .minimal: return "Minimal"
         case .dark: return "Dark"
+        case .darkBlue: return "Dark Blue"
+        case .darkPurple: return "Dark Purple"
         case .system: return "System"
         case .kawaii: return "Kawaii"
         case .serene: return "Serene"
@@ -41,6 +45,8 @@ enum ThemeMode: String, CaseIterable {
         case .lightGreen: return "leaf.fill"
         case .minimal: return "circle.fill"
         case .dark: return "moon.fill"
+        case .darkBlue: return "moon.circle.fill"
+        case .darkPurple: return "moon.stars.fill"
         case .system: return "circle.lefthalf.filled"
         case .kawaii: return "heart.fill"
         case .serene: return "cloud.fill"
@@ -52,7 +58,7 @@ enum ThemeMode: String, CaseIterable {
         switch self {
         case .light, .lightBlue, .minimal, .dark, .system:
             return false
-        case .lightGreen, .kawaii, .serene, .coffee:
+        case .lightGreen, .darkBlue, .darkPurple, .kawaii, .serene, .coffee:
             return true
         }
     }
@@ -125,6 +131,10 @@ class ThemeManager: ObservableObject {
             case .minimal:
                 themeMode = .dark
             case .dark:
+                themeMode = .darkBlue
+            case .darkBlue:
+                themeMode = .darkPurple
+            case .darkPurple:
                 themeMode = .light
             case .system:
                 // If in system mode, toggle to opposite of current appearance
@@ -166,6 +176,24 @@ class ThemeManager: ObservableObject {
             newTheme = MinimalTheme()
         case .dark:
             newTheme = DarkTheme()
+        case .darkBlue:
+            // Check if user has access to Dark Blue theme
+            if let premiumManager = premiumManager,
+               premiumManager.hasAccess(to: .premiumAccess) {
+                newTheme = DarkBlueTheme()
+            } else {
+                // Fallback to dark theme if no access, but preserve the theme selection
+                newTheme = DarkTheme()
+            }
+        case .darkPurple:
+            // Check if user has access to Dark Purple theme
+            if let premiumManager = premiumManager,
+               premiumManager.hasAccess(to: .premiumAccess) {
+                newTheme = DarkPurpleTheme()
+            } else {
+                // Fallback to dark theme if no access, but preserve the theme selection
+                newTheme = DarkTheme()
+            }
         case .system:
             newTheme = isDarkMode ? DarkTheme() : PlainLightTheme()
         case .kawaii:
@@ -253,7 +281,7 @@ class ThemeManager: ObservableObject {
         }
         
         switch mode {
-        case .kawaii, .lightGreen, .serene, .coffee:
+        case .kawaii, .lightGreen, .darkBlue, .darkPurple, .serene, .coffee:
             return premiumManager.hasAccess(to: .premiumAccess)
         default:
             return true

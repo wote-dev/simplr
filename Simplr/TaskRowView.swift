@@ -92,6 +92,15 @@ struct TaskRowView: View {
         return isUrgentTaskMemoized
     }
     
+    // Cached icon colors for performance optimization during animations
+    private var cachedDeleteIconColor: Color {
+        getIconColor(for: theme.error)
+    }
+    
+    private var cachedEditIconColor: Color {
+        getIconColor(for: isInCompletedView ? theme.warning : theme.primary)
+    }
+    
     // Category-based glow effect properties removed
     
     var body: some View {
@@ -124,14 +133,14 @@ struct TaskRowView: View {
                                 }) {
                                     Image(systemName: "trash")
                                         .font(.system(size: 18, weight: .bold))
-                                        .foregroundColor(getIconColor(for: theme.error))
+                                        .foregroundColor(cachedDeleteIconColor)
                                 }
                                 .buttonStyle(PlainButtonStyle())
                             } else {
-                                // Preview icon with consistent sizing
+                                // Preview icon with consistent sizing and cached color for performance
                                 Image(systemName: "trash")
                                     .font(.system(size: showDeleteIcon ? 18 : 14, weight: .bold))
-                                    .foregroundColor(getIconColor(for: theme.error))
+                                    .foregroundColor(cachedDeleteIconColor)
                                     .scaleEffect(1.0)
                                     .animation(.interactiveSpring(response: 0.25, dampingFraction: 0.8, blendDuration: 0), value: showDeleteIcon)
                             }
@@ -161,14 +170,14 @@ struct TaskRowView: View {
                                 }) {
                                     Image(systemName: isInCompletedView ? "arrow.uturn.backward" : "pencil")
                                         .font(.system(size: 18, weight: .bold))
-                                        .foregroundColor(getIconColor(for: isInCompletedView ? theme.warning : theme.primary))
+                                        .foregroundColor(cachedEditIconColor)
                                 }
                                 .buttonStyle(PlainButtonStyle())
                             } else {
-                                // Preview icon with consistent sizing
+                                // Preview icon with consistent sizing and cached color for performance
                                 Image(systemName: isInCompletedView ? "arrow.uturn.backward" : "pencil")
                                     .font(.system(size: showEditIcon ? 18 : 14, weight: .bold))
-                                    .foregroundColor(getIconColor(for: isInCompletedView ? theme.warning : theme.primary))
+                                    .foregroundColor(cachedEditIconColor)
                                     .scaleEffect(1.0)
                                     .animation(.interactiveSpring(response: 0.25, dampingFraction: 0.8, blendDuration: 0), value: showEditIcon)
                             }
@@ -618,14 +627,43 @@ struct TaskRowView: View {
     
     /// Returns the appropriate icon color based on the background color for maximum contrast
     private func getIconColor(for baseColor: Color) -> Color {
-        // In dark theme, primary is white, so we need black icons for contrast
-        // In light theme, primary is black, so we need white icons for contrast
+        // Handle dark themes (DarkTheme, DarkBlueTheme, and DarkPurpleTheme) with optimized color selection
         if theme is DarkTheme {
             // Dark theme: primary is white, error is bright red - use black icons
             if baseColor == theme.primary {
                 return Color.black // Black icon on white background
             } else {
                 return Color.white // White icon on colored backgrounds (error, success)
+            }
+        } else if theme is DarkBlueTheme {
+            // Dark Blue theme: optimized icon colors for blue-tinted backgrounds
+            if baseColor == theme.primary {
+                // Primary blue background - use dark icon for contrast
+                return Color(red: 0.1, green: 0.15, blue: 0.25)
+            } else if baseColor == theme.error {
+                // Red error background - use white icon
+                return Color.white
+            } else if baseColor == theme.warning {
+                // Orange warning background - use dark icon
+                return Color(red: 0.1, green: 0.15, blue: 0.25)
+            } else {
+                // Other colored backgrounds - use white for contrast
+                return Color.white
+            }
+        } else if theme is DarkPurpleTheme {
+            // Dark Purple theme: optimized icon colors for purple-tinted backgrounds
+            if baseColor == theme.primary {
+                // Primary purple background - use dark icon for contrast
+                return Color(red: 0.08, green: 0.05, blue: 0.15)
+            } else if baseColor == theme.error {
+                // Red error background - use white icon
+                return Color.white
+            } else if baseColor == theme.warning {
+                // Orange warning background - use dark icon
+                return Color(red: 0.08, green: 0.05, blue: 0.15)
+            } else {
+                // Other colored backgrounds - use white for contrast
+                return Color.white
             }
         } else {
             // Light theme and Kawaii: primary is dark, use white icons
@@ -783,8 +821,12 @@ struct TaskRowView: View {
     }
     
     private func updateDragState(translation: CGFloat) {
-        // Use interactive spring for real-time responsiveness
-        withAnimation(.interactiveSpring(response: 0.25, dampingFraction: 0.9, blendDuration: 0)) {
+        // Use interactive spring for real-time responsiveness with theme-specific optimizations
+        let isDarkThemeOptimized = theme is DarkBlueTheme || theme is DarkPurpleTheme
+        let animationResponse: Double = isDarkThemeOptimized ? 0.2 : 0.25
+        let animationDamping: Double = isDarkThemeOptimized ? 0.95 : 0.9
+        
+        withAnimation(.interactiveSpring(response: animationResponse, dampingFraction: animationDamping, blendDuration: 0)) {
             dragOffset = translation
             isDragging = abs(translation) > 10
         }
@@ -793,15 +835,29 @@ struct TaskRowView: View {
     private func updateVisualFeedback(translation: CGFloat) {
         // Calculate progress for visual feedback
         dragProgress = min(1.0, abs(translation) / abs(actionThreshold))
-        let shouldShowIcons = abs(translation) > 40
+        
+        // Theme-specific icon thresholds for optimal user experience
+        let iconThreshold: CGFloat = {
+            if theme is DarkPurpleTheme || theme is DarkBlueTheme {
+                return 50 // Higher threshold for dark themes to prevent premature appearance
+            } else {
+                return 40 // Standard threshold for other themes
+            }
+        }()
+        
+        let shouldShowIcons = abs(translation) > iconThreshold
         
         // Batch state updates to reduce re-renders with improved state management
         let newShowDeleteIcon = shouldShowIcons
         let newShowEditIcon = shouldShowIcons
         
         if newShowDeleteIcon != showDeleteIcon || newShowEditIcon != showEditIcon {
-            // Use optimized animation for icon state changes
-            withAnimation(.interactiveSpring(response: 0.25, dampingFraction: 0.8, blendDuration: 0)) {
+            // Use optimized animation for icon state changes with theme-specific performance tuning
+            let isDarkThemeOptimized = theme is DarkBlueTheme || theme is DarkPurpleTheme
+            let animationResponse: Double = isDarkThemeOptimized ? 0.2 : 0.25
+            let animationDamping: Double = isDarkThemeOptimized ? 0.9 : 0.8
+            
+            withAnimation(.interactiveSpring(response: animationResponse, dampingFraction: animationDamping, blendDuration: 0)) {
                 showDeleteIcon = newShowDeleteIcon
                 showEditIcon = newShowEditIcon
             }

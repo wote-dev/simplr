@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		37B17FBA2E3065430066E481 /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = 37RC001B2E1A080000509E4E /* RevenueCat */; };
 		37D69F6B2E1A072000509E4E /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 37D69F6A2E1A072000509E4E /* WidgetKit.framework */; };
 		37D69F6D2E1A072000509E4E /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 37D69F6C2E1A072000509E4E /* SwiftUI.framework */; };
 		37D69F7E2E1A072200509E4E /* SimplrWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 37D69F682E1A072000509E4E /* SimplrWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -100,6 +101,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				37B17FBA2E3065430066E481 /* RevenueCat in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

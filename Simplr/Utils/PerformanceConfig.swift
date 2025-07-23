@@ -29,11 +29,24 @@ struct PerformanceConfig {
         static let springResponse: Double = 0.4
         static let springDamping: Double = 0.8
         
+        // Form-specific animation settings for optimal UX
+        static let formSectionResponse: Double = 0.4
+        static let formSectionDamping: Double = 0.8
+        static let datePickerResponse: Double = 0.35
+        static let datePickerDamping: Double = 0.9
+        static let toggleResponse: Double = 0.25
+        static let toggleDamping: Double = 0.85
+        
         // Optimized animations for better performance
         static let optimizedFast = SwiftUI.Animation.easeInOut(duration: fastDuration).speed(1.2)
         static let optimizedDefault = SwiftUI.Animation.easeInOut(duration: defaultDuration).speed(1.2)
         static let optimizedSlow = SwiftUI.Animation.easeInOut(duration: slowDuration).speed(1.1)
         static let optimizedSpring = SwiftUI.Animation.spring(response: springResponse, dampingFraction: springDamping).speed(1.1)
+        
+        // Form-specific optimized animations
+        static let optimizedFormSection = SwiftUI.Animation.spring(response: formSectionResponse, dampingFraction: formSectionDamping, blendDuration: 0.1)
+        static let optimizedDatePicker = SwiftUI.Animation.spring(response: datePickerResponse, dampingFraction: datePickerDamping, blendDuration: 0.1)
+        static let optimizedToggle = SwiftUI.Animation.spring(response: toggleResponse, dampingFraction: toggleDamping, blendDuration: 0.05)
     }
     
     // MARK: - UI Settings

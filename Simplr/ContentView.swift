@@ -21,6 +21,10 @@ extension Image {
             }
         case .dark:
             self.init("\(name)-dark")
+        case .darkBlue:
+            self.init("\(name)-dark") // Use dark icons for dark blue theme
+        case .darkPurple:
+            self.init("\(name)-dark") // Use dark icons for dark purple theme
         case .light:
             self.init("\(name)-light")
         case .lightBlue:
@@ -45,6 +49,10 @@ extension Image {
             self.init("bcs-kawaii")
         case .dark:
             self.init("bcs-dark")
+        case .darkBlue:
+            self.init("bcs-dark") // Use dark logo for dark blue theme
+        case .darkPurple:
+            self.init("bcs-dark") // Use dark logo for dark purple theme
         case .light:
             self.init("bcs-light")
         case .lightBlue:

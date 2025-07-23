@@ -43,6 +43,8 @@ struct PaywallView: View {
     private let themeCache: [ThemeMode: Theme] = [
         .kawaii: KawaiiTheme(),
         .lightGreen: LightGreenTheme(),
+        .darkBlue: DarkBlueTheme(),
+        .darkPurple: DarkPurpleTheme(),
         .serene: SereneTheme(),
         .coffee: CoffeeTheme()
     ]
@@ -385,10 +387,16 @@ struct PaywallView: View {
                 .tracking(-0.3)
                 .foregroundColor(previewTheme.text)
             
-            // Two rows of theme cards for better layout with 4 themes
+            // Three rows of theme cards for better layout with 6 themes
             VStack(spacing: 12) {
                 HStack(spacing: 12) {
                     ForEach([ThemeMode.kawaii, ThemeMode.lightGreen], id: \.self) { themeMode in
+                        themePreviewCard(themeMode)
+                    }
+                }
+                
+                HStack(spacing: 12) {
+                    ForEach([ThemeMode.darkBlue, ThemeMode.darkPurple], id: \.self) { themeMode in
                         themePreviewCard(themeMode)
                     }
                 }

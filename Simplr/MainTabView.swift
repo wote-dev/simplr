@@ -179,6 +179,7 @@ struct MainTabView: View {
                 .opacity(selectedTab == .completed ? 1 : 0)
                 .allowsHitTesting(selectedTab == .completed)
         }
+        .animation(nil, value: selectedTab) // Disable animation for content transitions
     }
     
 
@@ -207,9 +208,8 @@ struct MainTabView: View {
 
         HapticManager.shared.selectionChanged()
 
-        withAnimation(optimizedAnimation) {
-            selectedTab = tab
-        }
+        // Update selected tab without animation to prevent tab bar color changes
+        selectedTab = tab
     }
     
     // MARK: - Performance Optimization Helpers
@@ -222,6 +222,16 @@ struct MainTabView: View {
         
         // Use the fastest, most efficient animation
         return .easeOut(duration: 0.2)
+    }
+    
+    /// Optimized animation specifically for icon highlighting
+    private var iconAnimation: Animation {
+        if shouldUseReducedMotion {
+            return .linear(duration: 0)
+        }
+        
+        // Smooth, subtle animation for icon state changes
+        return .easeInOut(duration: 0.15)
     }
     
     /// Minimal transition for best performance
@@ -248,6 +258,7 @@ struct MainTabView: View {
                         (themeManager.themeMode == .kawaii ? theme.textSecondary :
                          (themeManager.isDarkMode ? Color.white.opacity(0.6) : Color.black.opacity(0.5)))
                     )
+                    .animation(iconAnimation, value: selectedTab) // Only animate icon changes
                 
                 Text(tab.title)
                     .font(.system(size: 10, weight: selectedTab == tab ? .medium : .regular))
@@ -257,6 +268,7 @@ struct MainTabView: View {
                         (themeManager.themeMode == .kawaii ? theme.textSecondary :
                          (themeManager.isDarkMode ? Color.white.opacity(0.6) : Color.black.opacity(0.5)))
                     )
+                    .animation(iconAnimation, value: selectedTab) // Only animate text changes
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 12)
