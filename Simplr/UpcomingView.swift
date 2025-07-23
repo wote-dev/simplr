@@ -25,13 +25,14 @@ struct UpcomingView: View {
     @Binding var selectedTaskId: UUID?
     
     enum SortOption: CaseIterable {
-        case priority, dueDate, creationDate, alphabetical
+        case priority, dueDate, creationDateNewest, creationDateOldest, alphabetical
         
         var title: String {
             switch self {
             case .priority: return "Priority"
             case .dueDate: return "Due Date"
-            case .creationDate: return "Creation Date"
+            case .creationDateNewest: return "Most Recent"
+            case .creationDateOldest: return "First Added"
             case .alphabetical: return "Alphabetical"
             }
         }
@@ -40,7 +41,8 @@ struct UpcomingView: View {
             switch self {
             case .priority: return "exclamationmark.triangle"
             case .dueDate: return "calendar"
-            case .creationDate: return "clock"
+            case .creationDateNewest: return "clock.arrow.2.circlepath"
+            case .creationDateOldest: return "clock"
             case .alphabetical: return "textformat.abc"
             }
         }
@@ -122,9 +124,13 @@ struct UpcomingView: View {
                     return task1.createdAt > task2.createdAt // Newest first for undated tasks
                 }
                 
-            case .creationDate:
+            case .creationDateNewest:
                 // Sort by creation date (newest first)
                 return task1.createdAt > task2.createdAt
+                
+            case .creationDateOldest:
+                // Sort by creation date (oldest first)
+                return task1.createdAt < task2.createdAt
                 
             case .alphabetical:
                 // Sort alphabetically by title

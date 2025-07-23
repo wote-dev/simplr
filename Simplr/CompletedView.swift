@@ -15,20 +15,21 @@ struct CompletedView: View {
     @State private var showingDeleteAlert = false
     @State private var taskToDelete: Task?
     @State private var taskToEdit: Task?
-    @State private var selectedSortOption: SortOption = .creationDate
+    @State private var selectedSortOption: SortOption = .creationDateNewest
     @Namespace private var taskNamespace
     
     // Spotlight navigation
     @Binding var selectedTaskId: UUID?
     
     enum SortOption: CaseIterable {
-        case priority, dueDate, creationDate, alphabetical
+        case priority, dueDate, creationDateNewest, creationDateOldest, alphabetical
         
         var title: String {
             switch self {
             case .priority: return "Priority"
             case .dueDate: return "Due Date"
-            case .creationDate: return "Completion Date"
+            case .creationDateNewest: return "Most Recent"
+            case .creationDateOldest: return "First Added"
             case .alphabetical: return "Alphabetical"
             }
         }
@@ -37,7 +38,8 @@ struct CompletedView: View {
             switch self {
             case .priority: return "exclamationmark.triangle"
             case .dueDate: return "calendar"
-            case .creationDate: return "clock"
+            case .creationDateNewest: return "clock.arrow.2.circlepath"
+            case .creationDateOldest: return "clock"
             case .alphabetical: return "textformat.abc"
             }
         }
@@ -86,11 +88,17 @@ struct CompletedView: View {
                     return compDate1 > compDate2
                 }
                 
-            case .creationDate:
+            case .creationDateNewest:
                 // Sort by completion date (most recent first), fallback to created date
                 let date1 = task1.completedAt ?? task1.createdAt
                 let date2 = task2.completedAt ?? task2.createdAt
                 return date1 > date2
+                
+            case .creationDateOldest:
+                // Sort by completion date (oldest first), fallback to created date
+                let date1 = task1.completedAt ?? task1.createdAt
+                let date2 = task2.completedAt ?? task2.createdAt
+                return date1 < date2
                 
             case .alphabetical:
                 // Sort alphabetically by title
