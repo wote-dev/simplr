@@ -805,6 +805,131 @@ struct KawaiiTheme: Theme {
     }
 }
 
+// MARK: - Coffee Theme (Warm Sepia and Brown Tones)
+struct CoffeeTheme: Theme {
+    let primary = Color(red: 0.55, green: 0.42, blue: 0.32) // Rich coffee brown
+    let secondary = Color(red: 0.72, green: 0.58, blue: 0.45) // Warm caramel
+    let accent = Color(red: 0.45, green: 0.32, blue: 0.22) // Deep espresso brown for contrast
+    let background = Color(red: 0.96, green: 0.94, blue: 0.90) // Warm sepia background
+    let surface = Color(red: 0.92, green: 0.88, blue: 0.82) // Cream coffee surface with texture feel
+    let surfaceSecondary = Color(red: 0.90, green: 0.85, blue: 0.78) // Darker cream secondary surface for distinction
+    let text = Color(red: 0.18, green: 0.12, blue: 0.08) // Dark coffee text for readability
+    let textSecondary = Color(red: 0.38, green: 0.28, blue: 0.20) // Medium coffee-brown secondary text
+    let textTertiary = Color(red: 0.58, green: 0.48, blue: 0.38) // Light coffee-brown tertiary text
+    let success = Color(red: 0.52, green: 0.70, blue: 0.42) // Warm sage green for success
+    let warning = Color(red: 0.92, green: 0.72, blue: 0.45) // Warm amber for warnings
+    let error = Color(red: 0.85, green: 0.52, blue: 0.45) // Warm terracotta for errors
+    let shadow = Color(red: 0.55, green: 0.42, blue: 0.32).opacity(0.18) // Coffee-tinted shadow
+    let border = Color(red: 0.78, green: 0.68, blue: 0.58).opacity(0.6) // Warm coffee border
+    let borderSecondary = Color(red: 0.72, green: 0.62, blue: 0.52).opacity(0.7) // Darker coffee secondary border
+    let toggle = Color(red: 0.45, green: 0.32, blue: 0.22)
+    let progress = Color(red: 0.55, green: 0.42, blue: 0.32) // Coffee brown progress color
+    
+    var backgroundGradient: LinearGradient {
+        LinearGradient(
+            colors: [
+                Color(red: 0.96, green: 0.94, blue: 0.90),
+                Color(red: 0.94, green: 0.91, blue: 0.86)
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+    
+    var surfaceGradient: LinearGradient {
+        LinearGradient(
+            colors: [
+                Color(red: 0.93, green: 0.89, blue: 0.83), // Lighter cream coffee tone
+                Color(red: 0.91, green: 0.86, blue: 0.79)  // Darker cream coffee tone for contrast
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+    
+    var accentGradient: LinearGradient {
+        LinearGradient(
+            colors: [
+                Color(red: 0.55, green: 0.42, blue: 0.32),
+                Color(red: 0.45, green: 0.32, blue: 0.22)
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+    
+    var backgroundImage: String? {
+        nil
+    }
+    
+    var shadowStyle: ShadowStyle {
+        ShadowStyle(
+            color: primary.opacity(0.10),
+            radius: 6,
+            y: 2
+        )
+    }
+    
+    var cardShadowStyle: ShadowStyle {
+        ShadowStyle(
+            color: primary.opacity(0.15),
+            radius: 12,
+            y: 4
+        )
+    }
+    
+    var neumorphicStyle: NeumorphicShadowStyle {
+        NeumorphicShadowStyle(
+            lightShadow: ShadowStyle(
+                color: Color(red: 0.98, green: 0.96, blue: 0.92).opacity(0.9),
+                radius: 8,
+                x: -4,
+                y: -4
+            ),
+            darkShadow: ShadowStyle(
+                color: primary.opacity(0.20),
+                radius: 8,
+                x: 4,
+                y: 4
+            )
+        )
+    }
+    
+    var neumorphicButtonStyle: NeumorphicShadowStyle {
+        NeumorphicShadowStyle(
+            lightShadow: ShadowStyle(
+                color: Color(red: 0.98, green: 0.96, blue: 0.92).opacity(0.95),
+                radius: 6,
+                x: -3,
+                y: -3
+            ),
+            darkShadow: ShadowStyle(
+                color: primary.opacity(0.18),
+                radius: 6,
+                x: 3,
+                y: 3
+            )
+        )
+    }
+    
+    var neumorphicPressedStyle: NeumorphicShadowStyle {
+        NeumorphicShadowStyle(
+            lightShadow: ShadowStyle(
+                color: primary.opacity(0.15),
+                radius: 4,
+                x: 2,
+                y: 2
+            ),
+            darkShadow: ShadowStyle(
+                color: Color(red: 0.98, green: 0.96, blue: 0.92).opacity(0.8),
+                radius: 4,
+                x: -2,
+                y: -2
+            )
+        )
+    }
+}
+
 // MARK: - Serene Theme (Soft Lavender and Dusty Rose)
 struct SereneTheme: Theme {
     let primary = Color(red: 0.75, green: 0.68, blue: 0.85) // Soft lavender primary

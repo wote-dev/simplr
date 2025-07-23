@@ -31,6 +31,8 @@ extension Image {
             self.init("\(name)-light") // Use same light icons for minimal theme
         case .serene:
             self.init("\(name)-light") // Use same light icons for serene theme
+        case .coffee:
+            self.init("\(name)-light") // Use same light icons for coffee theme
         case .system:
             let isDarkMode = themeManager.isDarkMode
             self.init(isDarkMode ? "\(name)-dark" : "\(name)-light")
@@ -53,6 +55,8 @@ extension Image {
             self.init("bcs-light") // Use same light logo for minimal theme
         case .serene:
             self.init("bcs-light") // Use same light logo for serene theme
+        case .coffee:
+            self.init("bcs-light") // Use same light logo for coffee theme
         case .system:
             let isDarkMode = themeManager.isDarkMode
             self.init(isDarkMode ? "bcs-dark" : "bcs-light")
@@ -92,11 +96,15 @@ struct ContentView: View {
         if theme is KawaiiTheme {
             // Kawaii theme: use accent color for better visibility against light backgrounds
             return theme.accent
+        } else if theme is CoffeeTheme {
+            // Coffee theme: use accent color for better contrast against warm background
+            return theme.accent
         } else if theme.background == Color.white || 
                   theme.background == Color(red: 0.98, green: 0.98, blue: 0.98) ||
                   theme.background == Color(red: 0.98, green: 0.99, blue: 1.0) ||
-                  theme.background == Color(red: 0.98, green: 1.0, blue: 0.99) {
-            // Light themes: use text color for better contrast
+                  theme.background == Color(red: 0.98, green: 1.0, blue: 0.99) ||
+                  theme.background == Color(red: 0.96, green: 0.94, blue: 0.90) {
+            // Light themes (including coffee): use text color for better contrast
             return theme.text
         } else {
             // Dark themes and others: use primary color as before

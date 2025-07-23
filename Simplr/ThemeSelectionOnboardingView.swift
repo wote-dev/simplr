@@ -168,10 +168,14 @@ struct ThemeOnboardingCard: View {
         if theme is KawaiiTheme {
             // Kawaii theme: use accent color for better visibility against light backgrounds
             return theme.accent
+        } else if theme is CoffeeTheme {
+            // Coffee theme: use accent color for better contrast against sepia background
+            return theme.accent
         } else if theme.background == Color.white || 
                   theme.background == Color(red: 0.98, green: 0.98, blue: 0.98) ||
                   theme.background == Color(red: 0.98, green: 0.99, blue: 1.0) ||
-                  theme.background == Color(red: 0.98, green: 1.0, blue: 0.99) {
+                  theme.background == Color(red: 0.98, green: 1.0, blue: 0.99) ||
+                  theme.background == Color(red: 0.96, green: 0.94, blue: 0.90) {
             // Light themes: use text color for better contrast
             return theme.text
         } else {
@@ -265,6 +269,8 @@ struct ThemeOnboardingCard: View {
             return "Cute and colorful"
         case .serene:
             return "Peaceful and calming"
+        case .coffee:
+            return "Warm and cozy"
         }
     }
 }

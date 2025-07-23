@@ -18,6 +18,7 @@ enum ThemeMode: String, CaseIterable {
     case system = "system"
     case kawaii = "kawaii"
     case serene = "serene"
+    case coffee = "coffee"
     
     var displayName: String {
         switch self {
@@ -29,6 +30,7 @@ enum ThemeMode: String, CaseIterable {
         case .system: return "System"
         case .kawaii: return "Kawaii"
         case .serene: return "Serene"
+        case .coffee: return "Coffee"
         }
     }
     
@@ -42,6 +44,7 @@ enum ThemeMode: String, CaseIterable {
         case .system: return "circle.lefthalf.filled"
         case .kawaii: return "heart.fill"
         case .serene: return "cloud.fill"
+        case .coffee: return "cup.and.saucer.fill"
         }
     }
     
@@ -49,7 +52,7 @@ enum ThemeMode: String, CaseIterable {
         switch self {
         case .light, .lightBlue, .minimal, .dark, .system:
             return false
-        case .lightGreen, .kawaii, .serene:
+        case .lightGreen, .kawaii, .serene, .coffee:
             return true
         }
     }
@@ -116,6 +119,8 @@ class ThemeManager: ObservableObject {
             case .lightGreen:
                 themeMode = .serene
             case .serene:
+                themeMode = .coffee
+            case .coffee:
                 themeMode = .minimal
             case .minimal:
                 themeMode = .dark
@@ -173,6 +178,17 @@ class ThemeManager: ObservableObject {
                 // This allows the theme choice to persist when the user gains premium access
                 newTheme = PlainLightTheme()
                 // Don't reset the theme mode - keep it as kawaii so it persists
+            }
+        case .coffee:
+            // Check if user has access to Coffee theme
+            if let premiumManager = premiumManager,
+               premiumManager.hasAccess(to: .premiumAccess) {
+                newTheme = CoffeeTheme()
+            } else {
+                // Fallback to light theme if no access, but preserve the coffee theme selection
+                // This allows the theme choice to persist when the user gains premium access
+                newTheme = PlainLightTheme()
+                // Don't reset the theme mode - keep it as coffee so it persists
             }
         }
         
@@ -237,7 +253,7 @@ class ThemeManager: ObservableObject {
         }
         
         switch mode {
-        case .kawaii, .lightGreen, .serene:
+        case .kawaii, .lightGreen, .serene, .coffee:
             return premiumManager.hasAccess(to: .premiumAccess)
         default:
             return true
