@@ -227,11 +227,15 @@ class PremiumManager: NSObject, ObservableObject, PurchasesDelegate {
     // MARK: - Paywall Presentation
     
     func showPaywall(for feature: PremiumFeature? = nil) {
+        // Performance optimization: Only update state if it's actually changing
+        guard !showingPaywall else { return }
         showingPaywall = true
         HapticManager.shared.buttonTap()
     }
     
     func dismissPaywall() {
+        // Performance optimization: Only update state if it's actually changing
+        guard showingPaywall else { return }
         showingPaywall = false
     }
 }

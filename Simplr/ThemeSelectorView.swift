@@ -144,6 +144,11 @@ struct ThemeOptionCard: View {
     let isChanging: Bool
     let onSelect: () -> Void
     
+    /// Premium gold color for locked features - optimized for performance with static computation
+    private var premiumGoldColor: Color {
+        Color(red: 0.85, green: 0.65, blue: 0.13) // Rich gold color that signals premium
+    }
+    
     /// Returns subtle, consistent border color for all themes with enhanced visibility for light themes
     private func getBorderColor(for theme: Theme) -> Color {
         // Enhanced border visibility for light and kawaii themes while maintaining subtlety
@@ -221,7 +226,7 @@ struct ThemeOptionCard: View {
                             } else {
                                 Image(systemName: "lock.fill")
                                     .font(.caption)
-                                    .foregroundColor(Color(red: 1.0, green: 0.2, blue: 0.6))
+                                    .foregroundColor(premiumGoldColor)
                             }
                         }
                         
@@ -237,7 +242,7 @@ struct ThemeOptionCard: View {
                         Text("Premium Feature")
                             .font(.caption)
                             .fontWeight(.medium)
-                            .foregroundColor(Color(red: 1.0, green: 0.2, blue: 0.6))
+                            .foregroundColor(premiumGoldColor)
                             .padding(.top, 2)
                     }
                 }

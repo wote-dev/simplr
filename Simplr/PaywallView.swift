@@ -85,6 +85,8 @@ struct PaywallView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Close") {
+                        // Reset paywall state in PremiumManager to allow re-access
+                        premiumManager.dismissPaywall()
                         dismiss()
                         HapticManager.shared.buttonTap()
                     }
@@ -114,6 +116,8 @@ struct PaywallView: View {
                         
                         // Small delay before dismissing paywall to return to main app
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            // Reset paywall state before dismissing
+                            premiumManager.dismissPaywall()
                             dismiss()
                         }
                     }
@@ -133,6 +137,10 @@ struct PaywallView: View {
             updatePreviewTheme()
             // Initialize the selected premium theme to match the preview
             selectedPremiumTheme = selectedThemePreview
+        }
+        .onDisappear {
+            // Ensure paywall state is reset when view disappears (handles swipe-to-dismiss)
+            premiumManager.dismissPaywall()
         }
         .onChange(of: selectedThemePreview) { _, newTheme in
             updatePreviewTheme()

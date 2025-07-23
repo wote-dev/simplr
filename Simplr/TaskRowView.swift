@@ -1120,34 +1120,59 @@ struct TaskRowView: View {
                 .fontWeight(.medium)
         }
         .foregroundColor(
-            task.isOverdue ? theme.error : 
-            task.isPending ? theme.warning : 
-            // Maximum contrast for urgent tasks in light and kawaii themes
-            (isUrgentTask && (theme.background != .black)) ? Color.white : theme.textSecondary
+            task.isOverdue ? 
+                (theme is KawaiiTheme ? Color.white : theme.error) : 
+            task.isPending ? 
+                (theme is KawaiiTheme ? Color(red: 0.2, green: 0.1, blue: 0.15) : theme.warning) : 
+            // Enhanced visibility for kawaii theme with stronger contrast
+            (isUrgentTask && (theme.background != .black)) ? Color.white : 
+            (theme is KawaiiTheme ? Color(red: 0.15, green: 0.1, blue: 0.2) : theme.textSecondary)
         )
         .padding(.horizontal, 6)
         .padding(.vertical, 3)
         .background(
             Capsule()
                 .fill(
-                    task.isOverdue ? theme.error.opacity(0.15) :
-                    task.isPending ? theme.warning.opacity(0.1) :
-                    // Maximum contrast background for urgent tasks in light and kawaii themes
+                    task.isOverdue ? 
+                        (theme is KawaiiTheme ? 
+                            Color(red: 0.9, green: 0.3, blue: 0.4) : // Strong kawaii error background
+                            theme.error.opacity(0.15)) :
+                    task.isPending ? 
+                        (theme is KawaiiTheme ? 
+                            Color(red: 0.95, green: 0.7, blue: 0.3) : // Kawaii warning background
+                            theme.warning.opacity(0.1)) :
+                    // Enhanced kawaii theme due date pill background for better visibility
                     (isUrgentTask && (theme.background != .black)) ? 
-                        (theme is KawaiiTheme ? Color(red: 0.05, green: 0.05, blue: 0.05) : Color.black.opacity(0.85)) : 
-                        theme.surfaceSecondary
+                        (theme is KawaiiTheme ? 
+                            Color(red: 0.7, green: 0.5, blue: 0.8) : // Kawaii urgent background
+                            Color.black.opacity(0.85)) : 
+                    (theme is KawaiiTheme ? 
+                        Color(red: 0.95, green: 0.9, blue: 0.95) : // Subtle kawaii normal background
+                        theme.surfaceSecondary)
                 )
         )
         .overlay(
             Capsule()
                 .stroke(
-                    task.isOverdue ? theme.error.opacity(0.3) :
-                    task.isPending ? theme.warning.opacity(0.2) :
-                    // Maximum contrast border for urgent tasks in light and kawaii themes
+                    task.isOverdue ? 
+                        (theme is KawaiiTheme ? 
+                            Color(red: 0.7, green: 0.2, blue: 0.3) : // Strong kawaii error border
+                            theme.error.opacity(0.3)) :
+                    task.isPending ? 
+                        (theme is KawaiiTheme ? 
+                            Color(red: 0.8, green: 0.5, blue: 0.2) : // Kawaii warning border
+                            theme.warning.opacity(0.2)) :
+                    // Enhanced kawaii theme border for better visibility
                     (isUrgentTask && (theme.background != .black)) ? 
-                        (theme is KawaiiTheme ? Color.black : Color.black.opacity(0.9)) : Color.clear,
-                    lineWidth: (isUrgentTask && (theme.background != .black)) ? 
-                        (theme is KawaiiTheme ? 2.0 : 1.5) : 1
+                        (theme is KawaiiTheme ? 
+                            Color(red: 0.5, green: 0.3, blue: 0.6) : // Kawaii urgent border
+                            Color.black.opacity(0.9)) : 
+                    (theme is KawaiiTheme ? 
+                        Color(red: 0.8, green: 0.7, blue: 0.85).opacity(0.4) : // Subtle kawaii normal border
+                        Color.clear),
+                    lineWidth: theme is KawaiiTheme ? 
+                        (task.isOverdue || task.isPending || isUrgentTask ? 1.2 : 0.8) : 
+                        ((isUrgentTask && (theme.background != .black)) ? 1.5 : 1)
                 )
         )
         .scaleEffect(task.isCompleted ? 0.95 : 1.0)
@@ -1173,30 +1198,44 @@ struct TaskRowView: View {
             }
         }
         .foregroundColor(
-            // Maximum contrast for urgent tasks in light and kawaii themes
-            (isUrgentTask && (theme.background != .black)) ? 
-                Color.white : // White text for maximum contrast
-                theme.warning
+            // Enhanced visibility for kawaii theme with stronger contrast
+            theme is KawaiiTheme ? 
+                (isUrgentTask ? Color.white : Color(red: 0.2, green: 0.1, blue: 0.15)) : // Dark text for kawaii, white for urgent
+                ((isUrgentTask && (theme.background != .black)) ? 
+                    Color.white : // White text for maximum contrast
+                    theme.warning)
         )
         .padding(.horizontal, 6)
         .padding(.vertical, 3)
         .background(
             Capsule()
                 .fill(
-                    // Maximum contrast background for urgent tasks in light and kawaii themes
-                    (isUrgentTask && (theme.background != .black)) ? 
-                        (theme is KawaiiTheme ? Color(red: 0.7, green: 0.3, blue: 0.0) : Color(red: 0.9, green: 0.5, blue: 0.0)) : // Darker orange for kawaii
-                        theme.warning.opacity(0.1)
+                    // Enhanced kawaii theme reminder pill background for better visibility
+                    theme is KawaiiTheme ? 
+                        (isUrgentTask ? 
+                            Color(red: 0.85, green: 0.45, blue: 0.55) : // Use kawaii accent color for urgent
+                            Color(red: 0.85, green: 0.45, blue: 0.55).opacity(0.15)) : // Subtle kawaii accent background for normal
+                        ((isUrgentTask && (theme.background != .black)) ? 
+                            Color(red: 0.9, green: 0.5, blue: 0.0) : // Orange for other urgent themes
+                            theme.warning.opacity(0.1))
                 )
         )
         .overlay(
-            // Consistent border for urgent tasks in light and kawaii themes
-            (isUrgentTask && (theme.background != .black)) ?
+            // Enhanced border for kawaii theme visibility
+            theme is KawaiiTheme ? 
                 Capsule()
                     .stroke(
-                        (theme is KawaiiTheme ? Color(red: 0.5, green: 0.2, blue: 0.0) : Color(red: 0.7, green: 0.4, blue: 0.0)),
-                        lineWidth: 0.8
-                    ) : nil
+                        isUrgentTask ? 
+                            Color(red: 0.7, green: 0.3, blue: 0.4) : // Darker kawaii border for urgent
+                            Color(red: 0.85, green: 0.45, blue: 0.55).opacity(0.4), // Subtle kawaii border for normal
+                        lineWidth: isUrgentTask ? 1.0 : 0.6
+                    ) :
+                ((isUrgentTask && (theme.background != .black)) ?
+                    Capsule()
+                        .stroke(
+                            Color(red: 0.7, green: 0.4, blue: 0.0),
+                            lineWidth: 0.8
+                        ) : nil)
         )
         .scaleEffect(task.isCompleted ? 0.95 : 1.0)
         .opacity(task.isCompleted ? 0.6 : 1.0)

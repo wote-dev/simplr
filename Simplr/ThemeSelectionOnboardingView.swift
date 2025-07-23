@@ -158,6 +158,11 @@ struct ThemeOnboardingCard: View {
     let canAccess: Bool
     let onSelect: () -> Void
     
+    /// Premium gold color for locked features - optimized for performance with static computation
+    private var premiumGoldColor: Color {
+        Color(red: 0.85, green: 0.65, blue: 0.13) // Rich gold color that signals premium
+    }
+    
     /// Returns appropriate icon color for non-selected theme options with proper contrast
     private func getIconColor(for theme: Theme) -> Color {
         if theme is KawaiiTheme {
@@ -204,7 +209,7 @@ struct ThemeOnboardingCard: View {
                             } else {
                                 Image(systemName: "lock.fill")
                                     .font(.caption)
-                                    .foregroundColor(Color(red: 1.0, green: 0.2, blue: 0.6))
+                                    .foregroundColor(premiumGoldColor)
                             }
                         }
                         
