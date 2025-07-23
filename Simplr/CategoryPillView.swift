@@ -127,6 +127,10 @@ struct CategoryPillView: View {
                                 case .serene:
                                     return category.color.sereneGradient
                                 default:
+                                    // Check if current theme is coffee theme for subdued colors
+                                    if theme is CoffeeTheme {
+                                        return category.color.coffeeGradient
+                                    }
                                     return category.color.gradient
                                 }
                             }())
@@ -141,12 +145,24 @@ struct CategoryPillView: View {
                                             case .serene:
                                                 return category.color.sereneDarkColor
                                             default:
+                                                // Check if current theme is coffee theme for subdued colors
+                                                if theme is CoffeeTheme {
+                                                    return category.color.coffeeDarkColor
+                                                }
                                                 return category.color.darkColor
                                             }
                                         }(),
                                         lineWidth: 0.8
                                     )
-                                    .opacity(themeManager.themeMode == .serene ? 0.2 : 0.3)
+                                    .opacity({
+                                        if themeManager.themeMode == .serene {
+                                            return 0.2
+                                        } else if theme is CoffeeTheme {
+                                            return 0.25 // Slightly more subtle for coffee theme
+                                        } else {
+                                            return 0.3
+                                        }
+                                    }())
                             )
                             .scaleEffect(isSelected ? 1.1 : 1.0)
                             .animation(.smoothSpring, value: isSelected)

@@ -580,11 +580,59 @@ struct SettingsView: View {
     
     private func categoryInfoCard(_ category: TaskCategory) -> some View {
         let isKawaii = themeManager.themeMode == .kawaii
+        let isSerene = themeManager.themeMode == .serene
+        let isCoffee = theme is CoffeeTheme
         let isCollapsed = categoryManager.isCategoryCollapsed(category)
-        let categoryGradient = isKawaii ? category.color.kawaiiGradient : category.color.gradient
-        let categoryStrokeColor = isKawaii ? category.color.kawaiiDarkColor : category.color.darkColor
-        let backgroundFillColor = isCollapsed ? theme.surfaceSecondary : (isKawaii ? category.color.kawaiiLightColor.opacity(0.3) : category.color.lightColor.opacity(0.3))
-        let strokeColor = isKawaii ? category.color.kawaiiColor.opacity(0.3) : category.color.color.opacity(0.3)
+        
+        let categoryGradient: LinearGradient = {
+            if isKawaii {
+                return category.color.kawaiiGradient
+            } else if isSerene {
+                return category.color.sereneGradient
+            } else if isCoffee {
+                return category.color.coffeeGradient
+            } else {
+                return category.color.gradient
+            }
+        }()
+        
+        let categoryStrokeColor: Color = {
+            if isKawaii {
+                return category.color.kawaiiDarkColor
+            } else if isSerene {
+                return category.color.sereneDarkColor
+            } else if isCoffee {
+                return category.color.coffeeDarkColor
+            } else {
+                return category.color.darkColor
+            }
+        }()
+        
+        let backgroundFillColor: Color = {
+            if isCollapsed {
+                return theme.surfaceSecondary
+            } else if isKawaii {
+                return category.color.kawaiiLightColor.opacity(0.3)
+            } else if isSerene {
+                return category.color.sereneLightColor.opacity(0.3)
+            } else if isCoffee {
+                return category.color.coffeeLightColor.opacity(0.25)
+            } else {
+                return category.color.lightColor.opacity(0.3)
+            }
+        }()
+        
+        let strokeColor: Color = {
+            if isKawaii {
+                return category.color.kawaiiColor.opacity(0.3)
+            } else if isSerene {
+                return category.color.sereneColor.opacity(0.25)
+            } else if isCoffee {
+                return category.color.coffeeColor.opacity(0.2)
+            } else {
+                return category.color.color.opacity(0.3)
+            }
+        }()
         let statusColor = category.isCustom ? theme.warning : theme.success
         
         return VStack(alignment: .leading, spacing: 8) {

@@ -37,6 +37,10 @@ struct CategorySectionHeaderView: View {
         case .serene:
             return category.color.sereneColor
         default:
+            // Check if current theme is coffee theme for subdued colors
+            if theme is CoffeeTheme {
+                return category.color.coffeeColor
+            }
             return category.color.color
         }
     }
@@ -110,6 +114,10 @@ struct CategorySectionHeaderView: View {
                             case .serene:
                                 return category.color.sereneGradient
                             default:
+                                // Check if current theme is coffee theme for subdued colors
+                                if theme is CoffeeTheme {
+                                    return category.color.coffeeGradient
+                                }
                                 return category.color.gradient
                             }
                         }())
@@ -124,18 +132,54 @@ struct CategorySectionHeaderView: View {
                                         case .serene:
                                             return category.color.sereneDarkColor
                                         default:
+                                            // Check if current theme is coffee theme for subdued colors
+                                            if theme is CoffeeTheme {
+                                                return category.color.coffeeDarkColor
+                                            }
                                             return category.color.darkColor
                                         }
                                     }(),
                                     lineWidth: 0.8
                                 )
-                                .opacity(themeManager.themeMode == .serene ? 0.2 : 0.3)
+                                .opacity({
+                                    if themeManager.themeMode == .serene {
+                                        return 0.2
+                                    } else if theme is CoffeeTheme {
+                                        return 0.25 // Slightly more subdued for coffee theme
+                                    } else {
+                                        return 0.3
+                                    }
+                                }())
                         )
                         .shadow(
-                            color: categoryColor.opacity(themeManager.themeMode == .serene ? 0.15 : 0.2),
-                            radius: themeManager.themeMode == .serene ? 0.5 : 1,
+                            color: categoryColor.opacity({
+                                if themeManager.themeMode == .serene {
+                                    return 0.15
+                                } else if theme is CoffeeTheme {
+                                    return 0.12 // More subdued shadow for coffee theme
+                                } else {
+                                    return 0.2
+                                }
+                            }()),
+                            radius: {
+                                if themeManager.themeMode == .serene {
+                                    return 0.5
+                                } else if theme is CoffeeTheme {
+                                    return 0.8 // Slightly softer shadow for coffee theme
+                                } else {
+                                    return 1.0
+                                }
+                            }(),
                             x: 0,
-                            y: themeManager.themeMode == .serene ? 0.3 : 0.5
+                            y: {
+                                if themeManager.themeMode == .serene {
+                                    return 0.3
+                                } else if theme is CoffeeTheme {
+                                    return 0.4 // Subtle shadow offset for coffee theme
+                                } else {
+                                    return 0.5
+                                }
+                            }()
                         )
                 }
             } else {
@@ -174,11 +218,22 @@ struct CategorySectionHeaderView: View {
         .scaleEffect(isPressed ? 0.98 : 1.0)
         .animation(.interpolatingSpring(stiffness: 500, damping: 30), value: isPressed)
         .contentShape(Rectangle()) // Make entire area tappable
-        .onLongPressGesture(minimumDuration: 0, maximumDistance: .infinity, pressing: { pressing in
-            withAnimation(.interpolatingSpring(stiffness: 500, damping: 30)) {
-                isPressed = pressing
-            }
-        }, perform: {})
+        .allowsHitTesting(true)
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in
+                    if !isPressed {
+                        withAnimation(.interpolatingSpring(stiffness: 500, damping: 30)) {
+                            isPressed = true
+                        }
+                    }
+                }
+                .onEnded { _ in
+                    withAnimation(.interpolatingSpring(stiffness: 500, damping: 30)) {
+                        isPressed = false
+                    }
+                }
+        )
     }
 }
 

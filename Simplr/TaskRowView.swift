@@ -334,30 +334,7 @@ struct TaskRowView: View {
                         
                         // Due date display under task text
                         if let dueDate = task.dueDate {
-                            HStack(spacing: 6) {
-                                Image(systemName: task.isOverdue ? "exclamationmark.triangle.fill" : 
-                                      task.isPending ? "clock" : "calendar")
-                                    .font(.caption2)
-                                    .foregroundColor(
-                                        task.isOverdue ? theme.error : 
-                                        task.isPending ? theme.warning : 
-                                        theme.textSecondary
-                                    )
-                                
-                                Text(formatDueDate(dueDate))
-                                    .font(.caption2)
-                                    .fontWeight(.medium)
-                                    .foregroundColor(
-                                        task.isOverdue ? theme.error : 
-                                        task.isPending ? theme.warning : 
-                                        theme.textSecondary
-                                    )
-                                
-                                Spacer()
-                            }
-                            .opacity(task.isCompleted ? 0.6 : 1.0)
-                            .scaleEffect(task.isCompleted ? 0.99 : 1.0, anchor: .leading)
-                            .animation(.easeInOut(duration: 0.2), value: task.isCompleted)
+                            dueDatePill(dueDate: dueDate)
                         }
                         
 
@@ -1198,9 +1175,13 @@ struct TaskRowView: View {
             }
         }
         .foregroundColor(
-            // Enhanced visibility for kawaii theme with stronger contrast
+            // Enhanced visibility for kawaii, serene, and coffee themes with stronger contrast
             theme is KawaiiTheme ? 
                 (isUrgentTask ? Color.white : Color(red: 0.2, green: 0.1, blue: 0.15)) : // Dark text for kawaii, white for urgent
+            theme is SereneTheme ?
+                (isUrgentTask ? Color.white : Color(red: 0.15, green: 0.12, blue: 0.18)) : // Dark purple text for serene, white for urgent
+            theme is CoffeeTheme ?
+                (isUrgentTask ? Color.white : Color(red: 0.18, green: 0.12, blue: 0.08)) : // Dark coffee text for coffee theme, white for urgent
                 ((isUrgentTask && (theme.background != .black)) ? 
                     Color.white : // White text for maximum contrast
                     theme.warning)
@@ -1210,24 +1191,48 @@ struct TaskRowView: View {
         .background(
             Capsule()
                 .fill(
-                    // Enhanced kawaii theme reminder pill background for better visibility
+                    // Enhanced kawaii, serene, and coffee theme reminder pill background for better visibility
                     theme is KawaiiTheme ? 
                         (isUrgentTask ? 
                             Color(red: 0.85, green: 0.45, blue: 0.55) : // Use kawaii accent color for urgent
                             Color(red: 0.85, green: 0.45, blue: 0.55).opacity(0.15)) : // Subtle kawaii accent background for normal
+                    theme is SereneTheme ?
+                        (isUrgentTask ?
+                            Color(red: 0.68, green: 0.58, blue: 0.82) : // Use serene accent color for urgent
+                            Color(red: 0.68, green: 0.58, blue: 0.82).opacity(0.15)) : // Subtle serene accent background for normal
+                    theme is CoffeeTheme ?
+                        (isUrgentTask ?
+                            Color(red: 0.45, green: 0.32, blue: 0.22) : // Use coffee accent color for urgent
+                            Color(red: 0.45, green: 0.32, blue: 0.22).opacity(0.15)) : // Subtle coffee accent background for normal
                         ((isUrgentTask && (theme.background != .black)) ? 
                             Color(red: 0.9, green: 0.5, blue: 0.0) : // Orange for other urgent themes
                             theme.warning.opacity(0.1))
                 )
         )
         .overlay(
-            // Enhanced border for kawaii theme visibility
+            // Enhanced border for kawaii, serene, and coffee theme visibility
             theme is KawaiiTheme ? 
                 Capsule()
                     .stroke(
                         isUrgentTask ? 
                             Color(red: 0.7, green: 0.3, blue: 0.4) : // Darker kawaii border for urgent
                             Color(red: 0.85, green: 0.45, blue: 0.55).opacity(0.4), // Subtle kawaii border for normal
+                        lineWidth: isUrgentTask ? 1.0 : 0.6
+                    ) :
+            theme is SereneTheme ?
+                Capsule()
+                    .stroke(
+                        isUrgentTask ?
+                            Color(red: 0.55, green: 0.45, blue: 0.68) : // Darker serene border for urgent
+                            Color(red: 0.68, green: 0.58, blue: 0.82).opacity(0.4), // Subtle serene border for normal
+                        lineWidth: isUrgentTask ? 1.0 : 0.6
+                    ) :
+            theme is CoffeeTheme ?
+                Capsule()
+                    .stroke(
+                        isUrgentTask ?
+                            Color(red: 0.18, green: 0.12, blue: 0.08) : // Same dark coffee color as text for urgent
+                            Color(red: 0.18, green: 0.12, blue: 0.08).opacity(0.4), // Same dark coffee color as text for normal
                         lineWidth: isUrgentTask ? 1.0 : 0.6
                     ) :
                 ((isUrgentTask && (theme.background != .black)) ?
@@ -1242,22 +1247,153 @@ struct TaskRowView: View {
         .animation(.easeInOut(duration: 0.3).delay(0.2), value: task.isCompleted)
     }
     
+    private func dueDatePill(dueDate: Date) -> some View {
+        // Computed properties to break down complex expressions for better compilation performance
+        let dueDateTextColor: Color = {
+            if theme is KawaiiTheme {
+                if task.isOverdue {
+                    return Color.white
+                } else if task.isPending {
+                    return Color(red: 0.2, green: 0.1, blue: 0.15)
+                } else if isUrgentTask {
+                    return Color.white
+                } else {
+                    return Color(red: 0.15, green: 0.1, blue: 0.2)
+                }
+            } else if theme is SereneTheme {
+                if task.isOverdue || task.isPending {
+                    return Color.white
+                } else {
+                    return Color(red: 0.15, green: 0.12, blue: 0.18)
+                }
+            } else {
+                if task.isOverdue {
+                    return theme.error
+                } else if task.isPending {
+                    return theme.background == .black ? Color.white : theme.warning
+                } else {
+                    return theme.textSecondary
+                }
+            }
+        }()
+        
+        let dueDateBackgroundColor: Color = {
+            if theme is KawaiiTheme {
+                if task.isOverdue {
+                    return Color(red: 0.85, green: 0.45, blue: 0.55)
+                } else if task.isPending {
+                    return Color(red: 0.92, green: 0.78, blue: 0.45)
+                } else if isUrgentTask {
+                    return Color(red: 0.78, green: 0.65, blue: 0.85)
+                } else {
+                    return Color(red: 0.95, green: 0.9, blue: 0.95)
+                }
+            } else if theme is SereneTheme {
+                if task.isOverdue {
+                    return Color(red: 0.92, green: 0.68, blue: 0.72)
+                } else if task.isPending {
+                    return Color(red: 0.95, green: 0.82, blue: 0.68)
+                } else {
+                    return Color(red: 0.68, green: 0.58, blue: 0.82).opacity(0.15)
+                }
+            } else {
+                if task.isOverdue {
+                    return theme.error.opacity(0.15)
+                } else if task.isPending {
+                    return theme.warning.opacity(0.15)
+                } else {
+                    return theme.textSecondary.opacity(0.1)
+                }
+            }
+        }()
+        
+        let dueDateBorderColor: Color = {
+            if theme is KawaiiTheme {
+                if task.isOverdue {
+                    return Color(red: 0.75, green: 0.35, blue: 0.45)
+                } else if task.isPending {
+                    return Color(red: 0.85, green: 0.65, blue: 0.35)
+                } else if isUrgentTask {
+                    return Color(red: 0.65, green: 0.45, blue: 0.75)
+                } else {
+                    return Color(red: 0.8, green: 0.7, blue: 0.85).opacity(0.4)
+                }
+            } else if theme is SereneTheme {
+                if task.isOverdue {
+                    return Color(red: 0.85, green: 0.55, blue: 0.60)
+                } else if task.isPending {
+                    return Color(red: 0.88, green: 0.70, blue: 0.55)
+                } else {
+                    return Color(red: 0.68, green: 0.58, blue: 0.82).opacity(0.4)
+                }
+            } else {
+                if task.isOverdue {
+                    return theme.error.opacity(0.6)
+                } else if task.isPending {
+                    return theme.warning.opacity(0.6)
+                } else {
+                    return Color.clear
+                }
+            }
+        }()
+        
+        let dueDateBorderWidth: CGFloat = {
+            if theme is KawaiiTheme {
+                return (task.isOverdue || task.isPending || isUrgentTask) ? 1.0 : 0.8
+            } else if theme is SereneTheme {
+                return (task.isOverdue || task.isPending) ? 1.0 : 0.6
+            } else {
+                return (task.isOverdue || task.isPending) ? 0.8 : 0
+            }
+        }()
+        
+        return HStack(spacing: 4) {
+            Image(systemName: task.isOverdue ? "exclamationmark.triangle.fill" : 
+                  task.isPending ? "clock" : "calendar")
+                .font(.caption2)
+                .shadow(
+                    color: theme.background == .black ? Color.white.opacity(0.05) : Color.clear,
+                    radius: 0.5,
+                    x: 0,
+                    y: 0.3
+                )
+            
+            Text(formatDueDate(dueDate))
+                .font(.caption2)
+                .fontWeight(.medium)
+        }
+        .foregroundColor(dueDateTextColor)
+        .padding(.horizontal, 6)
+        .padding(.vertical, 3)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(dueDateBackgroundColor)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(dueDateBorderColor, lineWidth: dueDateBorderWidth)
+        )
+        .opacity(task.isCompleted ? 0.6 : 1.0)
+        .scaleEffect(task.isCompleted ? 0.99 : 1.0, anchor: .leading)
+        .animation(.easeInOut(duration: 0.2), value: task.isCompleted)
+    }
+    
     private func formatDueDate(_ date: Date) -> String {
         let formatter = DateFormatter()
         let calendar = Calendar.current
         
         if calendar.isDateInToday(date) {
             formatter.timeStyle = .short
-            return "Today \(formatter.string(from: date))"
+            return formatter.string(from: date)
         } else if calendar.isDateInTomorrow(date) {
-            formatter.timeStyle = .short
-            return "Tomorrow \(formatter.string(from: date))"
+            formatter.dateFormat = "MMM d"
+            return formatter.string(from: date)
         } else if calendar.isDateInYesterday(date) {
-            formatter.timeStyle = .short
-            return "Yesterday \(formatter.string(from: date))"
+            formatter.dateFormat = "MMM d"
+            return formatter.string(from: date)
         } else {
-            // For other dates, show compact date and time
-            formatter.dateFormat = "MMM d, h:mm a"
+            // For other dates, show compact date only
+            formatter.dateFormat = "MMM d"
             return formatter.string(from: date)
         }
     }

@@ -10,6 +10,7 @@ import SwiftUI
 struct UpcomingView: View {
     @EnvironmentObject var taskManager: TaskManager
     @EnvironmentObject var themeManager: ThemeManager
+    @EnvironmentObject var categoryManager: CategoryManager
     @Environment(\.theme) var theme
     @State private var showingAddTask = false
     @State private var taskToEdit: Task?
@@ -132,9 +133,13 @@ struct UpcomingView: View {
         }
     }
     
-    private var groupedTasks: [(String, [Task])] {
+    private var groupedTasksByCategory: [(category: TaskCategory?, tasks: [Task])] {
+        return categoryManager.groupTasksByCategory(upcomingTasks)
+    }
+    
+    private func groupTasksByDate(_ tasks: [Task]) -> [(String, [Task])] {
         let calendar = Calendar.current
-        let grouped = Dictionary(grouping: upcomingTasks) { task in
+        let grouped = Dictionary(grouping: tasks) { task in
             // Use due date if available, otherwise use reminder date
             let relevantDate = task.dueDate ?? task.reminderDate
             guard let date = relevantDate else { return "No Date" }
@@ -418,92 +423,77 @@ struct UpcomingView: View {
     
     private var taskListView: some View {
         ScrollView(.vertical, showsIndicators: false) {
-            LazyVStack(spacing: 24, pinnedViews: []) {
-                ForEach(groupedTasks, id: \.0) { sectionTitle, tasks in
-                    VStack(alignment: .leading, spacing: 16) {
-                        // Enhanced section header
-                        HStack(alignment: .center, spacing: 12) {
-                            // Section title with better typography
-                            Text(sectionTitle)
-                                .font(.system(size: 20, weight: .bold, design: .rounded))
-                                .foregroundStyle(
-                                    LinearGradient(
-                                        colors: [
-                                            theme.text,
-                                            theme.text.opacity(0.8)
-                                        ],
-                                        startPoint: .leading,
-                                        endPoint: .trailing
-                                    )
-                                )
-                                .tracking(-0.2)
+            LazyVStack(spacing: 16, pinnedViews: []) {
+                ForEach(Array(groupedTasksByCategory.indices), id: \.self) { index in
+                    let categoryGroup = groupedTasksByCategory[index]
+                    if !categoryGroup.tasks.isEmpty {
+                        VStack(spacing: 8) {
+                            // Category section header with collapse functionality
+                            CategorySectionHeaderView(
+                                category: categoryGroup.category,
+                                taskCount: categoryGroup.tasks.count
+                            )
                             
-                            // Decorative line
-                            Rectangle()
-                                .fill(
-                                    LinearGradient(
-                                        colors: [
-                                            Color.clear,
-                                            theme.textSecondary.opacity(0.3),
-                                            Color.clear
-                                        ],
-                                        startPoint: .leading,
-                                        endPoint: .trailing
-                                    )
-                                )
-                                .frame(height: 1)
-                            
-                            // Enhanced task count badge
-                            Text("\(tasks.count)")
-                                .font(.system(size: 14, weight: .bold, design: .rounded))
-                                .foregroundColor(theme.background)
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 6)
-                                .background(
-                                    Capsule()
-                                        .fill(
-                                            LinearGradient(
-                                                colors: [
-                                                    theme.accent,
-                                                    theme.accent.opacity(0.8)
-                                                ],
-                                                startPoint: .topLeading,
-                                                endPoint: .bottomTrailing
-                                            )
-                                        )
-                                        .shadow(
-                                            color: theme.shadow,
-                                            radius: 3,
-                                            x: 0,
-                                            y: 2
-                                        )
-                                )
-                                .transition(.scale.combined(with: .opacity))
-                                .animation(.adaptiveBouncy, value: tasks.count)
-                        }
-                        .padding(.horizontal, 24)
-                        .padding(.bottom, 4)
-                        
-                        // Task cards with enhanced spacing
-                        LazyVStack(spacing: 10) {
-                            ForEach(tasks, id: \.id) { task in
-                                taskRowWithEffects(task)
-                                    .id("task-\(task.id.uuidString)")
+                            // Show tasks only if category is not collapsed
+                            if !categoryManager.isCategoryCollapsed(categoryGroup.category) {
+                                // Group tasks by date within each category
+                                let dateGroupedTasks = groupTasksByDate(categoryGroup.tasks)
+                                
+                                LazyVStack(spacing: 20) {
+                                    ForEach(dateGroupedTasks, id: \.0) { sectionTitle, tasks in
+                                        VStack(alignment: .leading, spacing: 12) {
+                                            // Date section header (smaller, secondary)
+                                            HStack(alignment: .center, spacing: 8) {
+                                                Text(sectionTitle)
+                                                    .font(.system(size: 16, weight: .semibold, design: .rounded))
+                                                    .foregroundColor(theme.textSecondary)
+                                                    .tracking(-0.1)
+                                                
+                                                Rectangle()
+                                                    .fill(theme.textSecondary.opacity(0.2))
+                                                    .frame(height: 0.5)
+                                                
+                                                Text("\(tasks.count)")
+                                                    .font(.system(size: 12, weight: .medium))
+                                                    .foregroundColor(theme.textTertiary)
+                                                    .padding(.horizontal, 6)
+                                                    .padding(.vertical, 2)
+                                                    .background(
+                                                        Capsule()
+                                                            .fill(theme.surfaceSecondary)
+                                                    )
+                                            }
+                                            .padding(.horizontal, 24)
+                                            
+                                            // Task cards
+                                            LazyVStack(spacing: 10) {
+                                                ForEach(tasks, id: \.id) { task in
+                                                    taskRowWithEffects(task)
+                                                        .id("task-\(task.id.uuidString)")
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                .clipped() // Optimize rendering performance
+                                .transition(.opacity)
                             }
                         }
+                        .animation(.easeInOut(duration: 0.25), value: categoryManager.isCategoryCollapsed(categoryGroup.category))
+                        .id("category-\(categoryGroup.category?.id.uuidString ?? "uncategorized")")
                     }
                 }
             }
-            .padding(.top, 16)
-            .padding(.bottom, 120)
+            .padding(.top, 8)
+            .padding(.bottom, 100)
         }
         .scrollContentBackground(.hidden)
         .scrollBounceBehavior(.automatic)
         .scrollClipDisabled(false)
         .scrollDismissesKeyboard(.interactively)
         .transition(.asymmetric(
-            insertion: .opacity.combined(with: .scale(scale: 0.95)).combined(with: .offset(y: 10)),
-            removal: .opacity.combined(with: .scale(scale: 0.95)).combined(with: .offset(y: -10))
+            insertion: .scale.combined(with: .opacity),
+            removal: .scale.combined(with: .opacity)
         ))
     }
     

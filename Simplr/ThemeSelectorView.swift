@@ -407,12 +407,31 @@ struct ThemePreviewCard: View {
                                 .font(.caption2)
                                 .fontWeight(.medium)
                         }
-                        .foregroundColor(theme.warning)
+                        .foregroundColor(
+                            // Enhanced visibility for coffee theme preview
+                            theme is CoffeeTheme ?
+                                Color(red: 0.18, green: 0.12, blue: 0.08) : // Dark coffee text for coffee theme
+                                theme.warning
+                        )
                         .padding(.horizontal, 6)
                         .padding(.vertical, 3)
                         .background(
                             Capsule()
-                                .fill(theme.warning.opacity(0.1))
+                                .fill(
+                                    // Enhanced coffee theme preview background
+                                    theme is CoffeeTheme ?
+                                        Color(red: 0.45, green: 0.32, blue: 0.22).opacity(0.15) : // Coffee accent background
+                                        theme.warning.opacity(0.1)
+                                )
+                        )
+                        .overlay(
+                            // Enhanced border for coffee theme preview
+                            theme is CoffeeTheme ?
+                                Capsule()
+                                    .stroke(
+                                        Color(red: 0.18, green: 0.12, blue: 0.08).opacity(0.4),
+                                        lineWidth: 0.6
+                                    ) : nil
                         )
                     }
                 }

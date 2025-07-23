@@ -200,6 +200,52 @@ enum CategoryColor: String, CaseIterable, Codable {
             endPoint: .bottomTrailing
         )
     }
+    
+    /// Subdued colors for coffee theme - warm, muted tones that blend with coffee aesthetic
+    var coffeeColor: Color {
+        switch self {
+        case .blue: return Color(red: 0.72, green: 0.76, blue: 0.82)     // Muted coffee-blue
+        case .green: return Color(red: 0.76, green: 0.80, blue: 0.72)    // Muted coffee-sage
+        case .orange: return Color(red: 0.82, green: 0.76, blue: 0.68)   // Muted coffee-terracotta
+        case .red: return Color(red: 0.80, green: 0.70, blue: 0.68)      // Muted coffee-rose
+        case .purple: return Color(red: 0.78, green: 0.72, blue: 0.80)   // Muted coffee-lavender
+        case .indigo: return Color(red: 0.74, green: 0.76, blue: 0.82)   // Muted coffee-periwinkle
+        case .pink: return Color(red: 0.82, green: 0.72, blue: 0.76)     // Muted coffee-blush
+        case .teal: return Color(red: 0.70, green: 0.80, blue: 0.78)     // Muted coffee-aqua
+        case .yellow: return Color(red: 0.82, green: 0.80, blue: 0.68)   // Muted coffee-cream
+        case .gray: return Color(red: 0.76, green: 0.74, blue: 0.72)     // Muted coffee-silver
+        }
+    }
+    
+    /// Coffee light color for backgrounds
+    var coffeeLightColor: Color {
+        coffeeColor.opacity(0.25)
+    }
+    
+    /// Coffee dark color for text and borders
+    var coffeeDarkColor: Color {
+        switch self {
+        case .blue: return Color(red: 0.58, green: 0.62, blue: 0.68)
+        case .green: return Color(red: 0.62, green: 0.68, blue: 0.58)
+        case .orange: return Color(red: 0.68, green: 0.62, blue: 0.54)
+        case .red: return Color(red: 0.68, green: 0.56, blue: 0.54)
+        case .purple: return Color(red: 0.64, green: 0.58, blue: 0.68)
+        case .indigo: return Color(red: 0.60, green: 0.62, blue: 0.68)
+        case .pink: return Color(red: 0.68, green: 0.58, blue: 0.62)
+        case .teal: return Color(red: 0.56, green: 0.68, blue: 0.64)
+        case .yellow: return Color(red: 0.68, green: 0.66, blue: 0.54)
+        case .gray: return Color(red: 0.62, green: 0.60, blue: 0.58)
+        }
+    }
+    
+    /// Coffee gradient for subdued appearance
+    var coffeeGradient: LinearGradient {
+        LinearGradient(
+            colors: [coffeeColor, coffeeDarkColor],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
 }
 
 
