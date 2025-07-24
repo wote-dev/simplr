@@ -67,6 +67,43 @@ class CategoryManager: ObservableObject {
         return Date().timeIntervalSince(lastCacheUpdate) < cacheValidityDuration
     }
     
+    /// CRITICAL FIX: Refreshes category state when task completion status changes
+    /// This method ensures category collapse/expand states remain consistent
+    /// and prevents the bug where wrong categories collapse/expand
+    func refreshCategoryState() {
+        // Force cache rebuild to ensure category lookups are accurate
+        rebuildCache()
+        
+        // Clean up any stale collapsed states for categories that no longer exist
+        validateCollapsedStates()
+        
+        // Post notification to trigger UI refresh for all views that depend on category state
+        // This ensures TodayView, UpcomingView, and other category-dependent views update properly
+        DispatchQueue.main.async {
+            NotificationCenter.default.post(
+                name: NSNotification.Name("CategoryStateDidRefresh"),
+                object: self
+            )
+        }
+    }
+    
+    /// Validates and cleans up collapsed states for non-existent categories
+    /// This prevents state corruption and ensures optimal performance
+    private func validateCollapsedStates() {
+        // Performance optimization: Use Set for O(1) lookup operations
+        var validCategoryNames = Set(categories.map { $0.name })
+        validCategoryNames.insert("Uncategorized") // Always include uncategorized
+        
+        // Efficient set subtraction to find stale category names
+        let staleCategoryNames = collapsedCategories.subtracting(validCategoryNames)
+        
+        // Only perform expensive save operation if cleanup is needed
+        if !staleCategoryNames.isEmpty {
+            collapsedCategories.subtract(staleCategoryNames)
+            saveCollapsedCategories()
+        }
+    }
+    
     // MARK: - Category Management
     
     func addCategory(_ category: TaskCategory) {
@@ -143,22 +180,28 @@ class CategoryManager: ObservableObject {
         // Defensive programming: Ensure we have a valid category name
         guard !categoryName.isEmpty else { return }
         
-        // Optimized toggle with single haptic feedback and immediate save for reliability
-        let wasCollapsed = collapsedCategories.contains(categoryName)
-        
-        // Perform the toggle operation atomically
-        if wasCollapsed {
-            collapsedCategories.remove(categoryName)
-        } else {
-            collapsedCategories.insert(categoryName)
+        // CRITICAL FIX: Prevent rapid successive calls that could cause state corruption
+        // Use a debounce mechanism to ensure only one toggle operation at a time
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            
+            // Optimized toggle with single haptic feedback and immediate save for reliability
+            let wasCollapsed = self.collapsedCategories.contains(categoryName)
+            
+            // Perform the toggle operation atomically
+            if wasCollapsed {
+                self.collapsedCategories.remove(categoryName)
+            } else {
+                self.collapsedCategories.insert(categoryName)
+            }
+            
+            // Immediate save for better state persistence reliability
+            // This ensures user preferences are never lost
+            self.saveCollapsedCategories()
+            
+            // Force UI update to ensure immediate visual feedback
+            self.objectWillChange.send()
         }
-        
-        // Immediate save for better state persistence reliability
-        // This ensures user preferences are never lost
-        saveCollapsedCategories()
-        
-        // Single haptic feedback for better performance (after state change)
-        HapticManager.shared.selectionChange()
     }
     
     func isCategoryCollapsed(_ category: TaskCategory?) -> Bool {

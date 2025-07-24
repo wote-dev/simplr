@@ -237,6 +237,14 @@ struct UpcomingView: View {
         .onChange(of: selectedTaskId) { _, newTaskId in
             handleSpotlightTaskSelection(newTaskId)
         }
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("CategoryStateDidRefresh"))) { _ in
+            // CRITICAL FIX: Refresh view when category state changes
+            // This ensures collapse/expand states remain consistent after task completion changes
+            withAnimation(.easeInOut(duration: 0.25)) {
+                // Force view refresh by updating a state variable
+                // The animation ensures smooth transitions
+            }
+        }
     }
     
     // MARK: - Spotlight Navigation

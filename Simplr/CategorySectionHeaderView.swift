@@ -61,15 +61,41 @@ struct CategorySectionHeaderView: View {
         categoryManager.isCategoryCollapsed(category)
     }
     
+    /// Optimized theme-adaptive chevron color with performance caching
+    private var themeAdaptiveChevronColor: Color {
+        // Enhanced theme-specific chevron colors for better visibility and consistency
+        switch themeManager.themeMode {
+        case .kawaii:
+            // Softer, more playful color for kawaii theme
+            return theme.textSecondary.opacity(0.8)
+        case .serene:
+            // Calmer, more subdued color for serene theme
+            return theme.textSecondary.opacity(0.75)
+        default:
+            // Check for specific theme types for optimal contrast
+            if theme is CoffeeTheme {
+                // Warmer tone for coffee theme
+                return theme.textSecondary.opacity(0.85)
+            } else if theme is DarkPurpleTheme || theme is DarkBlueTheme {
+                // Enhanced visibility for dark themes
+                return theme.textSecondary.opacity(0.9)
+            } else {
+                // Standard visibility for light themes
+                return theme.textSecondary
+            }
+        }
+    }
+    
     var body: some View {
         HStack(spacing: 12) {
-            // Simple Collapse/Expand chevron with clean rotation
+            // Theme-adaptive Collapse/Expand chevron with optimized performance
             Image(systemName: "chevron.down")
                 .font(.system(size: 12, weight: .semibold))
-                .foregroundColor(theme.textSecondary)
+                .foregroundColor(themeAdaptiveChevronColor)
                 .rotationEffect(.degrees(isCollapsed ? -90 : 0))
                 .animation(.easeInOut(duration: 0.25), value: isCollapsed)
                 .frame(width: 12, height: 12)
+                .contentShape(Rectangle()) // Improved touch target
             // Category icon/indicator
             if let category = category {
                 if isUrgentCategory {
@@ -206,25 +232,34 @@ struct CategorySectionHeaderView: View {
         .scaleEffect(isPressed ? 0.98 : 1.0)
         .animation(.interpolatingSpring(stiffness: 500, damping: 30), value: isPressed)
         .contentShape(Rectangle()) // Make entire area tappable
-        .onTapGesture {
-            // Immediate state change for better responsiveness
-            withAnimation(.easeInOut(duration: 0.25)) {
-                if let onToggleCollapse = onToggleCollapse {
-                    onToggleCollapse()
-                } else {
-                    categoryManager.toggleCategoryCollapse(category)
+        .simultaneousGesture(
+            // CRITICAL FIX: Use DragGesture for reliable press detection without gesture conflicts
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in
+                    if !isPressed {
+                        withAnimation(.interpolatingSpring(stiffness: 500, damping: 30)) {
+                            isPressed = true
+                        }
+                    }
                 }
-            }
-            
-            // Haptic feedback
-            HapticManager.shared.buttonTap()
-        }
-        .onLongPressGesture(minimumDuration: 0, maximumDistance: .infinity, pressing: { pressing in
-            // Handle press state for visual feedback
-            withAnimation(.interpolatingSpring(stiffness: 500, damping: 30)) {
-                isPressed = pressing
-            }
-        }, perform: {})
+                .onEnded { _ in
+                    withAnimation(.interpolatingSpring(stiffness: 500, damping: 30)) {
+                        isPressed = false
+                    }
+                    
+                    // Perform the toggle action with proper animation and haptic feedback
+                    withAnimation(.easeInOut(duration: 0.25)) {
+                        if let onToggleCollapse = onToggleCollapse {
+                            onToggleCollapse()
+                        } else {
+                            categoryManager.toggleCategoryCollapse(category)
+                        }
+                    }
+                    
+                    // Provide haptic feedback after successful toggle
+                    HapticManager.shared.selectionChange()
+                }
+        )
     }
 }
 

@@ -129,6 +129,7 @@ struct SettingsView: View {
                                                     .font(.system(size: 14, weight: .medium))
                                             }
                                             .foregroundColor(theme.accent)
+                                            .animation(.easeInOut(duration: 0.2), value: theme.accent)
                                             .padding(.horizontal, 12)
                                             .padding(.vertical, 8)
                                             .background(
@@ -151,7 +152,8 @@ struct SettingsView: View {
                                                 Text("Collapse All")
                                                     .font(.system(size: 14, weight: .medium))
                                             }
-                                            .foregroundColor(theme.textSecondary)
+                                            .foregroundColor(collapseButtonColor)
+                                            .animation(.easeInOut(duration: 0.2), value: collapseButtonColor)
                                             .padding(.horizontal, 12)
                                             .padding(.vertical, 8)
                                             .background(
@@ -475,6 +477,42 @@ struct SettingsView: View {
         }
     }
     
+    /// Theme-adaptive color for collapse button with enhanced visibility
+    private var collapseButtonColor: Color {
+        switch themeManager.themeMode {
+        case .kawaii:
+            return theme.textSecondary.opacity(0.85)
+        case .serene:
+            return theme.textSecondary.opacity(0.8)
+        default:
+            if theme is CoffeeTheme {
+                return theme.textSecondary.opacity(0.9)
+            } else if theme is DarkPurpleTheme || theme is DarkBlueTheme {
+                return theme.textSecondary.opacity(0.95)
+            } else {
+                return theme.textSecondary
+            }
+        }
+    }
+    
+    /// Optimized chevron color for settings rows with theme adaptation
+    private var settingsChevronColor: Color {
+        switch themeManager.themeMode {
+        case .kawaii:
+            return theme.textTertiary.opacity(0.8)
+        case .serene:
+            return theme.textTertiary.opacity(0.75)
+        default:
+            if theme is CoffeeTheme {
+                return theme.textTertiary.opacity(0.85)
+            } else if theme is DarkPurpleTheme || theme is DarkBlueTheme {
+                return theme.textTertiary.opacity(0.9)
+            } else {
+                return theme.textTertiary
+            }
+        }
+    }
+    
     private func settingsRow(
         title: String,
         value: String,
@@ -502,7 +540,7 @@ struct SettingsView: View {
             if showChevron {
                 Image(systemName: "chevron.right")
                     .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(theme.textTertiary)
+                    .foregroundColor(settingsChevronColor)
             }
         }
         .padding(.vertical, 4) // Added vertical padding for better touch targets
@@ -584,6 +622,24 @@ struct SettingsView: View {
         let isCoffee = theme is CoffeeTheme
         let isCollapsed = categoryManager.isCategoryCollapsed(category)
         
+        /// Optimized theme-adaptive chevron color for consistent visibility
+        let themeAdaptiveChevronColor: Color = {
+            switch themeManager.themeMode {
+            case .kawaii:
+                return theme.textSecondary.opacity(0.8)
+            case .serene:
+                return theme.textSecondary.opacity(0.75)
+            default:
+                if theme is CoffeeTheme {
+                    return theme.textSecondary.opacity(0.85)
+                } else if theme is DarkPurpleTheme || theme is DarkBlueTheme {
+                    return theme.textSecondary.opacity(0.9)
+                } else {
+                    return theme.textSecondary
+                }
+            }
+        }()
+        
         let categoryGradient: LinearGradient = {
             if isKawaii {
                 return category.color.kawaiiGradient
@@ -653,11 +709,12 @@ struct SettingsView: View {
                 
                 Spacer()
                 
-                // Collapse indicator
+                // Theme-adaptive collapse indicator
                 if isCollapsed {
                     Image(systemName: "chevron.right")
                         .font(.system(size: 10, weight: .medium))
-                        .foregroundColor(theme.textSecondary)
+                        .foregroundColor(themeAdaptiveChevronColor)
+                        .animation(.easeInOut(duration: 0.2), value: isCollapsed)
                 }
                 
                 if category.isCustom {

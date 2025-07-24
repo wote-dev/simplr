@@ -205,6 +205,11 @@ class TaskManager: ObservableObject {
         _futureTasks = nil
         _noDueDateTasks = nil
         lastTasksUpdate = Date()
+        
+        // CRITICAL FIX: Notify CategoryManager to refresh its state
+        // This ensures category collapse/expand states remain consistent
+        // when tasks change completion status
+        categoryManager?.refreshCategoryState()
     }
     
     private func isCacheValid() -> Bool {
@@ -384,8 +389,10 @@ class TaskManager: ObservableObject {
             let categories = categoryManager?.categories ?? []
             SpotlightManager.shared.indexTask(tasks[index], categories: categories)
             
-            invalidateCache()
-            saveTasksWithImmediateBadgeUpdate()
+            // CRITICAL FIX: Invalidate cache and refresh category state
+        // This ensures proper synchronization between task state and category collapse/expand state
+        invalidateCache()
+        saveTasksWithImmediateBadgeUpdate()
         }
     }
     
