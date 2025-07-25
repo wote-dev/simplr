@@ -161,11 +161,15 @@ struct CompletedView: View {
                 VStack(spacing: 0) {
                     headerView
                     
-                    if completedTasks.isEmpty {
-                        emptyStateView
-                    } else {
-                        taskListView
+                    // Optimized state transition with performance monitoring
+                    Group {
+                        if completedTasks.isEmpty {
+                            emptyStateView
+                        } else {
+                            taskListView
+                        }
                     }
+                    .animation(UIOptimizer.optimizedStateTransitionAnimation(), value: completedTasks.isEmpty)
                 }
             }
             .navigationBarHidden(true)
@@ -176,10 +180,28 @@ struct CompletedView: View {
         }
         .confirmationDialog("Delete Task", isPresented: $showingDeleteAlert, presenting: taskToDelete) { task in
             Button("Delete", role: .destructive) {
-                // Trigger the deletion animation and then delete the task
-                withAnimation(.smoothSpring) {
-                    taskManager.deleteTask(task)
+                // Optimized deletion with empty state awareness
+                let willBeEmpty = completedTasks.count == 1
+                
+                if willBeEmpty {
+                    // Special handling for last task deletion - smooth empty state transition
+                    withAnimation(UIOptimizer.optimizedStateTransitionAnimation()) {
+                        taskManager.deleteTask(task)
+                    }
+                    
+                    // Ensure smooth empty state appearance
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        withAnimation(UIOptimizer.optimizedEmptyStateContainerAnimation()) {
+                            // Trigger empty state animation refresh
+                        }
+                    }
+                } else {
+                    // Standard deletion animation for multiple tasks
+                    withAnimation(UIOptimizer.optimizedUndoAnimation()) {
+                        taskManager.deleteTask(task)
+                    }
                 }
+                
                 taskToDelete = nil
             }
             Button("Cancel", role: .cancel) {
@@ -292,6 +314,7 @@ struct CompletedView: View {
     
     private var emptyStateView: some View {
         VStack(spacing: 24) {
+            // Optimized icon with smooth scaling animation
             Image(systemName: "checkmark.seal")
                 .font(.system(size: 50, weight: .light))
                 .foregroundStyle(theme.accentGradient)
@@ -301,27 +324,33 @@ struct CompletedView: View {
                     x: 0,
                     y: 2
                 )
-                .animation(.easeInOut(duration: 0.3), value: completedTasks.isEmpty)
+                .scaleEffect(completedTasks.isEmpty ? 1.0 : 0.8)
+                .opacity(completedTasks.isEmpty ? 1.0 : 0.0)
+                .animation(UIOptimizer.optimizedEmptyStateIconAnimation(), value: completedTasks.isEmpty)
             
             VStack(spacing: 16) {
                 Text("No Completed Tasks")
                     .font(.system(size: 28, weight: .bold, design: .rounded))
                     .foregroundStyle(theme.accentGradient)
                     .tracking(-0.3)
+                    .scaleEffect(completedTasks.isEmpty ? 1.0 : 0.9)
+                    .opacity(completedTasks.isEmpty ? 1.0 : 0.0)
+                    .animation(UIOptimizer.optimizedEmptyStateTitleAnimation(), value: completedTasks.isEmpty)
                 
                 Text("Complete some tasks to see them here!")
                     .font(.system(size: 18, weight: .medium, design: .rounded))
                     .foregroundColor(theme.text)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 40)
+                    .scaleEffect(completedTasks.isEmpty ? 1.0 : 0.95)
+                    .opacity(completedTasks.isEmpty ? 1.0 : 0.0)
+                    .animation(UIOptimizer.optimizedEmptyStateSubtitleAnimation(), value: completedTasks.isEmpty)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(.top, -50)
-        .transition(.asymmetric(
-            insertion: .scale.combined(with: .opacity),
-            removal: .scale.combined(with: .opacity)
-        ))
+        .transition(UIOptimizer.optimizedEmptyStateTransition())
+        .animation(UIOptimizer.optimizedEmptyStateContainerAnimation(), value: completedTasks.isEmpty)
     }
     
     private var taskListView: some View {
@@ -383,10 +412,8 @@ struct CompletedView: View {
         .scrollBounceBehavior(.automatic)
         .scrollClipDisabled(false)
         .scrollDismissesKeyboard(.interactively)
-        .transition(.asymmetric(
-            insertion: .opacity.combined(with: .scale(scale: 0.95)),
-            removal: .opacity.combined(with: .scale(scale: 0.95))
-        ))
+        .transition(UIOptimizer.optimizedTaskListTransition())
+        .animation(UIOptimizer.optimizedTaskListAnimation(), value: !completedTasks.isEmpty)
     }
     
     private func completedTaskRow(_ task: Task) -> some View {
@@ -394,9 +421,26 @@ struct CompletedView: View {
             task: task,
             namespace: taskNamespace,
             onToggleCompletion: {
-                // Optimized animation for undo operation - simple and smooth
-                withAnimation(UIOptimizer.optimizedUndoAnimation()) {
-                    taskManager.toggleTaskCompletion(task)
+                // Optimized animation for undo operation with state transition awareness
+                let willBeEmpty = completedTasks.count == 1
+                
+                if willBeEmpty {
+                    // Special handling when this will be the last task - smooth empty state transition
+                    withAnimation(UIOptimizer.optimizedStateTransitionAnimation()) {
+                        taskManager.toggleTaskCompletion(task)
+                    }
+                    
+                    // Ensure empty state appears smoothly
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                        withAnimation(UIOptimizer.optimizedEmptyStateContainerAnimation()) {
+                            // Trigger empty state refresh
+                        }
+                    }
+                } else {
+                    // Standard undo animation for multiple tasks
+                    withAnimation(UIOptimizer.optimizedUndoAnimation()) {
+                        taskManager.toggleTaskCompletion(task)
+                    }
                 }
             },
             onEdit: {
@@ -430,12 +474,21 @@ struct CompletedView: View {
     private func clearAllCompleted() {
         let completedTasksToDelete = completedTasks
         
-        withAnimation(.smoothSpring) {
+        // Use optimized animation for smooth transition to empty state
+        withAnimation(UIOptimizer.optimizedStateTransitionAnimation()) {
             for task in completedTasksToDelete {
                 taskManager.deleteTask(task)
             }
         }
         
+        // Provide haptic feedback for user confirmation
         HapticManager.shared.successFeedback()
+        
+        // Ensure smooth empty state appearance with slight delay
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            withAnimation(UIOptimizer.optimizedEmptyStateContainerAnimation()) {
+                // Trigger empty state animation refresh
+            }
+        }
     }
 }

@@ -49,6 +49,15 @@ struct PerformanceConfig {
         static let undoSpringDamping: Double = 0.85
         static let undoTransitionScale: Double = 0.98
         
+        // Empty state animation settings for optimal UX
+        static let emptyStateContainerDuration: Double = 0.5
+        static let emptyStateIconDelay: Double = 0.1
+        static let emptyStateTitleDelay: Double = 0.2
+        static let emptyStateSubtitleDelay: Double = 0.3
+        static let emptyStateStaggerInterval: Double = 0.1
+        static let emptyStateSpringResponse: Double = 0.5
+        static let emptyStateSpringDamping: Double = 0.8
+        
         // Form-specific optimized animations
         static let optimizedFormSection = SwiftUI.Animation.spring(response: formSectionResponse, dampingFraction: formSectionDamping, blendDuration: 0.1)
         static let optimizedDatePicker = SwiftUI.Animation.spring(response: datePickerResponse, dampingFraction: datePickerDamping, blendDuration: 0.1)

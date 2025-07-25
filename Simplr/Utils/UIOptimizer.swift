@@ -278,6 +278,219 @@ class UIOptimizer: ObservableObject {
             // Perform background cleanup
         }
     }
+    
+    // MARK: - Empty State Optimized Animations
+    
+    /// Ultra-smooth empty state container animation with staggered timing
+    static func optimizedEmptyStateContainerAnimation() -> Animation {
+        if PerformanceConfig.shouldUseReducedAnimations {
+            return .easeInOut(duration: 0.25)
+        }
+        
+        let devicePerformance = getDevicePerformanceLevel()
+        switch devicePerformance {
+        case .high:
+            return .spring(
+                response: 0.5,
+                dampingFraction: 0.8,
+                blendDuration: 0.1
+            ).speed(1.2)
+        case .medium:
+            return .spring(
+                response: 0.6,
+                dampingFraction: 0.85,
+                blendDuration: 0.15
+            )
+        case .low:
+            return .easeInOut(duration: 0.3)
+        }
+    }
+    
+    /// Optimized icon animation with gentle bounce effect
+    static func optimizedEmptyStateIconAnimation() -> Animation {
+        if PerformanceConfig.shouldUseReducedAnimations {
+            return .easeInOut(duration: 0.2)
+        }
+        
+        let devicePerformance = getDevicePerformanceLevel()
+        switch devicePerformance {
+        case .high:
+            return .spring(
+                response: 0.6,
+                dampingFraction: 0.75,
+                blendDuration: 0.1
+            ).delay(0.1).speed(1.3)
+        case .medium:
+            return .spring(
+                response: 0.7,
+                dampingFraction: 0.8,
+                blendDuration: 0.15
+            ).delay(0.1)
+        case .low:
+            return .easeInOut(duration: 0.25).delay(0.05)
+        }
+    }
+    
+    /// Optimized title animation with subtle entrance effect
+    static func optimizedEmptyStateTitleAnimation() -> Animation {
+        if PerformanceConfig.shouldUseReducedAnimations {
+            return .easeInOut(duration: 0.2)
+        }
+        
+        let devicePerformance = getDevicePerformanceLevel()
+        switch devicePerformance {
+        case .high:
+            return .spring(
+                response: 0.5,
+                dampingFraction: 0.85,
+                blendDuration: 0.1
+            ).delay(0.2).speed(1.2)
+        case .medium:
+            return .spring(
+                response: 0.6,
+                dampingFraction: 0.9,
+                blendDuration: 0.15
+            ).delay(0.15)
+        case .low:
+            return .easeInOut(duration: 0.25).delay(0.1)
+        }
+    }
+    
+    /// Optimized subtitle animation with final stagger
+    static func optimizedEmptyStateSubtitleAnimation() -> Animation {
+        if PerformanceConfig.shouldUseReducedAnimations {
+            return .easeInOut(duration: 0.2)
+        }
+        
+        let devicePerformance = getDevicePerformanceLevel()
+        switch devicePerformance {
+        case .high:
+            return .spring(
+                response: 0.4,
+                dampingFraction: 0.9,
+                blendDuration: 0.1
+            ).delay(0.3).speed(1.1)
+        case .medium:
+            return .spring(
+                response: 0.5,
+                dampingFraction: 0.95,
+                blendDuration: 0.15
+            ).delay(0.25)
+        case .low:
+            return .easeInOut(duration: 0.25).delay(0.15)
+        }
+    }
+    
+    /// Optimized empty state transition with smooth scaling
+    static func optimizedEmptyStateTransition() -> AnyTransition {
+        if PerformanceConfig.shouldUseReducedAnimations {
+            return AnyTransition.opacity
+        }
+        
+        let devicePerformance = getDevicePerformanceLevel()
+        switch devicePerformance {
+        case .high:
+            return AnyTransition.asymmetric(
+                insertion: .scale(scale: 0.8, anchor: .center)
+                    .combined(with: .opacity)
+                    .combined(with: .offset(y: 20))
+                    .animation(optimizedEmptyStateContainerAnimation()),
+                removal: .scale(scale: 0.9, anchor: .center)
+                    .combined(with: .opacity)
+                    .combined(with: .offset(y: -10))
+                    .animation(.easeInOut(duration: 0.2))
+            )
+        case .medium:
+            return AnyTransition.asymmetric(
+                insertion: .scale(scale: 0.9, anchor: .center)
+                    .combined(with: .opacity)
+                    .animation(optimizedEmptyStateContainerAnimation()),
+                removal: .scale(scale: 0.95, anchor: .center)
+                    .combined(with: .opacity)
+                    .animation(.easeInOut(duration: 0.2))
+            )
+        case .low:
+            return AnyTransition.opacity.animation(.easeInOut(duration: 0.25))
+        }
+    }
+    
+    /// Optimized task list transition for smooth state changes
+    static func optimizedTaskListTransition() -> AnyTransition {
+        if PerformanceConfig.shouldUseReducedAnimations {
+            return AnyTransition.opacity
+        }
+        
+        let devicePerformance = getDevicePerformanceLevel()
+        switch devicePerformance {
+        case .high:
+            return AnyTransition.asymmetric(
+                insertion: .opacity.combined(with: .scale(scale: 0.95, anchor: .top))
+                    .combined(with: .offset(y: 10))
+                    .animation(.spring(response: 0.5, dampingFraction: 0.8).speed(1.2)),
+                removal: .opacity.combined(with: .scale(scale: 0.98, anchor: .top))
+                    .animation(.easeInOut(duration: 0.2))
+            )
+        case .medium:
+            return AnyTransition.asymmetric(
+                insertion: .opacity.combined(with: .scale(scale: 0.97, anchor: .top))
+                    .animation(.spring(response: 0.6, dampingFraction: 0.85)),
+                removal: .opacity.combined(with: .scale(scale: 0.99, anchor: .top))
+                    .animation(.easeInOut(duration: 0.2))
+            )
+        case .low:
+            return AnyTransition.opacity.animation(.easeInOut(duration: 0.25))
+        }
+    }
+    
+    /// Optimized task list animation for content appearance
+    static func optimizedTaskListAnimation() -> Animation {
+        if PerformanceConfig.shouldUseReducedAnimations {
+            return .easeInOut(duration: 0.25)
+        }
+        
+        let devicePerformance = getDevicePerformanceLevel()
+        switch devicePerformance {
+        case .high:
+            return .spring(
+                response: 0.5,
+                dampingFraction: 0.8,
+                blendDuration: 0.1
+            ).speed(1.2)
+        case .medium:
+            return .spring(
+                response: 0.6,
+                dampingFraction: 0.85,
+                blendDuration: 0.15
+            )
+        case .low:
+            return .easeInOut(duration: 0.3)
+        }
+    }
+    
+    /// Optimized state transition animation for main content switching
+    static func optimizedStateTransitionAnimation() -> Animation {
+        if PerformanceConfig.shouldUseReducedAnimations {
+            return .easeInOut(duration: 0.2)
+        }
+        
+        let devicePerformance = getDevicePerformanceLevel()
+        switch devicePerformance {
+        case .high:
+            return .spring(
+                response: 0.4,
+                dampingFraction: 0.85,
+                blendDuration: 0.1
+            ).speed(1.3)
+        case .medium:
+            return .spring(
+                response: 0.5,
+                dampingFraction: 0.9,
+                blendDuration: 0.15
+            )
+        case .low:
+            return .easeInOut(duration: 0.25)
+        }
+    }
 }
 
 /// View modifier for optimized rendering

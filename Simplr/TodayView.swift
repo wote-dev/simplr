@@ -23,6 +23,8 @@ struct TodayView: View {
     @State private var selectedFilter: TaskFilter = .all
     @State private var selectedSortOption: SortOption = .priority
     @State private var showingSettings = false
+    @State private var showEmptyState = false
+    @State private var emptyStateAnimationPhase = 0
     
     // Shared UserDefaults for widget synchronization
     private let sharedUserDefaults = UserDefaults(suiteName: "group.com.danielzverev.simplr")
@@ -208,11 +210,14 @@ struct TodayView: View {
                 VStack(spacing: 0) {
                     headerView
                     
-                    if todayTasks.isEmpty {
+                    if showEmptyState {
                         emptyStateView
                     } else {
                         taskListView
                     }
+                }
+                .onChange(of: todayTasks.isEmpty) { _, isEmpty in
+                    handleEmptyStateTransition(isEmpty: isEmpty)
                 }
             }
             .navigationBarHidden(true)
@@ -261,6 +266,10 @@ struct TodayView: View {
         }
         .onAppear {
             loadSortOption()
+            // Initialize empty state if needed
+            if todayTasks.isEmpty {
+                handleEmptyStateTransition(isEmpty: true)
+            }
         }
         .onChange(of: selectedSortOption) { _, newValue in
             saveSortOption(newValue)
@@ -435,6 +444,7 @@ struct TodayView: View {
     
     private var emptyStateView: some View {
         VStack(spacing: 24) {
+            // House icon with enhanced smooth animation and staggered appearance
             Image(systemName: "house")
                 .font(.system(size: 50, weight: .light))
                 .foregroundStyle(theme.accentGradient)
@@ -445,28 +455,42 @@ struct TodayView: View {
                     y: 2
                 )
                 .scaleEffect(showingAddTask ? 1.1 : 1.0)
-                .animation(.easeInOut(duration: 0.3), value: showingAddTask)
+                .scaleEffect(emptyStateAnimationPhase >= 1 ? 1.0 : 0.3)
+                .opacity(emptyStateAnimationPhase >= 1 ? 1.0 : 0.0)
+                .offset(y: emptyStateAnimationPhase >= 1 ? 0 : 30)
+                .animation(.adaptiveSmooth, value: showingAddTask)
+                .animation(.adaptiveElastic.delay(0.2), value: emptyStateAnimationPhase)
+                .floating(intensity: 3, duration: 3.0) // Subtle floating animation
             
+            // Text content with staggered smooth animations
             VStack(spacing: 16) {
                 Text("All Clear for Today!")
                     .font(.system(size: 28, weight: .bold, design: .rounded))
                     .foregroundStyle(theme.accentGradient)
                     .tracking(-0.3)
+                    .scaleEffect(emptyStateAnimationPhase >= 2 ? 1.0 : 0.8)
+                    .opacity(emptyStateAnimationPhase >= 2 ? 1.0 : 0.0)
+                    .offset(y: emptyStateAnimationPhase >= 2 ? 0 : 20)
+                    .animation(.adaptiveSmooth.delay(0.4), value: emptyStateAnimationPhase)
                 
                 Text("No tasks due today. Enjoy your free time!")
                     .font(.system(size: 18, weight: .medium, design: .rounded))
                     .foregroundColor(theme.text)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 40)
+                    .scaleEffect(emptyStateAnimationPhase >= 3 ? 1.0 : 0.9)
+                    .opacity(emptyStateAnimationPhase >= 3 ? 1.0 : 0.0)
+                    .offset(y: emptyStateAnimationPhase >= 3 ? 0 : 15)
+                    .animation(.adaptiveSmooth.delay(0.6), value: emptyStateAnimationPhase)
             }
             .opacity(showingAddTask ? 0.7 : 1.0)
-            .animation(.easeInOut(duration: 0.3), value: showingAddTask)
+            .animation(.adaptiveSmooth, value: showingAddTask)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(.top, -50)
         .transition(.asymmetric(
-            insertion: .scale.combined(with: .opacity),
-            removal: .scale.combined(with: .opacity)
+            insertion: .scale(scale: 0.8).combined(with: .opacity).combined(with: .offset(y: 20)),
+            removal: .scale(scale: 0.9).combined(with: .opacity).combined(with: .offset(y: -10))
         ))
     }
     
@@ -573,6 +597,50 @@ struct TodayView: View {
         if let savedSortOption = sharedUserDefaults.string(forKey: todaySortOptionKey),
            let sortOption = SortOption(rawValue: savedSortOption) {
             selectedSortOption = sortOption
+        }
+    }
+    
+    // MARK: - Empty State Animation Management
+    
+    private func handleEmptyStateTransition(isEmpty: Bool) {
+        if isEmpty {
+            // Show empty state with smooth transition
+            withAnimation(.adaptiveSmooth.delay(0.1)) {
+                showEmptyState = true
+            }
+            
+            // Reset animation phase and start staggered animations
+            emptyStateAnimationPhase = 0
+            
+            // Trigger staggered animation phases
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                withAnimation(.adaptiveElastic) {
+                    emptyStateAnimationPhase = 1 // House icon
+                }
+            }
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                withAnimation(.adaptiveSmooth) {
+                    emptyStateAnimationPhase = 2 // Title text
+                }
+            }
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                withAnimation(.adaptiveSmooth) {
+                    emptyStateAnimationPhase = 3 // Subtitle text
+                }
+            }
+            
+            // Add subtle haptic feedback for completion
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                HapticManager.shared.successFeedback()
+            }
+        } else {
+            // Hide empty state immediately when tasks are added
+            withAnimation(.adaptiveSmooth) {
+                showEmptyState = false
+                emptyStateAnimationPhase = 0
+            }
         }
     }
 }
