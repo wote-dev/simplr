@@ -338,31 +338,56 @@ class TaskManager: ObservableObject {
     }
     
     func toggleTaskCompletion(_ task: Task) {
-        if let index = tasks.firstIndex(where: { $0.id == task.id }) {
-            tasks[index].isCompleted.toggle()
-            
-            // Set or clear the completion date
-            if tasks[index].isCompleted {
-                tasks[index].completedAt = Date()
-                HapticManager.shared.taskCompleted()
-                cancelNotification(for: tasks[index])
-            } else {
-                tasks[index].completedAt = nil
-                HapticManager.shared.taskUncompleted()
-                if tasks[index].hasReminder, let reminderDate = tasks[index].reminderDate {
-                    scheduleNotification(for: tasks[index], at: reminderDate)
-                }
+        guard let index = tasks.firstIndex(where: { $0.id == task.id }) else { return }
+        
+        // Optimized completion toggle with minimal overhead
+        let wasCompleted = tasks[index].isCompleted
+        tasks[index].isCompleted.toggle()
+        
+        // Set or clear the completion date efficiently
+        if tasks[index].isCompleted {
+            tasks[index].completedAt = Date()
+            HapticManager.shared.taskCompleted()
+            cancelNotification(for: tasks[index])
+        } else {
+            tasks[index].completedAt = nil
+            HapticManager.shared.taskUncompleted()
+            // Only reschedule notification if task has reminder
+            if tasks[index].hasReminder, let reminderDate = tasks[index].reminderDate {
+                scheduleNotification(for: tasks[index], at: reminderDate)
             }
-            
-            // Update the task in Spotlight with new completion status
-            let categories = categoryManager?.categories ?? []
-            SpotlightManager.shared.indexTask(tasks[index], categories: categories)
-            
-            // CRITICAL FIX: Invalidate cache and refresh category state
-        // This ensures proper synchronization between task state and category collapse/expand state
-        invalidateCache()
-        saveTasksWithImmediateBadgeUpdate()
         }
+        
+        // Batch Spotlight and cache updates for better performance
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            guard let self = self else { return }
+            
+            // Update Spotlight index in background
+            let categories = self.categoryManager?.categories ?? []
+            SpotlightManager.shared.indexTask(self.tasks[index], categories: categories)
+            
+            // Update UI on main thread with optimized cache invalidation
+            DispatchQueue.main.async {
+                self.optimizedCacheInvalidation()
+                self.saveTasksWithImmediateBadgeUpdate()
+            }
+        }
+    }
+    
+    /// Optimized cache invalidation for undo operations
+    private func optimizedCacheInvalidation() {
+        // Use unified cache manager for efficient invalidation
+        cacheManager.invalidateAllCaches()
+        
+        // Only invalidate specific computed property caches that are affected
+        _overdueTasks = nil
+        _pendingTasks = nil
+        _completedTasks = nil
+        _todayTasks = nil
+        lastTasksUpdate = Date()
+        
+        // Lightweight category state refresh
+        categoryManager?.refreshCategoryState()
     }
     
 

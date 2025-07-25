@@ -989,20 +989,50 @@ struct TaskRowView: View {
     }
     
     private func confirmMarkIncompleteAction() {
-        // Execute the mark as incomplete action
+        // Execute the mark as incomplete action with optimized performance
         gestureCompleted = true
         HapticManager.shared.buttonTap()
         
-        // Immediately clear scroll gesture flag to allow scrolling
+        // Immediately clear scroll gesture flags for responsive UI
         gestureState.isScrollGesture = false
         gestureState.isActive = false
         
-        // Reset gesture state and trigger completion toggle
-        resetGestureState()
+        // Optimized visual feedback for undo operation
+        withAnimation(UIOptimizer.optimizedUndoAnimation()) {
+            showCheckmark = false
+            completionScale = 1.0
+            completionOpacity = 1.0
+        }
         
-        // Trigger completion toggle to mark as incomplete
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            onToggleCompletion()
+        // Reset gesture state with minimal delay
+        resetGestureStateOptimized()
+        
+        // Immediate completion toggle for responsive undo
+        onToggleCompletion()
+    }
+    
+    /// Optimized gesture state reset for undo operations
+    private func resetGestureStateOptimized() {
+        // Ultra-fast reset animation optimized for undo operations
+        withAnimation(UIOptimizer.buttonResponseAnimation()) {
+            dragOffset = 0
+            isDragging = false
+            dragProgress = 0
+            showEditIcon = false
+            showDeleteIcon = false
+            showBothActionsConfirmation = false
+            completionOpacity = 1.0
+        }
+        
+        // Immediate state cleanup without delays
+        hasTriggeredHaptic = false
+        gestureCompleted = false
+        gestureState.reset()
+        
+        // Minimal delay for state synchronization
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
+            gestureState.isScrollGesture = false
+            gestureState.isActive = false
         }
     }
     

@@ -43,6 +43,12 @@ struct PerformanceConfig {
         static let optimizedSlow = SwiftUI.Animation.easeInOut(duration: slowDuration).speed(1.1)
         static let optimizedSpring = SwiftUI.Animation.spring(response: springResponse, dampingFraction: springDamping).speed(1.1)
         
+        // Undo operation specific settings for maximum responsiveness
+        static let undoAnimationDuration: Double = 0.2
+        static let undoSpringResponse: Double = 0.3
+        static let undoSpringDamping: Double = 0.85
+        static let undoTransitionScale: Double = 0.98
+        
         // Form-specific optimized animations
         static let optimizedFormSection = SwiftUI.Animation.spring(response: formSectionResponse, dampingFraction: formSectionDamping, blendDuration: 0.1)
         static let optimizedDatePicker = SwiftUI.Animation.spring(response: datePickerResponse, dampingFraction: datePickerDamping, blendDuration: 0.1)

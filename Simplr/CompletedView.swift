@@ -394,7 +394,8 @@ struct CompletedView: View {
             task: task,
             namespace: taskNamespace,
             onToggleCompletion: {
-                withAnimation(.interpolatingSpring(stiffness: 300, damping: 30)) {
+                // Optimized animation for undo operation - simple and smooth
+                withAnimation(UIOptimizer.optimizedUndoAnimation()) {
                     taskManager.toggleTaskCompletion(task)
                 }
             },
@@ -414,11 +415,16 @@ struct CompletedView: View {
         .environmentObject(taskManager)
         .padding(.horizontal, 20)
         .opacity(0.8) // Slightly dimmed to show it's completed
-        .transition(.asymmetric(
-            insertion: .scale(scale: 0.8).combined(with: .opacity).combined(with: .offset(x: 50)),
-            removal: .scale(scale: 0.8).combined(with: .opacity).combined(with: .offset(x: -50))
-        ))
+        .transition(optimizedTaskTransition())
         .matchedGeometryEffect(id: task.id, in: taskNamespace)
+    }
+    
+    /// Ultra-optimized transition for completed task removal with maximum responsiveness
+    private func optimizedTaskTransition() -> AnyTransition {
+        let insertion = AnyTransition.opacity.combined(with: .scale(scale: 0.96))
+        let removal = AnyTransition.opacity.combined(with: .scale(scale: PerformanceConfig.Animation.undoTransitionScale))
+            .animation(UIOptimizer.optimizedUndoAnimation())
+        return .asymmetric(insertion: insertion, removal: removal)
     }
     
     private func clearAllCompleted() {

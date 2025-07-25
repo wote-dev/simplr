@@ -244,6 +244,31 @@ class UIOptimizer: ObservableObject {
         }
     }
     
+    /// Performance-optimized animation for undo operations with maximum responsiveness
+    static func optimizedUndoAnimation() -> Animation {
+        if PerformanceConfig.shouldUseReducedAnimations {
+            return .easeInOut(duration: PerformanceConfig.Animation.undoAnimationDuration * 0.8)
+        }
+        
+        let devicePerformance = getDevicePerformanceLevel()
+        switch devicePerformance {
+        case .high:
+            return .spring(
+                response: PerformanceConfig.Animation.undoSpringResponse,
+                dampingFraction: PerformanceConfig.Animation.undoSpringDamping,
+                blendDuration: 0.05
+            ).speed(1.4)
+        case .medium:
+            return .spring(
+                response: PerformanceConfig.Animation.undoSpringResponse * 1.1,
+                dampingFraction: PerformanceConfig.Animation.undoSpringDamping,
+                blendDuration: 0.08
+            ).speed(1.2)
+        case .low:
+            return .easeInOut(duration: PerformanceConfig.Animation.undoAnimationDuration).speed(1.1)
+        }
+    }
+    
     /// Aggressive cleanup for memory pressure
     func aggressiveCleanup() {
         cleanup()
