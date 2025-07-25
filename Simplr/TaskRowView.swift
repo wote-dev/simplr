@@ -197,29 +197,31 @@ struct TaskRowView: View {
                     performCompletionToggle()
                 }) {
                     ZStack {
-                        // Use the same visual style as checklist items for consistency
+                        // Ultra-optimized completion icon with device-adaptive animation
                         Image(systemName: (task.isCompleted || showCheckmark) ? "checkmark.circle.fill" : "circle")
                             .font(.system(size: 32, weight: .medium))
                             .foregroundColor((task.isCompleted || showCheckmark) ? theme.success : theme.textTertiary)
                             .scaleEffect(completionScale)
-                            .animation(.interpolatingSpring(stiffness: 600, damping: 20), value: task.isCompleted)
-                            .animation(.interpolatingSpring(stiffness: 600, damping: 20), value: showCheckmark)
+                            .animation(
+                                UIOptimizer.completionAnimation(),  // Device-optimized animation
+                                value: completionScale  // Single animation trigger for maximum performance
+                            )
                             .matchedGeometryEffect(id: "\(task.id)-completion", in: namespace)
                         
-                        // Particle effect for completion
+                        // Ultra-optimized particle effect with device-adaptive performance
                         if showCompletionParticles {
-                            ForEach(0..<8, id: \.self) { index in
+                            ForEach(0..<5, id: \.self) { index in  // Further reduced to 5 particles for optimal performance
                                 Circle()
                                     .fill(theme.success)
-                                    .frame(width: 4, height: 4)
+                                    .frame(width: 2.5, height: 2.5)  // Even smaller particles for smoother animation
                                     .offset(
-                                        x: cos(Double(index) * .pi / 4) * 30,
-                                        y: sin(Double(index) * .pi / 4) * 30
+                                        x: cos(Double(index) * .pi / 2.5) * 20,  // Reduced radius for tighter effect
+                                        y: sin(Double(index) * .pi / 2.5) * 20
                                     )
                                     .scaleEffect(showCompletionParticles ? 0 : 1)
                                     .opacity(showCompletionParticles ? 0 : 1)
                                     .animation(
-                                        Animation.adaptiveSmooth.delay(Double(index) * 0.05),
+                                        UIOptimizer.particleAnimation(delay: Double(index) * 0.02),  // Device-optimized with faster sequence
                                         value: showCompletionParticles
                                     )
                             }
@@ -227,8 +229,11 @@ struct TaskRowView: View {
                     }
                 }
                 .buttonStyle(PlainButtonStyle())
-                .scaleEffect(isPressed ? 0.95 : 1.0)
-                .animation(.interpolatingSpring(stiffness: 600, damping: 30), value: isPressed)
+                .scaleEffect(isPressed ? 0.97 : 1.0)  // Minimal scale for ultra-subtle effect
+                .animation(
+                    UIOptimizer.buttonResponseAnimation(),  // Device-optimized ultra-fast response
+                    value: isPressed
+                )
                 
                 // Main content area with text on left and pills on right
                 HStack(alignment: .top, spacing: 12) {
@@ -492,8 +497,8 @@ struct TaskRowView: View {
             // This fixes the issue where undone tasks show the checkmark tick
             showCheckmark = task.isCompleted
             
-            // Initial animation when task appears
-            withAnimation(.easeInOut(duration: 0.3).delay(0.1)) {
+            // Ultra-optimized initial animation when task appears
+            withAnimation(UIOptimizer.optimizedAnimation().delay(0.08)) {
                 completionOpacity = 1.0
             }
             
@@ -544,7 +549,7 @@ struct TaskRowView: View {
             // Toggle completion action
             Button(action: {
                 HapticManager.shared.contextMenuAction()
-                withAnimation(.easeInOut(duration: 0.2)) {
+                withAnimation(UIOptimizer.buttonResponseAnimation()) {
                     onToggleCompletion()
                 }
             }) {
@@ -1037,41 +1042,42 @@ struct TaskRowView: View {
         // Prepare haptic feedback for better responsiveness
         HapticManager.shared.prepareForInteraction()
         
-        // Immediate visual feedback with optimized animation
-        withAnimation(.interactiveSpring(response: 0.3, dampingFraction: 0.7, blendDuration: 0)) {
+        // Device-optimized animation for maximum performance
+        withAnimation(UIOptimizer.completionAnimation()) {
             if !task.isCompleted {
-                // Animate completion - show green filled circle immediately
-                completionScale = 1.2
+                // Animate completion - immediate visual feedback
+                completionScale = 1.1  // Further reduced scale for ultra-smooth animation
                 showCompletionParticles = true
                 showCheckmark = true
                 HapticManager.shared.taskCompleted()
             } else {
-                // Animate un-completion - show empty circle immediately
+                // Animate un-completion - immediate visual feedback
                 showCheckmark = false
-                completionScale = 1.1
+                completionScale = 1.05  // Minimal scale for uncomplete
                 HapticManager.shared.taskUncompleted()
             }
         }
         
-        // Trigger the actual completion toggle with minimal delay for immediate feedback
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+        // Trigger the actual completion toggle with ultra-fast delay for immediate feedback
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.02) {  // Ultra-fast delay
             onToggleCompletion()
             
-            // Stop URGENT pulsating animation if task is being completed
-            if isUrgentTask && !task.isCompleted {
-                stopUrgentPulsatingAnimation()
-            }
-            // Restart URGENT pulsating animation if task is being uncompleted
-            else if isUrgentTask && task.isCompleted {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                    startUrgentPulsatingAnimation()
+            // Optimized URGENT animation handling
+            if isUrgentTask {
+                if !task.isCompleted {
+                    stopUrgentPulsatingAnimation()
+                } else {
+                    // Reduced delay for better responsiveness
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        startUrgentPulsatingAnimation()
+                    }
                 }
             }
         }
         
-        // Reset animation states with smooth transition
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-            withAnimation(.interactiveSpring(response: 0.3, dampingFraction: 0.8, blendDuration: 0)) {
+        // Ultra-optimized reset with device-adaptive animation and reduced timing
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {  // Further reduced for faster feedback
+            withAnimation(UIOptimizer.completionAnimation()) {  // Device-optimized reset animation
                 completionScale = 1.0
                 showCompletionParticles = false
             }
@@ -1082,8 +1088,8 @@ struct TaskRowView: View {
     }
     
     private func resetGestureState() {
-        // High-performance reset animation for 120fps
-        withAnimation(.interactiveSpring(response: 0.4, dampingFraction: 0.8, blendDuration: 0)) {
+        // Ultra-high-performance reset animation with device optimization
+        withAnimation(UIOptimizer.buttonResponseAnimation()) {
             dragOffset = 0
             isDragging = false
             dragProgress = 0
@@ -1100,8 +1106,8 @@ struct TaskRowView: View {
         // Explicitly reset gesture state to ensure clean slate
         gestureState.reset()
         
-        // Force a brief delay to ensure state is fully cleared before allowing new gestures
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+        // Ultra-fast delay to ensure state is fully cleared before allowing new gestures
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.03) {
             // Additional cleanup to ensure no lingering state
             gestureState.isScrollGesture = false
             gestureState.isActive = false
@@ -1128,9 +1134,9 @@ struct TaskRowView: View {
         }
     }
     
-    /// Stops the URGENT pulsating animation
+    /// Stops the URGENT pulsating animation with device-optimized performance
     private func stopUrgentPulsatingAnimation() {
-        withAnimation(.easeOut(duration: 0.5)) {
+        withAnimation(UIOptimizer.optimizedAnimation()) {
             urgentGlowIntensity = 0.0
             urgentTintOpacity = 0.0
         }

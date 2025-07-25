@@ -193,6 +193,57 @@ class UIOptimizer: ObservableObject {
         }
     }
     
+    /// High-performance completion animation optimized for 60fps
+    static func completionAnimation() -> Animation {
+        if PerformanceConfig.shouldUseReducedAnimations {
+            return .easeInOut(duration: 0.15)
+        }
+        
+        let devicePerformance = getDevicePerformanceLevel()
+        switch devicePerformance {
+        case .high:
+            return .interpolatingSpring(stiffness: 800, damping: 25).speed(1.3)
+        case .medium:
+            return .interpolatingSpring(stiffness: 700, damping: 28).speed(1.1)
+        case .low:
+            return .easeInOut(duration: 0.2)
+        }
+    }
+    
+    /// Optimized particle animation for completion effects
+    static func particleAnimation(delay: Double = 0) -> Animation {
+        if PerformanceConfig.shouldUseReducedAnimations {
+            return .linear(duration: 0.1).delay(delay)
+        }
+        
+        let devicePerformance = getDevicePerformanceLevel()
+        switch devicePerformance {
+        case .high:
+            return .interpolatingSpring(stiffness: 600, damping: 30).delay(delay)
+        case .medium:
+            return .interpolatingSpring(stiffness: 500, damping: 35).delay(delay)
+        case .low:
+            return .easeOut(duration: 0.15).delay(delay)
+        }
+    }
+    
+    /// Ultra-fast button response animation
+    static func buttonResponseAnimation() -> Animation {
+        if PerformanceConfig.shouldUseReducedAnimations {
+            return .linear(duration: 0.08)
+        }
+        
+        let devicePerformance = getDevicePerformanceLevel()
+        switch devicePerformance {
+        case .high:
+            return .interpolatingSpring(stiffness: 900, damping: 35).speed(1.5)
+        case .medium:
+            return .interpolatingSpring(stiffness: 800, damping: 40).speed(1.2)
+        case .low:
+            return .easeInOut(duration: 0.12)
+        }
+    }
+    
     /// Aggressive cleanup for memory pressure
     func aggressiveCleanup() {
         cleanup()
