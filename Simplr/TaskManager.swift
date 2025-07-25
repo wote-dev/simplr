@@ -30,14 +30,10 @@ class TaskManager: ObservableObject {
     // Badge management
     private let badgeManager = BadgeManager.shared
     
-    // Performance optimization: Enhanced caching system for App Store
-    private var filteredTasksCache: [String: [Task]] = [:]
+    // Unified cache manager for optimized memory usage
+    private let cacheManager = UnifiedCacheManager.shared
     private var lastCacheUpdate = Date.distantPast
     private let cacheValidityDuration: TimeInterval = PerformanceConfig.Cache.cacheValidityDuration
-    private let maxCacheSize = PerformanceConfig.Cache.maxFilteredTasksCacheSize
-    private var cacheHitCount = 0
-    private var cacheMissCount = 0
-    private var lastCleanupTime = Date.distantPast
     
     // Batch operation optimization
     private var batchUpdateTimer: Timer?
@@ -85,8 +81,8 @@ class TaskManager: ObservableObject {
     }
     
     private func handleMemoryWarning() {
-        // Aggressively clear all caches during memory pressure for App Store quality
-        filteredTasksCache.removeAll(keepingCapacity: false)
+        // Use unified cache manager for memory pressure handling
+        cacheManager.invalidateAllCaches()
         lastCacheUpdate = Date.distantPast
         
         // Clear computed property caches
@@ -96,10 +92,6 @@ class TaskManager: ObservableObject {
         _todayTasks = nil
         _futureTasks = nil
         _noDueDateTasks = nil
-        
-        // Reset cache metrics
-        cacheHitCount = 0
-        cacheMissCount = 0
         
         // Force memory cleanup
         autoreleasepool {
@@ -116,12 +108,8 @@ class TaskManager: ObservableObject {
     
     /// Perform comprehensive background cleanup
     private func performBackgroundCleanup() {
-        // Reduce cache size when app goes to background
-        let targetSize = PerformanceConfig.Cache.backgroundCacheSize
-        if filteredTasksCache.count > targetSize {
-            let keysToRemove = Array(filteredTasksCache.keys.prefix(filteredTasksCache.count - targetSize))
-            keysToRemove.forEach { filteredTasksCache.removeValue(forKey: $0) }
-        }
+        // Unified cache manager handles background cleanup automatically
+        // Just need to clear computed property caches and batch operations
         
         // Cancel any pending batch operations
         batchUpdateTimer?.invalidate()
@@ -187,15 +175,8 @@ class TaskManager: ObservableObject {
     // MARK: - Enhanced Cache Management
     
     private func invalidateCache() {
-        // Clear filtered cache with size management
-        if filteredTasksCache.count > maxCacheSize {
-            // Keep only the most recently used cache entries
-            let sortedKeys = Array(filteredTasksCache.keys).suffix(maxCacheSize / 2)
-            let newCache = Dictionary(uniqueKeysWithValues: sortedKeys.map { ($0, filteredTasksCache[$0]!) })
-            filteredTasksCache = newCache
-        } else {
-            filteredTasksCache.removeAll(keepingCapacity: true)
-        }
+        // Use unified cache manager for all cache invalidation
+        cacheManager.invalidateAllCaches()
         
         // Invalidate computed property caches
         _overdueTasks = nil
@@ -212,18 +193,7 @@ class TaskManager: ObservableObject {
         categoryManager?.refreshCategoryState()
     }
     
-    private func isCacheValid() -> Bool {
-        return Date().timeIntervalSince(lastCacheUpdate) < cacheValidityDuration
-    }
-    
-    private func cleanupCache() {
-        // Remove expired cache entries
-        let now = Date()
-        if now.timeIntervalSince(lastCacheUpdate) > cacheValidityDuration * 2 {
-            filteredTasksCache.removeAll(keepingCapacity: true)
-            lastCacheUpdate = now
-        }
-    }
+    // Cache validity and cleanup now handled by UnifiedCacheManager
     
     // MARK: - Task Management
     
@@ -330,8 +300,7 @@ class TaskManager: ObservableObject {
             SpotlightManager.shared.indexTask(task, categories: categories)
         }
         
-        // Cleanup cache periodically
-        cleanupCache()
+        // Cache cleanup is now handled automatically by UnifiedCacheManager
     }
     
     func updateTask(
@@ -540,9 +509,12 @@ class TaskManager: ObservableObject {
     
     /// Returns all tasks that are overdue (past due date and not completed)
     var overdueTasks: [Task] {
-        if let cached = _overdueTasks, Date().timeIntervalSince(lastTasksUpdate) < cacheValidityDuration {
+        let cacheKey = UnifiedCacheManager.computedTasksKey(type: "overdue")
+        
+        if let cached = cacheManager.getCachedComputedTasks(for: cacheKey) {
             return cached
         }
+        
         let result = tasks.filter { $0.isOverdue }.sorted { task1, task2 in
             // URGENT category priority
             let task1IsUrgent = task1.categoryId == TaskCategory.urgent.id
@@ -560,15 +532,19 @@ class TaskManager: ObservableObject {
             // Finally by creation date
             return task1.createdAt > task2.createdAt
         }
-        _overdueTasks = result
+        
+        cacheManager.setCachedComputedTasks(result, for: cacheKey)
         return result
     }
     
     /// Returns all tasks that are pending (future due date and not completed)
     var pendingTasks: [Task] {
-        if let cached = _pendingTasks, Date().timeIntervalSince(lastTasksUpdate) < cacheValidityDuration {
+        let cacheKey = UnifiedCacheManager.computedTasksKey(type: "pending")
+        
+        if let cached = cacheManager.getCachedComputedTasks(for: cacheKey) {
             return cached
         }
+        
         let result = tasks.filter { $0.isPending }.sorted { task1, task2 in
             // URGENT category priority
             let task1IsUrgent = task1.categoryId == TaskCategory.urgent.id
@@ -586,15 +562,19 @@ class TaskManager: ObservableObject {
             // Finally by creation date
             return task1.createdAt > task2.createdAt
         }
-        _pendingTasks = result
+        
+        cacheManager.setCachedComputedTasks(result, for: cacheKey)
         return result
     }
     
     /// Returns all tasks due today (including completed ones)
     var todayTasks: [Task] {
-        if let cached = _todayTasks, Date().timeIntervalSince(lastTasksUpdate) < cacheValidityDuration {
+        let cacheKey = UnifiedCacheManager.computedTasksKey(type: "today")
+        
+        if let cached = cacheManager.getCachedComputedTasks(for: cacheKey) {
             return cached
         }
+        
         let result = tasks.filter { $0.isDueToday }.sorted { task1, task2 in
             // Completion status first
             if task1.isCompleted != task2.isCompleted {
@@ -614,15 +594,19 @@ class TaskManager: ObservableObject {
             // Finally by creation date
             return task1.createdAt > task2.createdAt
         }
-        _todayTasks = result
+        
+        cacheManager.setCachedComputedTasks(result, for: cacheKey)
         return result
     }
     
     /// Returns all tasks due in the future (tomorrow or later, not completed)
     var futureTasks: [Task] {
-        if let cached = _futureTasks, Date().timeIntervalSince(lastTasksUpdate) < cacheValidityDuration {
+        let cacheKey = UnifiedCacheManager.computedTasksKey(type: "future")
+        
+        if let cached = cacheManager.getCachedComputedTasks(for: cacheKey) {
             return cached
         }
+        
         let result = tasks.filter { $0.isDueFuture && !$0.isCompleted }.sorted { task1, task2 in
             // URGENT category priority
             let task1IsUrgent = task1.categoryId == TaskCategory.urgent.id
@@ -640,25 +624,32 @@ class TaskManager: ObservableObject {
             // Finally by creation date
             return task1.createdAt > task2.createdAt
         }
-        _futureTasks = result
+        
+        cacheManager.setCachedComputedTasks(result, for: cacheKey)
         return result
     }
     
     /// Returns all completed tasks
     var completedTasks: [Task] {
-        if let cached = _completedTasks, Date().timeIntervalSince(lastTasksUpdate) < cacheValidityDuration {
+        let cacheKey = UnifiedCacheManager.computedTasksKey(type: "completed")
+        
+        if let cached = cacheManager.getCachedComputedTasks(for: cacheKey) {
             return cached
         }
+        
         let result = tasks.filter { $0.isCompleted }
-        _completedTasks = result
+        cacheManager.setCachedComputedTasks(result, for: cacheKey)
         return result
     }
     
     /// Returns all tasks without a due date that are not completed
     var noDueDateTasks: [Task] {
-        if let cached = _noDueDateTasks, Date().timeIntervalSince(lastTasksUpdate) < cacheValidityDuration {
+        let cacheKey = UnifiedCacheManager.computedTasksKey(type: "noDueDate")
+        
+        if let cached = cacheManager.getCachedComputedTasks(for: cacheKey) {
             return cached
         }
+        
         let result = tasks.filter { $0.dueDate == nil && !$0.isCompleted }.sorted { task1, task2 in
             // URGENT category priority
             let task1IsUrgent = task1.categoryId == TaskCategory.urgent.id
@@ -671,7 +662,8 @@ class TaskManager: ObservableObject {
             // Sort by creation date (newer first)
             return task1.createdAt > task2.createdAt
         }
-        _noDueDateTasks = result
+        
+        cacheManager.setCachedComputedTasks(result, for: cacheKey)
         return result
     }
     
@@ -679,6 +671,12 @@ class TaskManager: ObservableObject {
     
     /// Returns tasks filtered by category
     func tasks(for categoryId: UUID?) -> [Task] {
+        let cacheKey = UnifiedCacheManager.categoryTasksKey(categoryId: categoryId)
+        
+        if let cached = cacheManager.getCachedCategoryTasks(for: cacheKey) {
+            return cached
+        }
+        
         let filtered: [Task]
         if let categoryId = categoryId {
             filtered = tasks.filter { $0.categoryId == categoryId }
@@ -687,7 +685,7 @@ class TaskManager: ObservableObject {
         }
         
         // Sort with URGENT category priority
-        return filtered.sorted { task1, task2 in
+        let result = filtered.sorted { task1, task2 in
             // Primary sort: completion status
             if task1.isCompleted != task2.isCompleted {
                 return !task1.isCompleted && task2.isCompleted
@@ -714,16 +712,19 @@ class TaskManager: ObservableObject {
                 return task1.createdAt > task2.createdAt
             }
         }
+        
+        cacheManager.setCachedCategoryTasks(result, for: cacheKey)
+        return result
     }
     
     /// Returns all tasks for a specific category (including subcategory filtering) - Optimized with caching
     func filteredTasks(categoryId: UUID? = nil, searchText: String = "", filterOption: FilterOption = .all) -> [Task] {
         return PerformanceMonitor.shared.measure(PerformanceMonitor.MeasurementPoint.taskFiltering) {
             // Create cache key
-            let cacheKey = "\(categoryId?.uuidString ?? "nil")_\(searchText)_\(filterOption.rawValue)"
+            let cacheKey = UnifiedCacheManager.filteredTasksKey(categoryId: categoryId, searchText: searchText, filterOption: filterOption)
             
-            // Check cache validity
-            if isCacheValid(), let cachedResult = filteredTasksCache[cacheKey] {
+            // Check cache
+            if let cachedResult = cacheManager.getCachedFilteredTasks(for: cacheKey) {
                 return cachedResult
             }
             
@@ -796,8 +797,7 @@ class TaskManager: ObservableObject {
         }
         
         // Cache the result
-             filteredTasksCache[cacheKey] = result
-             lastCacheUpdate = Date()
+             cacheManager.setCachedFilteredTasks(result, for: cacheKey)
              
              return result
          }
@@ -935,6 +935,25 @@ class TaskManager: ObservableObject {
         _Concurrency.Task { @MainActor in
             await badgeManager.updateBadgeCountWithTasks(tasks)
         }
+    }
+    
+    // MARK: - Cache Performance Monitoring
+    
+    /// Get cache performance metrics for debugging and optimization
+    func getCachePerformanceMetrics() -> CacheMetrics {
+        return cacheManager.getCacheMetrics()
+    }
+    
+    /// Log cache performance metrics (debug builds only)
+    func logCachePerformance() {
+        #if DEBUG
+        let metrics = getCachePerformanceMetrics()
+        print("Cache Performance:")
+        print("  Hit Rate: \(String(format: "%.2f", metrics.hitRate * 100))%")
+        print("  Total Entries: \(metrics.totalEntries)")
+        print("  Evictions: \(metrics.evictionCount)")
+        print("  Memory Pressure: \(metrics.memoryPressureActive ? "Active" : "Normal")")
+        #endif
     }
 }
 

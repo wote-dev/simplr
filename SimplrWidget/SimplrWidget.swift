@@ -98,8 +98,98 @@ struct TaskProvider: AppIntentTimelineProvider {
             return true
         }
         
-        // Sort tasks to match TodayView's priority sorting
-        let sortedTasks = filteredTasks.sorted { task1, task2 in
+        // Group tasks by category hierarchy like TodayView
+        let groupedTasks = groupTasksByCategory(filteredTasks)
+        
+        // Flatten grouped tasks while maintaining category hierarchy order
+        var flattenedTasks: [Task] = []
+        for categoryGroup in groupedTasks {
+            // Sort tasks within each category using the selected sort option
+            let sortedCategoryTasks = categoryGroup.tasks.sorted { task1, task2 in
+                return sortTasks(task1: task1, task2: task2, using: loadSortOption())
+            }
+            flattenedTasks.append(contentsOf: sortedCategoryTasks)
+        }
+        
+        // Return first 3 tasks for widget display
+        return Array(flattenedTasks.prefix(3))
+    }
+    
+    private func loadCategories() -> [TaskCategory] {
+        guard let userDefaults = UserDefaults(suiteName: "group.com.danielzverev.simplr"),
+              let data = userDefaults.data(forKey: "SavedCategories"),
+              let categories = try? JSONDecoder().decode([TaskCategory].self, from: data) else {
+            return []
+        }
+        return categories
+    }
+    
+    // MARK: - Sort Option Support
+    
+    enum SortOption: String, CaseIterable {
+        case priority = "priority"
+        case dueDate = "dueDate"
+        case creationDateNewest = "creationDateNewest"
+        case creationDateOldest = "creationDateOldest"
+        case alphabetical = "alphabetical"
+    }
+    
+    private func loadSortOption() -> SortOption {
+        guard let userDefaults = UserDefaults(suiteName: "group.com.danielzverev.simplr"),
+              let savedSortOption = userDefaults.string(forKey: "TodaySortOption"),
+              let sortOption = SortOption(rawValue: savedSortOption) else {
+            return .priority // Default to priority sorting
+        }
+        return sortOption
+    }
+    
+    // MARK: - Category Hierarchy Support
+    
+    // Category hierarchy for importance-based ordering (matches TodayView)
+    private let categoryHierarchy: [String] = [
+        "URGENT",
+        "IMPORTANT", 
+        "Work",
+        "Health",
+        "Learning",
+        "Shopping",
+        "Travel",
+        "Personal",
+        "Uncategorized"
+    ]
+    
+    /// Returns the priority order for a category (lower number = higher priority)
+    private func categoryPriority(for category: TaskCategory?) -> Int {
+        guard let category = category else { return categoryHierarchy.count } // Uncategorized goes last
+        return categoryHierarchy.firstIndex(of: category.name) ?? categoryHierarchy.count
+    }
+    
+    /// Groups tasks by category and returns them in hierarchical order
+    private func groupTasksByCategory(_ tasks: [Task]) -> [(category: TaskCategory?, tasks: [Task])] {
+        let categories = loadCategories()
+        
+        // Group tasks by category
+        let grouped = Dictionary(grouping: tasks) { task in
+            category(for: task.categoryId, in: categories)
+        }
+        
+        // Sort categories by hierarchy and return with their tasks
+        return grouped.sorted { first, second in
+            let firstPriority = categoryPriority(for: first.key)
+            let secondPriority = categoryPriority(for: second.key)
+            return firstPriority < secondPriority
+        }.map { (category: $0.key, tasks: $0.value) }
+    }
+    
+    /// Helper method to find category for a given ID
+    private func category(for id: UUID?, in categories: [TaskCategory]) -> TaskCategory? {
+        guard let id = id else { return nil }
+        return categories.first { $0.id == id }
+    }
+    
+    private func sortTasks(task1: Task, task2: Task, using sortOption: SortOption) -> Bool {
+        switch sortOption {
+        case .priority:
             // First priority: URGENT category tasks always come first
             let task1IsUrgent = task1.categoryId == TaskCategory.urgent.id
             let task2IsUrgent = task2.categoryId == TaskCategory.urgent.id
@@ -124,18 +214,31 @@ struct TaskProvider: AppIntentTimelineProvider {
             
             // Final priority: Sort by creation date (newest first)
             return task1.createdAt > task2.createdAt
+            
+        case .dueDate:
+            // Sort by due date (earliest first), then by creation date
+            if let date1 = task1.dueDate, let date2 = task2.dueDate {
+                return date1 < date2
+            } else if task1.dueDate != nil {
+                return true // Tasks with due dates come first
+            } else if task2.dueDate != nil {
+                return false
+            } else {
+                return task1.createdAt > task2.createdAt // Newest first for undated tasks
+            }
+            
+        case .creationDateNewest:
+            // Sort by creation date (newest first)
+            return task1.createdAt > task2.createdAt
+            
+        case .creationDateOldest:
+            // Sort by creation date (oldest first)
+            return task1.createdAt < task2.createdAt
+            
+        case .alphabetical:
+            // Sort alphabetically by title
+            return task1.title.localizedCaseInsensitiveCompare(task2.title) == .orderedAscending
         }
-        
-        return Array(sortedTasks.prefix(3))
-    }
-    
-    private func loadCategories() -> [TaskCategory] {
-        guard let userDefaults = UserDefaults(suiteName: "group.com.danielzverev.simplr"),
-              let data = userDefaults.data(forKey: "SavedCategories"),
-              let categories = try? JSONDecoder().decode([TaskCategory].self, from: data) else {
-            return []
-        }
-        return categories
     }
 }
 

@@ -24,6 +24,9 @@
 
 import SwiftUI
 import RevenueCat
+#if os(iOS)
+import UIKit
+#endif
 
 struct PaywallView: View {
     @EnvironmentObject var premiumManager: PremiumManager
@@ -98,7 +101,7 @@ struct PaywallView: View {
             }
         }
         .overlay {
-            // Welcome message overlay
+            // Welcome message overlay for new purchases
             if showWelcomeMessage {
                 WelcomeMessageOverlay(
                     selectedTheme: getTheme(for: selectedPremiumTheme),
@@ -130,6 +133,33 @@ struct PaywallView: View {
                     removal: .opacity.combined(with: .scale(scale: 1.1))
                 ))
                 .zIndex(1000)
+            }
+            
+            // Welcome back message overlay for restored purchases
+            if premiumManager.showWelcomeBackMessage {
+                WelcomeBackMessageOverlay(
+                    onContinue: {
+                        // Provide haptic feedback for successful completion
+                        HapticManager.shared.successFeedback()
+                        
+                        // Dismiss welcome back message with animation
+                        withAnimation(.easeInOut(duration: 0.4)) {
+                            premiumManager.dismissWelcomeBackMessage()
+                        }
+                        
+                        // Small delay before dismissing paywall to return to main app
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            // Reset paywall state before dismissing
+                            premiumManager.dismissPaywall()
+                            dismiss()
+                        }
+                    }
+                )
+                .transition(.asymmetric(
+                    insertion: .opacity.combined(with: .scale(scale: 0.9)),
+                    removal: .opacity.combined(with: .scale(scale: 1.1))
+                ))
+                .zIndex(1001) // Higher z-index to ensure it appears above other overlays
             }
         }
         // Theme selector is no longer needed in post-purchase flow
@@ -297,6 +327,21 @@ struct PaywallView: View {
         HapticManager.shared.buttonTap()
     }
     
+    // MARK: - Legal Links
+    private func openTermsOfService() {
+        guard let url = URL(string: "https://www.blackcubesolutions.com/simplr") else { return }
+        #if os(iOS)
+        UIApplication.shared.open(url)
+        #endif
+    }
+    
+    private func openPrivacyPolicy() {
+        guard let url = URL(string: "https://www.blackcubesolutions.com/simplr-privacy") else { return }
+        #if os(iOS)
+        UIApplication.shared.open(url)
+        #endif
+    }
+    
     // MARK: - Header Section
     private var headerSection: some View {
         VStack(spacing: 16) {
@@ -421,15 +466,19 @@ struct PaywallView: View {
             HapticManager.shared.buttonTap()
         } label: {
             VStack(spacing: 8) {
-                // Theme color preview
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(cardTheme.accentGradient)
-                    .frame(height: 40)
-                    .overlay(
-                        Image(systemName: themeMode.icon)
-                            .font(.system(size: 16, weight: .medium))
-                            .foregroundColor(cardTheme.background)
-                    )
+                // Theme icon overlay on full color background
+                ZStack {
+                    // Full color background
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(cardTheme.accentGradient)
+                        .frame(height: 60)
+                    
+                    // Theme icon with optimized contrast
+                    Image(systemName: themeMode.icon)
+                        .font(.system(size: 20, weight: .semibold))
+                        .foregroundColor(cardTheme.background)
+                        .shadow(color: cardTheme.accent.opacity(0.3), radius: 1, x: 0, y: 1)
+                }
                 
                 Text(themeMode.displayName)
                     .font(.system(size: 12, weight: .semibold, design: .rounded))
@@ -604,13 +653,15 @@ struct PaywallView: View {
             
             HStack(spacing: 16) {
                 Button("Terms") {
-                    // Handle terms
+                    openTermsOfService()
+                    HapticManager.shared.buttonTap()
                 }
                 .font(.system(size: 12, weight: .medium, design: .rounded))
                 .foregroundColor(previewTheme.textSecondary)
                 
                 Button("Privacy") {
-                    // Handle privacy
+                    openPrivacyPolicy()
+                    HapticManager.shared.buttonTap()
                 }
                 .font(.system(size: 12, weight: .medium, design: .rounded))
                 .foregroundColor(previewTheme.textSecondary)
@@ -666,6 +717,118 @@ enum PurchasePlan: CaseIterable {
             return false
         case .premiumAnnual:
             return true // Annual plan is most popular
+        }
+    }
+}
+
+// MARK: - Welcome Back Message Overlay
+struct WelcomeBackMessageOverlay: View {
+    @Environment(\.theme) var theme
+    let onContinue: () -> Void
+    
+    @State private var animateContent = false
+    @State private var animateButton = false
+    
+    var body: some View {
+        ZStack {
+            // Background blur with theme colors
+            theme.background.opacity(0.1)
+                .overlay(Color.black.opacity(0.3))
+                .ignoresSafeArea()
+                .onTapGesture {
+                    // Prevent dismissing by tapping background
+                }
+            
+            // Welcome back card
+            VStack(spacing: 32) {
+                // Success icon with animation
+                ZStack {
+                    Circle()
+                        .fill(theme.accent.opacity(0.2))
+                        .frame(width: 120, height: 120)
+                        .scaleEffect(animateContent ? 1.0 : 0.8)
+                    
+                    Circle()
+                        .fill(theme.accent.opacity(0.1))
+                        .frame(width: 100, height: 100)
+                        .scaleEffect(animateContent ? 1.0 : 0.7)
+                    
+                    // Crown icon for premium restoration
+                    Image(systemName: "crown.fill")
+                        .font(.system(size: 48, weight: .medium))
+                        .foregroundColor(theme.accent)
+                        .scaleEffect(animateContent ? 1.0 : 0.5)
+                }
+                .animation(.spring(response: 0.8, dampingFraction: 0.6).delay(0.2), value: animateContent)
+                
+                // Welcome back text
+                VStack(spacing: 16) {
+                    Text("Welcome Back!")
+                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .foregroundColor(theme.text)
+                        .opacity(animateContent ? 1.0 : 0.0)
+                        .offset(y: animateContent ? 0 : 20)
+                    
+                    Text("Your premium subscription has been successfully restored! You now have access to all premium themes and features.")
+                        .font(.system(size: 16, weight: .medium, design: .rounded))
+                        .foregroundColor(theme.textSecondary)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(nil)
+                        .opacity(animateContent ? 1.0 : 0.0)
+                        .offset(y: animateContent ? 0 : 20)
+                }
+                .animation(.spring(response: 0.8, dampingFraction: 0.8).delay(0.4), value: animateContent)
+                
+                // Continue button
+                Button {
+                    HapticManager.shared.buttonTap()
+                    onContinue()
+                } label: {
+                    HStack(spacing: 12) {
+                        Text("Continue")
+                            .font(.system(size: 18, weight: .semibold, design: .rounded))
+                        
+                        Image(systemName: "arrow.right")
+                            .font(.system(size: 16, weight: .medium))
+                    }
+                    .foregroundColor(theme.background)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 56)
+                    .background(
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(theme.accentGradient)
+                            .applyShadow(theme.cardShadowStyle)
+                    )
+                }
+                .scaleEffect(animateButton ? 1.0 : 0.9)
+                .opacity(animateButton ? 1.0 : 0.0)
+                .animation(.spring(response: 0.6, dampingFraction: 0.7).delay(0.8), value: animateButton)
+            }
+            .padding(.horizontal, 32)
+            .padding(.vertical, 40)
+            .background(
+                RoundedRectangle(cornerRadius: 24)
+                    .fill(theme.surfaceGradient)
+                    .applyShadow(theme.cardShadowStyle)
+            )
+            .padding(.horizontal, 24)
+            .scaleEffect(animateContent ? 1.0 : 0.9)
+            .opacity(animateContent ? 1.0 : 0.0)
+            .animation(.spring(response: 0.7, dampingFraction: 0.8), value: animateContent)
+        }
+        .onAppear {
+            // Performance optimization: Use efficient animation timing
+            DispatchQueue.main.async {
+                withAnimation(.spring(response: 0.7, dampingFraction: 0.8)) {
+                    animateContent = true
+                }
+            }
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                withAnimation(.spring(response: 0.6, dampingFraction: 0.7)) {
+                    animateButton = true
+                }
+            }
         }
     }
 }

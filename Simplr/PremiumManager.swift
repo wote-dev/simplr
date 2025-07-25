@@ -31,6 +31,7 @@ class PremiumManager: NSObject, ObservableObject, PurchasesDelegate {
     @Published var isPremium: Bool = false
     @Published var isLoading: Bool = false
     @Published var showingPaywall: Bool = false
+    @Published var showWelcomeBackMessage: Bool = false
     
     private let userDefaults = UserDefaults.standard
     private let premiumKey = "isPremium"
@@ -216,10 +217,25 @@ class PremiumManager: NSObject, ObservableObject, PurchasesDelegate {
                 self.isLoading = false
                 
                 if let customerInfo = customerInfo, error == nil {
+                    let wasPremium = self.isPremium
                     self.updatePremiumStatus(from: customerInfo)
+                    
+                    // Show welcome back message if user successfully restored premium access
+                    if !wasPremium && self.isPremium {
+                        HapticManager.shared.successFeedback()
+                        
+                        // Small delay for better UX flow
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
+                                self.showWelcomeBackMessage = true
+                            }
+                        }
+                    } else {
+                        HapticManager.shared.buttonTap()
+                    }
+                } else {
+                    HapticManager.shared.buttonTap()
                 }
-                
-                HapticManager.shared.buttonTap()
             }
         }
     }
@@ -237,6 +253,12 @@ class PremiumManager: NSObject, ObservableObject, PurchasesDelegate {
         // Performance optimization: Only update state if it's actually changing
         guard showingPaywall else { return }
         showingPaywall = false
+    }
+    
+    func dismissWelcomeBackMessage() {
+        // Performance optimization: Only update state if it's actually changing
+        guard showWelcomeBackMessage else { return }
+        showWelcomeBackMessage = false
     }
 }
 

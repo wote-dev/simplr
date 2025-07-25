@@ -7,6 +7,7 @@
 
 import SwiftUI
 import UniformTypeIdentifiers
+import WidgetKit
 
 struct TodayView: View {
     @EnvironmentObject var taskManager: TaskManager
@@ -22,6 +23,10 @@ struct TodayView: View {
     @State private var selectedFilter: TaskFilter = .all
     @State private var selectedSortOption: SortOption = .priority
     @State private var showingSettings = false
+    
+    // Shared UserDefaults for widget synchronization
+    private let sharedUserDefaults = UserDefaults(suiteName: "group.com.danielzverev.simplr")
+    private let todaySortOptionKey = "TodaySortOption"
     @Namespace private var taskNamespace
     
     // Spotlight navigation
@@ -39,8 +44,12 @@ struct TodayView: View {
         }
     }
     
-    enum SortOption: CaseIterable {
-        case priority, dueDate, creationDateNewest, creationDateOldest, alphabetical
+    enum SortOption: String, CaseIterable {
+        case priority = "priority"
+        case dueDate = "dueDate"
+        case creationDateNewest = "creationDateNewest"
+        case creationDateOldest = "creationDateOldest"
+        case alphabetical = "alphabetical"
         
         var title: String {
             switch self {
@@ -249,6 +258,12 @@ struct TodayView: View {
                 // Force view refresh by updating a state variable
                 // The animation ensures smooth transitions
             }
+        }
+        .onAppear {
+            loadSortOption()
+        }
+        .onChange(of: selectedSortOption) { _, newValue in
+            saveSortOption(newValue)
         }
     }
     
@@ -536,11 +551,28 @@ struct TodayView: View {
 
     }
     
-
-    
     private var todayDateString: String {
         let formatter = DateFormatter()
         formatter.dateFormat = "EEEE, MMMM d"
         return formatter.string(from: Date())
+    }
+    
+    // MARK: - Sort Option Persistence
+    
+    private func saveSortOption(_ sortOption: SortOption) {
+        sharedUserDefaults?.set(sortOption.rawValue, forKey: todaySortOptionKey)
+        sharedUserDefaults?.synchronize()
+        
+        // Trigger widget update to reflect new sort order
+        WidgetCenter.shared.reloadAllTimelines()
+    }
+    
+    private func loadSortOption() {
+        guard let sharedUserDefaults = sharedUserDefaults else { return }
+        
+        if let savedSortOption = sharedUserDefaults.string(forKey: todaySortOptionKey),
+           let sortOption = SortOption(rawValue: savedSortOption) {
+            selectedSortOption = sortOption
+        }
     }
 }
