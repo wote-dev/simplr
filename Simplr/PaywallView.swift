@@ -329,7 +329,7 @@ struct PaywallView: View {
     
     // MARK: - Legal Links
     private func openTermsOfService() {
-        guard let url = URL(string: "https://www.blackcubesolutions.com/simplr") else { return }
+        guard let url = URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/") else { return }
         #if os(iOS)
         UIApplication.shared.open(url)
         #endif
@@ -652,7 +652,7 @@ struct PaywallView: View {
                 .multilineTextAlignment(.center)
             
             HStack(spacing: 16) {
-                Button("Terms") {
+                Button("Terms of Use") {
                     openTermsOfService()
                     HapticManager.shared.buttonTap()
                 }

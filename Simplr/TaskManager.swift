@@ -268,6 +268,39 @@ class TaskManager: ObservableObject {
         }
     }
     
+    /// Immediate task update for checklist items - bypasses batch delays for instant UI feedback
+    func updateTaskImmediate(_ task: Task) {
+        guard let index = tasks.firstIndex(where: { $0.id == task.id }) else { return }
+        
+        let oldTask = tasks[index]
+        var updatedTask = task
+        
+        // Handle completion status changes with immediate feedback
+        if oldTask.isCompleted != updatedTask.isCompleted {
+            if updatedTask.isCompleted {
+                updatedTask.completedAt = Date()
+            } else {
+                updatedTask.completedAt = nil
+            }
+        }
+        
+        // Update task immediately
+        tasks[index] = updatedTask
+        
+        // Immediate cache invalidation for instant UI updates
+        invalidateCache()
+        
+        // Immediate save with optimized badge update
+        saveTasksWithOptimizedBadgeUpdate()
+        
+        // Background Spotlight update to avoid blocking UI
+        DispatchQueue.global(qos: .utility).async { [weak self] in
+            guard let self = self else { return }
+            let categories = self.categoryManager?.categories ?? []
+            SpotlightManager.shared.indexTask(updatedTask, categories: categories)
+        }
+    }
+    
     // MARK: - Batch Update Optimization
     
     private func scheduleBatchUpdate(for taskId: UUID) {
@@ -442,6 +475,28 @@ class TaskManager: ObservableObject {
                 
                 // Trigger immediate widget update
                 WidgetCenter.shared.reloadAllTimelines()
+            }
+        }
+    }
+    
+    /// Optimized save method specifically for checklist updates - minimal overhead
+    private func saveTasksWithOptimizedBadgeUpdate() {
+        PerformanceMonitor.shared.measure(PerformanceMonitor.MeasurementPoint.taskSaving) {
+            if let encoded = try? JSONEncoder().encode(tasks) {
+                userDefaults.set(encoded, forKey: tasksKey)
+                
+                // Immediate synchronization for data persistence
+                userDefaults.synchronize()
+                
+                // Optimized badge update - check if enabled and update asynchronously
+                _Concurrency.Task { @MainActor in
+                    if await badgeManager.isBadgeEnabled {
+                        await badgeManager.updateBadgeCountWithTasks(tasks)
+                    }
+                }
+                
+                // Skip widget update for checklist changes to improve performance
+                // Widgets will update on next app activation or significant task changes
             }
         }
     }

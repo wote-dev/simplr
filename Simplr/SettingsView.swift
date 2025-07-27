@@ -573,43 +573,7 @@ struct SettingsView: View {
             }
             .animatedButton()
             
-            // Support text
-            Text("If you like our work, feel free to support us by buying us a coffee")
-                .font(.system(size: 12, weight: .medium, design: .rounded))
-                .foregroundColor(theme.textSecondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 20)
-            
-            // Buy Me A Coffee link
-            Button {
-                if let url = URL(string: "https://coff.ee/danielzverev") {
-                    #if os(iOS)
-                    UIApplication.shared.open(url)
-                    #endif
-                }
-                HapticManager.shared.buttonTap()
-            } label: {
-                HStack(spacing: 8) {
-                    Image(systemName: "cup.and.saucer.fill")
-                        .font(.system(size: 14))
-                        .foregroundColor(theme.accent)
-                    
-                    Text("Buy Me A Coffee")
-                        .font(.system(size: 12, weight: .medium, design: .rounded))
-                        .foregroundColor(theme.accent)
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(theme.accent.opacity(0.1))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(theme.accent.opacity(0.3), lineWidth: 0.8)
-                        )
-                )
-            }
-            .animatedButton()
+
         }
         .padding(.top, 20)
     }

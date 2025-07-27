@@ -307,28 +307,19 @@ struct TaskRowView: View {
                                 VStack(alignment: .leading, spacing: 6) {
                                     ForEach(task.checklist) { item in
                                         HStack(spacing: 8) {
-                                            Button(action: {
-                                                // Immediate haptic feedback for responsiveness
-                                                HapticManager.shared.buttonTap()
-                                                toggleChecklistItem(item)
-                                            }) {
-                                                Image(systemName: item.isCompleted ? "checkmark.circle.fill" : "circle")
-                                                    .font(.system(size: 16, weight: .medium))
-                                                    .foregroundColor(item.isCompleted ? theme.success : theme.textTertiary)
-                                                    .animation(.easeInOut(duration: 0.2), value: item.isCompleted)
-                                            }
-                                            .buttonStyle(PlainButtonStyle())
-                                            .contentShape(Circle())
-                                            .frame(width: 24, height: 24)
-                                            .allowsHitTesting(true)
-                                            .highPriorityGesture(
-                                                TapGesture()
-                                                    .onEnded { _ in
-                                                        // Immediate haptic feedback for responsiveness
-                                                        HapticManager.shared.buttonTap()
-                                                        toggleChecklistItem(item)
-                                                    }
-                                            )
+                                            // Optimized single-tap checklist toggle with immediate feedback
+                                            Image(systemName: item.isCompleted ? "checkmark.circle.fill" : "circle")
+                                                .font(.system(size: 16, weight: .medium))
+                                                .foregroundColor(item.isCompleted ? theme.success : theme.textTertiary)
+                                                .contentShape(Circle())
+                                                .frame(width: 24, height: 24)
+                                                .scaleEffect(item.isCompleted ? 1.1 : 1.0)
+                                                .animation(.spring(response: 0.3, dampingFraction: 0.6), value: item.isCompleted)
+                                                .onTapGesture {
+                                                    // Immediate haptic feedback and optimized toggle
+                                                    HapticManager.shared.buttonTap()
+                                                    optimizedToggleChecklistItem(item)
+                                                }
                                             
                                             Text(item.title)
                                                 .font(.caption)
@@ -1508,20 +1499,22 @@ struct TaskRowView: View {
     }
     
     private func toggleChecklistItem(_ item: ChecklistItem) {
-        // Optimized checklist item toggle with performance considerations
-        PerformanceMonitor.shared.measure("ChecklistItemToggle") {
-            // Create a mutable copy of the task
-            var updatedTask = task
+        // Legacy method - kept for compatibility
+        optimizedToggleChecklistItem(item)
+    }
+    
+    private func optimizedToggleChecklistItem(_ item: ChecklistItem) {
+        // Ultra-optimized checklist toggle with immediate UI feedback
+        PerformanceMonitor.shared.measure("OptimizedChecklistToggle") {
+            // Find the checklist item index first for efficiency
+            guard let checklistIndex = task.checklist.firstIndex(where: { $0.id == item.id }) else { return }
             
-            // Find and update the checklist item
-            if let index = updatedTask.checklist.firstIndex(where: { $0.id == item.id }) {
-                updatedTask.checklist[index].isCompleted.toggle()
-                
-                // Update the task through the task manager (uses batch updates for performance)
-                taskManager.updateTask(updatedTask)
-                
-                // Haptic feedback is now provided immediately in the UI layer for better responsiveness
-            }
+            // Create optimized task copy with minimal overhead
+            var updatedTask = task
+            updatedTask.checklist[checklistIndex].isCompleted.toggle()
+            
+            // Immediate UI update through direct task manager call
+            taskManager.updateTaskImmediate(updatedTask)
         }
     }
 }
