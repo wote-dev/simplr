@@ -552,28 +552,16 @@ struct SettingsView: View {
             Divider()
                 .background(theme.textTertiary.opacity(0.3))
             
-            Button {
-                if let url = URL(string: "https://blackcubesolutions.com") {
-                    #if os(iOS)
-                    UIApplication.shared.open(url)
-                    #endif
-                }
-                HapticManager.shared.buttonTap()
-            } label: {
-                HStack(spacing: 8) {
-                    Text("Built by")
-                        .font(.system(size: 12, weight: .medium, design: .rounded))
-                        .foregroundColor(theme.textSecondary)
-                    
-                    Image(themedBCSLogo: themeManager)
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(height: 20)
-                }
+            HStack(spacing: 8) {
+                Text("Built by")
+                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                    .foregroundColor(theme.textSecondary)
+                
+                Image(themedBCSLogo: themeManager)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(height: 20)
             }
-            .animatedButton()
-            
-
         }
         .padding(.top, 20)
     }
