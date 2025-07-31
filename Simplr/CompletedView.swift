@@ -16,6 +16,8 @@ struct CompletedView: View {
     @State private var taskToDelete: Task?
     @State private var taskToEdit: Task?
     @State private var selectedSortOption: SortOption = .creationDateNewest
+    @State private var showEmptyState = false
+    @State private var emptyStateAnimationPhase = 0
     @Namespace private var taskNamespace
     
     // Spotlight navigation
@@ -213,6 +215,49 @@ struct CompletedView: View {
         .onChange(of: selectedTaskId) { _, newTaskId in
             handleSpotlightTaskSelection(newTaskId)
         }
+        .onChange(of: completedTasks.isEmpty) { _, isEmpty in
+            handleEmptyStateTransition(isEmpty: isEmpty)
+        }
+    }
+    
+    // MARK: - Helper Functions
+    
+    /// Handles the transition animation when empty state appears or disappears
+    private func handleEmptyStateTransition(isEmpty: Bool) {
+        if isEmpty {
+            // Show empty state with staggered animation
+            withAnimation(UIOptimizer.optimizedEmptyStateContainerAnimation()) {
+                showEmptyState = true
+            }
+            
+            // Staggered animation sequence with haptic feedback
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                withAnimation(UIOptimizer.optimizedEmptyStateIconAnimation()) {
+                    emptyStateAnimationPhase = 1
+                }
+                // Light haptic feedback for icon appearance
+                let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+                impactFeedback.impactOccurred()
+            }
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                withAnimation(UIOptimizer.optimizedEmptyStateTitleAnimation()) {
+                    emptyStateAnimationPhase = 2
+                }
+            }
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                withAnimation(UIOptimizer.optimizedEmptyStateSubtitleAnimation()) {
+                    emptyStateAnimationPhase = 3
+                }
+            }
+        } else {
+            // Hide empty state immediately when tasks are added
+            withAnimation(UIOptimizer.optimizedEmptyStateContainerAnimation()) {
+                showEmptyState = false
+                emptyStateAnimationPhase = 0
+            }
+        }
     }
     
     // MARK: - Spotlight Navigation
@@ -314,7 +359,7 @@ struct CompletedView: View {
     
     private var emptyStateView: some View {
         VStack(spacing: 24) {
-            // Optimized icon with smooth scaling animation
+            // Icon with optimized staggered animation
             Image(systemName: "checkmark.seal")
                 .font(.system(size: 50, weight: .light))
                 .foregroundStyle(theme.accentGradient)
@@ -324,33 +369,54 @@ struct CompletedView: View {
                     x: 0,
                     y: 2
                 )
-                .scaleEffect(completedTasks.isEmpty ? 1.0 : 0.8)
-                .opacity(completedTasks.isEmpty ? 1.0 : 0.0)
-                .animation(UIOptimizer.optimizedEmptyStateIconAnimation(), value: completedTasks.isEmpty)
+                .scaleEffect(emptyStateAnimationPhase >= 1 ? 1.0 : 0.3)
+                .opacity(emptyStateAnimationPhase >= 1 ? 1.0 : 0.0)
+                .offset(y: emptyStateAnimationPhase >= 1 ? 0 : 20)
+                .animation(UIOptimizer.optimizedEmptyStateIconAnimation(), value: emptyStateAnimationPhase)
+                .floating(intensity: 2, duration: 4.0)
             
             VStack(spacing: 16) {
                 Text("No Completed Tasks")
                     .font(.system(size: 28, weight: .bold, design: .rounded))
                     .foregroundStyle(theme.accentGradient)
                     .tracking(-0.3)
-                    .scaleEffect(completedTasks.isEmpty ? 1.0 : 0.9)
-                    .opacity(completedTasks.isEmpty ? 1.0 : 0.0)
-                    .animation(UIOptimizer.optimizedEmptyStateTitleAnimation(), value: completedTasks.isEmpty)
+                    .scaleEffect(emptyStateAnimationPhase >= 2 ? 1.0 : 0.8)
+                    .opacity(emptyStateAnimationPhase >= 2 ? 1.0 : 0.0)
+                    .offset(y: emptyStateAnimationPhase >= 2 ? 0 : 15)
+                    .animation(UIOptimizer.optimizedEmptyStateTitleAnimation(), value: emptyStateAnimationPhase)
                 
                 Text("Complete some tasks to see them here!")
                     .font(.system(size: 18, weight: .medium, design: .rounded))
                     .foregroundColor(theme.text)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 40)
-                    .scaleEffect(completedTasks.isEmpty ? 1.0 : 0.95)
-                    .opacity(completedTasks.isEmpty ? 1.0 : 0.0)
-                    .animation(UIOptimizer.optimizedEmptyStateSubtitleAnimation(), value: completedTasks.isEmpty)
+                    .scaleEffect(emptyStateAnimationPhase >= 3 ? 1.0 : 0.8)
+                    .opacity(emptyStateAnimationPhase >= 3 ? 1.0 : 0.0)
+                    .offset(y: emptyStateAnimationPhase >= 3 ? 0 : 10)
+                    .animation(UIOptimizer.optimizedEmptyStateSubtitleAnimation(), value: emptyStateAnimationPhase)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(.top, -50)
         .transition(UIOptimizer.optimizedEmptyStateTransition())
-        .animation(UIOptimizer.optimizedEmptyStateContainerAnimation(), value: completedTasks.isEmpty)
+        .onAppear {
+            // Trigger staggered animation sequence
+            withAnimation(.none) {
+                emptyStateAnimationPhase = 0
+            }
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                emptyStateAnimationPhase = 1
+            }
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                emptyStateAnimationPhase = 2
+            }
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                emptyStateAnimationPhase = 3
+            }
+        }
     }
     
     private var taskListView: some View {

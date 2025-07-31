@@ -18,6 +18,8 @@ struct UpcomingView: View {
     @State private var showingDeleteAlert = false
     @State private var taskToDelete: Task?
     @State private var selectedSortOption: SortOption = .dueDate
+    @State private var showEmptyState = false
+    @State private var emptyStateAnimationPhase = 0
 
     @Namespace private var taskNamespace
     
@@ -237,12 +239,55 @@ struct UpcomingView: View {
         .onChange(of: selectedTaskId) { _, newTaskId in
             handleSpotlightTaskSelection(newTaskId)
         }
+        .onChange(of: upcomingTasks.isEmpty) { _, isEmpty in
+            handleEmptyStateTransition(isEmpty: isEmpty)
+        }
         .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("CategoryStateDidRefresh"))) { _ in
             // CRITICAL FIX: Refresh view when category state changes
             // This ensures collapse/expand states remain consistent after task completion changes
             withAnimation(.easeInOut(duration: 0.25)) {
                 // Force view refresh by updating a state variable
                 // The animation ensures smooth transitions
+            }
+        }
+    }
+    
+    // MARK: - Helper Functions
+    
+    /// Handles the transition animation when empty state appears or disappears
+    private func handleEmptyStateTransition(isEmpty: Bool) {
+        if isEmpty {
+            // Show empty state with staggered animation
+            withAnimation(UIOptimizer.optimizedEmptyStateContainerAnimation()) {
+                showEmptyState = true
+            }
+            
+            // Staggered animation sequence with haptic feedback
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                withAnimation(UIOptimizer.optimizedEmptyStateIconAnimation()) {
+                    emptyStateAnimationPhase = 1
+                }
+                // Light haptic feedback for icon appearance
+                let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+                impactFeedback.impactOccurred()
+            }
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                withAnimation(UIOptimizer.optimizedEmptyStateTitleAnimation()) {
+                    emptyStateAnimationPhase = 2
+                }
+            }
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                withAnimation(UIOptimizer.optimizedEmptyStateSubtitleAnimation()) {
+                    emptyStateAnimationPhase = 3
+                }
+            }
+        } else {
+            // Hide empty state immediately when tasks are added
+            withAnimation(UIOptimizer.optimizedEmptyStateContainerAnimation()) {
+                showEmptyState = false
+                emptyStateAnimationPhase = 0
             }
         }
     }
@@ -398,8 +443,11 @@ struct UpcomingView: View {
                             endPoint: .bottomTrailing
                         )
                     )
-                    .scaleEffect(showingAddTask ? 0.95 : 1.0)
-                    .animation(.adaptiveBouncy, value: showingAddTask)
+                    .scaleEffect(emptyStateAnimationPhase >= 1 ? 1.0 : 0.3)
+                    .opacity(emptyStateAnimationPhase >= 1 ? 1.0 : 0.0)
+                    .offset(y: emptyStateAnimationPhase >= 1 ? 0 : 20)
+                    .animation(UIOptimizer.optimizedEmptyStateIconAnimation(), value: emptyStateAnimationPhase)
+                    .floating(intensity: 3, duration: 3.0)
             }
             
             // Enhanced text content
@@ -408,11 +456,19 @@ struct UpcomingView: View {
                     .font(.system(size: 28, weight: .bold, design: .rounded))
                     .foregroundStyle(theme.accentGradient)
                     .tracking(-0.3)
+                    .scaleEffect(emptyStateAnimationPhase >= 2 ? 1.0 : 0.8)
+                    .opacity(emptyStateAnimationPhase >= 2 ? 1.0 : 0.0)
+                    .offset(y: emptyStateAnimationPhase >= 2 ? 0 : 15)
+                    .animation(UIOptimizer.optimizedEmptyStateTitleAnimation(), value: emptyStateAnimationPhase)
                 
                 VStack(spacing: 8) {
                     Text("No upcoming tasks scheduled.")
                         .font(.system(size: 18, weight: .medium, design: .rounded))
                         .foregroundColor(theme.text)
+                        .scaleEffect(emptyStateAnimationPhase >= 3 ? 1.0 : 0.8)
+                        .opacity(emptyStateAnimationPhase >= 3 ? 1.0 : 0.0)
+                        .offset(y: emptyStateAnimationPhase >= 3 ? 0 : 10)
+                        .animation(UIOptimizer.optimizedEmptyStateSubtitleAnimation(), value: emptyStateAnimationPhase)
                 }
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
@@ -424,10 +480,25 @@ struct UpcomingView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(.top, -40)
-        .transition(.asymmetric(
-            insertion: .scale(scale: 0.8).combined(with: .opacity).combined(with: .offset(y: 20)),
-            removal: .scale(scale: 0.8).combined(with: .opacity).combined(with: .offset(y: -20))
-        ))
+        .transition(UIOptimizer.optimizedEmptyStateTransition())
+        .onAppear {
+            // Trigger staggered animation sequence
+            withAnimation(.none) {
+                emptyStateAnimationPhase = 0
+            }
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                emptyStateAnimationPhase = 1
+            }
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                emptyStateAnimationPhase = 2
+            }
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                emptyStateAnimationPhase = 3
+            }
+        }
     }
     
     private var taskListView: some View {

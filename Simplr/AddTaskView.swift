@@ -356,7 +356,7 @@ struct AddTaskView: View {
                             }
                             Button(action: {
                                 if let index = checklistItems.firstIndex(where: { $0.id == item.id }) {
-                                    withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                                    let _ = withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
                                         checklistItems.remove(at: index)
                                     }
                                 }
