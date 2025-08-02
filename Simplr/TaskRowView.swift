@@ -118,8 +118,8 @@ struct TaskRowView: View {
                                 .fill(showBothActionsConfirmation ? theme.error : theme.error.opacity(0.3))
                                 .frame(width: showBothActionsConfirmation ? 50 : 40, height: showBothActionsConfirmation ? 50 : 40)
                                 .scaleEffect(showBothActionsConfirmation ? 1.0 : (showDeleteIcon ? 1.0 : 0.85))
-                                .animation(.interactiveSpring(response: 0.4, dampingFraction: 0.9, blendDuration: 0), value: showDeleteIcon)
-                                .animation(.interactiveSpring(response: 0.4, dampingFraction: 0.9, blendDuration: 0), value: showBothActionsConfirmation)
+                                .animation(.interactiveSpring(response: 0.35, dampingFraction: 0.95, blendDuration: 0), value: showDeleteIcon)
+                                .animation(.interactiveSpring(response: 0.35, dampingFraction: 0.95, blendDuration: 0), value: showBothActionsConfirmation)
                             
                             if showBothActionsConfirmation {
                                 // Confirmation button - reset gesture state first, then show dialog
@@ -142,11 +142,11 @@ struct TaskRowView: View {
                                     .font(.system(size: showDeleteIcon ? 18 : 14, weight: .bold))
                                     .foregroundColor(cachedDeleteIconColor)
                                     .scaleEffect(1.0)
-                                    .animation(.interactiveSpring(response: 0.4, dampingFraction: 0.9, blendDuration: 0), value: showDeleteIcon)
+                                    .animation(.interactiveSpring(response: 0.35, dampingFraction: 0.95, blendDuration: 0), value: showDeleteIcon)
                             }
                         }
                         .opacity(showBothActionsConfirmation ? 1.0 : abs(dragProgress))
-                        .animation(.interactiveSpring(response: 0.4, dampingFraction: 0.9, blendDuration: 0), value: dragProgress)
+                        .animation(.interactiveSpring(response: 0.35, dampingFraction: 0.95, blendDuration: 0), value: dragProgress)
                         
                         // Second action (Edit or Mark as Incomplete based on context)
                         ZStack {
@@ -156,8 +156,8 @@ struct TaskRowView: View {
                                     (isInCompletedView ? theme.warning.opacity(0.3) : theme.primary.opacity(0.3)))
                                 .frame(width: showBothActionsConfirmation ? 50 : 40, height: showBothActionsConfirmation ? 50 : 40)
                                 .scaleEffect(showBothActionsConfirmation ? 1.0 : (showEditIcon ? 1.0 : 0.85))
-                                .animation(.interactiveSpring(response: 0.4, dampingFraction: 0.9, blendDuration: 0), value: showEditIcon)
-                                .animation(.interactiveSpring(response: 0.4, dampingFraction: 0.9, blendDuration: 0), value: showBothActionsConfirmation)
+                                .animation(.interactiveSpring(response: 0.35, dampingFraction: 0.95, blendDuration: 0), value: showEditIcon)
+                                .animation(.interactiveSpring(response: 0.35, dampingFraction: 0.95, blendDuration: 0), value: showBothActionsConfirmation)
                             
                             if showBothActionsConfirmation {
                                 // Confirmation button - execute appropriate action
@@ -179,11 +179,11 @@ struct TaskRowView: View {
                                     .font(.system(size: showEditIcon ? 18 : 14, weight: .bold))
                                     .foregroundColor(cachedEditIconColor)
                                     .scaleEffect(1.0)
-                                    .animation(.interactiveSpring(response: 0.4, dampingFraction: 0.9, blendDuration: 0), value: showEditIcon)
+                                    .animation(.interactiveSpring(response: 0.35, dampingFraction: 0.95, blendDuration: 0), value: showEditIcon)
                             }
                         }
                         .opacity(showBothActionsConfirmation ? 1.0 : abs(dragProgress))
-                        .animation(.interactiveSpring(response: 0.4, dampingFraction: 0.9, blendDuration: 0), value: dragProgress)
+                        .animation(.interactiveSpring(response: 0.35, dampingFraction: 0.95, blendDuration: 0), value: dragProgress)
                     }
                     .padding(.trailing, 20)
                 }
@@ -457,8 +457,8 @@ struct TaskRowView: View {
 
             .offset(x: max(dragOffset, -maxDragDistance)) // Prevent left clipping by limiting negative offset
             .scaleEffect(isDragging ? 0.98 : 1.0)
-            .animation(.interactiveSpring(response: 0.4, dampingFraction: 0.9, blendDuration: 0), value: dragOffset)
-            .animation(.interactiveSpring(response: 0.4, dampingFraction: 0.9, blendDuration: 0), value: isDragging)
+            .animation(.interactiveSpring(response: 0.35, dampingFraction: 0.95, blendDuration: 0), value: dragOffset)
+            .animation(.interactiveSpring(response: 0.35, dampingFraction: 0.95, blendDuration: 0), value: isDragging)
             .optimizedRendering(shouldUpdate: isDragging || task.isCompleted)
             .zIndex(2) // Task card layer - above action buttons
         }
@@ -719,12 +719,18 @@ struct TaskRowView: View {
         
         // Only respond to left swipes (negative translation)
         guard translation < 0 else {
-            // Right swipes reset to neutral with ultra-smooth animation
-            if dragOffset != 0 {
-                resetToNeutralState()
+            // Right swipes reset to neutral with ultra-smooth animation - throttled for performance
+            UIOptimizer.shared.throttle(key: "rightSwipeReset", interval: 0.016) {
+                if dragOffset != 0 {
+                    resetToNeutralState()
+                }
             }
             return
         }
+        
+        // Performance optimization: Skip updates for minimal changes
+        let translationDelta = abs(translation - gestureState.lastTranslation)
+        guard translationDelta > 1.0 else { return }
         
         // Reduced threshold for more responsive gesture initiation
         guard horizontalTranslation > 8 else { return }
@@ -749,17 +755,19 @@ struct TaskRowView: View {
             return
         }
         
-        // Normal gesture processing with ultra-smooth performance optimizations
-        let limitedTranslation = max(-maxDragDistance, translation)
-        
-        // Use ultra-smooth animation for 120fps with reduced friction
-        updateDragStateSmooth(translation: limitedTranslation)
-        
-        // Calculate progress and update visual feedback with enhanced smoothness
-        updateVisualFeedbackSmooth(translation: limitedTranslation)
-        
-        // Handle haptic feedback efficiently with improved timing
-        handleHapticFeedbackSmooth(translation: limitedTranslation)
+        // Normal gesture processing with ultra-smooth performance optimizations - throttled
+        UIOptimizer.shared.throttle(key: "leftSwipeUpdate", interval: 0.016) {
+            let limitedTranslation = max(-maxDragDistance, translation)
+            
+            // Use ultra-smooth animation for 120fps with reduced friction
+            updateDragStateSmooth(translation: limitedTranslation)
+            
+            // Calculate progress and update visual feedback with enhanced smoothness
+            updateVisualFeedbackSmooth(translation: limitedTranslation)
+            
+            // Handle haptic feedback efficiently with improved timing
+            handleHapticFeedbackSmooth(translation: limitedTranslation)
+        }
         
         // Store last translation for velocity calculations
         gestureState.lastTranslation = translation
@@ -772,16 +780,18 @@ struct TaskRowView: View {
         gestureState.isScrollGesture = false
         gestureState.isActive = false
         
-        // Ultra-smooth unified spring animation for maximum fluidity
-        withAnimation(.interactiveSpring(response: 0.4, dampingFraction: 0.9, blendDuration: 0)) {
+        // Performance-optimized single animation block to prevent jitter
+        withAnimation(.interactiveSpring(response: 0.35, dampingFraction: 0.95, blendDuration: 0)) {
             dragOffset = 0
             isDragging = false
             dragProgress = 0
             showEditIcon = false
             showDeleteIcon = false
+            showBothActionsConfirmation = false
+            completionOpacity = 1.0
         }
         
-        // Reset enhanced gesture state
+        // Reset enhanced gesture state with optimized timing
         gestureState.reset()
         gestureCompleted = false
         hasTriggeredHaptic = false
@@ -790,10 +800,10 @@ struct TaskRowView: View {
     private func handleIconShownStateSmooth(translation: CGFloat) {
         let distanceFromNeutral = abs(translation)
         
-        // Allow smoother movement with less restrictive constraints
-        if distanceFromNeutral > abs(dragOffset) * 1.1 { // Added 10% tolerance for smoother feel
-            // Keep current position with ultra-smooth animation
-            withAnimation(.interactiveSpring(response: 0.15, dampingFraction: 0.9, blendDuration: 0)) {
+        // Optimized movement detection with performance-first approach
+        if distanceFromNeutral > abs(dragOffset) * 1.05 { // Reduced tolerance for better performance
+            // Single unified animation to prevent conflicts
+            withAnimation(.interactiveSpring(response: 0.35, dampingFraction: 0.95, blendDuration: 0)) {
                 dragProgress = 0
                 showEditIcon = false
                 showDeleteIcon = false
@@ -801,19 +811,15 @@ struct TaskRowView: View {
             return
         }
         
-        // Allow movement toward neutral with enhanced smoothness
-        if translation > dragOffset * 0.95 { // Slight tolerance for smoother interaction
+        // Optimized movement toward neutral with unified timing
+        if translation > dragOffset * 0.98 { // Tighter tolerance for smoother interaction
             return
         }
         
-        // Update position with ultra-smooth animation
-        withAnimation(.interactiveSpring(response: 0.2, dampingFraction: 0.92, blendDuration: 0)) {
+        // Single animation block to prevent jitter and improve performance
+        withAnimation(.interactiveSpring(response: 0.35, dampingFraction: 0.95, blendDuration: 0)) {
             dragOffset = translation
-            isDragging = abs(translation) > 6 // Lower threshold for more responsive feedback
-        }
-        
-        // Reset visual indicators with smooth transition
-        withAnimation(.interactiveSpring(response: 0.18, dampingFraction: 0.88, blendDuration: 0)) {
+            isDragging = abs(translation) > 8 // Optimized threshold for better performance
             dragProgress = 0
             showEditIcon = false
             showDeleteIcon = false
@@ -1054,10 +1060,21 @@ struct TaskRowView: View {
         gestureState.isScrollGesture = false
         gestureState.isActive = false
         
-        // Ultra-smooth dismissal animation
-        withAnimation(.interactiveSpring(response: 0.25, dampingFraction: 0.85, blendDuration: 0)) {
-            resetGestureState()
+        // Performance-optimized dismissal animation with unified timing
+        withAnimation(.interactiveSpring(response: 0.35, dampingFraction: 0.95, blendDuration: 0)) {
+            dragOffset = 0
+            isDragging = false
+            dragProgress = 0
+            showEditIcon = false
+            showDeleteIcon = false
+            showBothActionsConfirmation = false
+            completionOpacity = 1.0
         }
+        
+        // Reset state with optimized cleanup
+        gestureState.reset()
+        gestureCompleted = false
+        hasTriggeredHaptic = false
         
         // Notify parent that deletion was canceled
         onDeleteCanceled?()
@@ -1113,8 +1130,8 @@ struct TaskRowView: View {
     }
     
     private func resetGestureState() {
-        // Ultra-high-performance reset animation with device optimization
-        withAnimation(UIOptimizer.buttonResponseAnimation()) {
+        // Performance-optimized reset animation with unified timing to prevent jitter
+        withAnimation(.interactiveSpring(response: 0.35, dampingFraction: 0.95, blendDuration: 0)) {
             dragOffset = 0
             isDragging = false
             dragProgress = 0
@@ -1130,13 +1147,8 @@ struct TaskRowView: View {
         
         // Explicitly reset gesture state to ensure clean slate
         gestureState.reset()
-        
-        // Ultra-fast delay to ensure state is fully cleared before allowing new gestures
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.03) {
-            // Additional cleanup to ensure no lingering state
-            gestureState.isScrollGesture = false
-            gestureState.isActive = false
-        }
+        gestureState.isScrollGesture = false
+        gestureState.isActive = false
     }
     
     private func duplicateTask() {
