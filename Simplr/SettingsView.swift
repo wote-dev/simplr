@@ -22,7 +22,7 @@ struct SettingsView: View {
     @Environment(\.dismiss) var dismiss
     @State private var notificationsEnabled = true
     @State private var soundEnabled = true
-    @State private var reminderTimeOffset = 15 // minutes before due time
+
     @State private var showingCreateCategory = false
     @State private var showingPrivacyPolicy = false
     @State private var showingTermsOfService = false
@@ -91,7 +91,7 @@ struct SettingsView: View {
                                     )
                                     )
                                     
-                                    reminderTimePicker
+
                                 }
                             }
                         }
@@ -444,38 +444,7 @@ struct SettingsView: View {
         .padding(.vertical, 4) // Added vertical padding
     }
     
-    private var reminderTimePicker: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Reminder Time")
-                .font(.system(size: 16, weight: .medium, design: .rounded))
-                .foregroundColor(theme.text)
-            
-            Text("Notify me before due time")
-                .font(.system(size: 12, weight: .medium, design: .rounded))
-                .foregroundColor(theme.textSecondary)
-            
-            Picker("Reminder Time", selection: $reminderTimeOffset) {
-                Text("5 minutes before").tag(5)
-                Text("15 minutes before").tag(15)
-                Text("30 minutes before").tag(30)
-                Text("1 hour before").tag(60)
-                Text("2 hours before").tag(120)
-            }
-            .pickerStyle(MenuPickerStyle())
-            .tint(theme.accent)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(theme.surface.opacity(0.5))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 16)
-                            .stroke(theme.accent.opacity(0.2), lineWidth: 0.8)
-                    )
-            )
-        }
-    }
+
     
     /// Theme-adaptive color for collapse button with enhanced visibility
     private var collapseButtonColor: Color {

@@ -187,7 +187,7 @@ struct TaskProvider: AppIntentTimelineProvider {
         return categories.first { $0.id == id }
     }
     
-    private func sortTasks(task1: Task, task2: Task, using sortOption: SortOption) -> Bool {
+    private func sortTasks(task1 : Task, task2: Task, using sortOption: SortOption) -> Bool {
         switch sortOption {
         case .priority:
             // First priority: URGENT category tasks always come first
@@ -245,15 +245,32 @@ struct TaskProvider: AppIntentTimelineProvider {
 struct SimplrWidgetEntryView: View {
     var entry: TaskProvider.Entry
     @Environment(\.widgetFamily) var family
+    @State private var theme: WidgetTheme = WidgetThemeManager.shared.currentTheme()
     
     var body: some View {
+        ZStack {
+            // Theme-aware background
+            WidgetBackgroundView(theme: theme, useGradient: true)
+                .ignoresSafeArea()
+            
+            content
+                .padding(family == .systemSmall ? 12 : 16)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        }
+        .onAppear {
+            // Update theme when view appears
+            theme = WidgetThemeManager.shared.currentTheme()
+        }
+    }
+    
+    private var content: some View {
         VStack(alignment: .leading, spacing: family == .systemSmall ? 6 : 10) {
             // Header
             HStack {
                 Text("Reminders")
                     .font(family == .systemSmall ? .subheadline : .headline)
                     .fontWeight(.semibold)
-                    .foregroundColor(.primary)
+                    .foregroundColor(theme.primaryTextColor)
                 Spacer()
             }
             
@@ -262,29 +279,27 @@ struct SimplrWidgetEntryView: View {
                 VStack(spacing: 6) {
                     Image(systemName: "checkmark.circle.fill")
                         .font(family == .systemSmall ? .title3 : .title2)
-                        .foregroundColor(.green)
+                        .foregroundColor(theme.successColor)
                     Text("All caught up!")
                         .font(family == .systemSmall ? .caption : .subheadline)
                         .fontWeight(.medium)
-                        .foregroundColor(.primary)
+                        .foregroundColor(theme.primaryTextColor)
                     Text("No pending tasks")
                         .font(.caption2)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(theme.secondaryTextColor)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 // Task list
                 VStack(alignment: .leading, spacing: family == .systemSmall ? 8 : 10) {
                     ForEach(entry.tasks) { task in
-                        TaskRowWidget(task: task, categories: entry.categories, family: family)
+                        TaskRowWidget(task: task, categories: entry.categories, family: family, theme: theme)
                     }
                 }
             }
             
             Spacer(minLength: 0)
         }
-        .padding(family == .systemSmall ? 12 : 16)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 }
 
@@ -292,6 +307,7 @@ struct TaskRowWidget: View {
     let task: Task
     let categories: [TaskCategory]
     let family: WidgetFamily
+    let theme: WidgetTheme
     
     private var taskCategory: TaskCategory? {
         guard let categoryId = task.categoryId else { return nil }
@@ -300,11 +316,11 @@ struct TaskRowWidget: View {
     
     private var dotColor: Color {
         if task.isOverdue {
-            return Color.red
+            return theme.errorColor
         } else if let category = taskCategory {
             return category.color.color
         } else {
-            return Color.gray // Default color for uncategorized tasks
+            return theme.secondaryTextColor // Default color for uncategorized tasks
         }
     }
     
@@ -325,13 +341,13 @@ struct TaskRowWidget: View {
                      if task.isCompleted {
                          Image(systemName: "checkmark.circle.fill")
                              .font(family == .systemSmall ? .system(size: 16, weight: .medium) : .system(size: 18, weight: .medium))
-                             .foregroundColor(.green)
+                             .foregroundColor(theme.successColor)
                              .contentTransition(.symbolEffect(.replace.offUp))
                              .symbolEffect(.bounce, value: task.isCompleted)
                      } else if isUrgentTask {
                          Image(systemName: "exclamationmark.triangle.fill")
                              .font(family == .systemSmall ? .system(size: 16, weight: .medium) : .system(size: 18, weight: .medium))
-                             .foregroundColor(.red)
+                             .foregroundColor(theme.errorColor)
                              .contentTransition(.symbolEffect(.replace.offUp))
                      } else {
                          Image(systemName: "circle")
@@ -351,22 +367,22 @@ struct TaskRowWidget: View {
                 Text(task.title)
                     .font(family == .systemSmall ? .caption : .footnote)
                     .fontWeight(.medium)
-                    .foregroundColor(task.isCompleted ? .secondary : .primary)
+                    .foregroundColor(task.isCompleted ? theme.secondaryTextColor : theme.primaryTextColor)
                     .lineLimit(family == .systemSmall ? 2 : 3)
                     .multilineTextAlignment(.leading)
                     .fixedSize(horizontal: false, vertical: true)
-                    .strikethrough(task.isCompleted, color: .secondary)
+                    .strikethrough(task.isCompleted, color: theme.secondaryTextColor)
                 
                 if task.isCompleted {
                     Text("Completed")
                         .font(.caption2)
                         .fontWeight(.medium)
-                        .foregroundColor(.green)
+                        .foregroundColor(theme.successColor)
                 } else if let dueDate = task.dueDate {
                     Text(dueDateText(for: dueDate))
                         .font(.caption2)
                         .fontWeight(.medium)
-                        .foregroundColor(task.isOverdue ? .red : .secondary)
+                        .foregroundColor(task.isOverdue ? theme.errorColor : theme.secondaryTextColor)
                 }
             }
             

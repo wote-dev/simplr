@@ -163,23 +163,23 @@ struct MainTabView: View {
             .ignoresSafeArea(.container, edges: .bottom)
     }
     
-    // MARK: - Optimized Tab Content Display
+    // MARK: - Animated Tab Content Display
     
     private var contentView: some View {
-        ZStack {
-            TodayView(selectedTaskId: $selectedTaskId)
-                .opacity(selectedTab == .today ? 1 : 0)
-                .allowsHitTesting(selectedTab == .today)
-
-            UpcomingView(selectedTaskId: $selectedTaskId)
-                .opacity(selectedTab == .upcoming ? 1 : 0)
-                .allowsHitTesting(selectedTab == .upcoming)
-
-            CompletedView(selectedTaskId: $selectedTaskId)
-                .opacity(selectedTab == .completed ? 1 : 0)
-                .allowsHitTesting(selectedTab == .completed)
+        GeometryReader { geometry in
+            HStack(spacing: 0) {
+                TodayView(selectedTaskId: $selectedTaskId)
+                    .frame(width: geometry.size.width)
+                
+                UpcomingView(selectedTaskId: $selectedTaskId)
+                    .frame(width: geometry.size.width)
+                
+                CompletedView(selectedTaskId: $selectedTaskId)
+                    .frame(width: geometry.size.width)
+            }
+            .offset(x: -CGFloat(selectedTab.index) * geometry.size.width)
+            .animation(optimizedTabAnimation, value: selectedTab)
         }
-        .animation(nil, value: selectedTab) // Disable animation for content transitions
     }
     
 
@@ -232,6 +232,16 @@ struct MainTabView: View {
         
         // Smooth, subtle animation for icon state changes
         return .easeInOut(duration: 0.15)
+    }
+    
+    /// Optimized animation for tab content transitions
+    private var optimizedTabAnimation: Animation {
+        if shouldUseReducedMotion {
+            return .linear(duration: 0)
+        }
+        
+        // Smooth, responsive animation for tab switching
+        return .spring(response: 0.3, dampingFraction: 0.8, blendDuration: 0)
     }
     
     /// Minimal transition for best performance

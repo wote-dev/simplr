@@ -528,6 +528,8 @@ struct UpcomingView: View {
                                                     .font(.system(size: 16, weight: .semibold, design: .rounded))
                                                     .foregroundColor(theme.textSecondary)
                                                     .tracking(-0.1)
+                                                    .lineLimit(1)
+                                                    .minimumScaleFactor(0.8)
                                                 
                                                 Rectangle()
                                                     .fill(theme.textSecondary.opacity(0.2))
@@ -556,10 +558,19 @@ struct UpcomingView: View {
                                     }
                                 }
                                 .clipped() // Optimize rendering performance
-                                .transition(.opacity)
+                                .transition(.asymmetric(
+                                    insertion: .opacity.combined(with: .scale(scale: 0.98, anchor: .top)),
+                                    removal: .opacity.combined(with: .scale(scale: 0.98, anchor: .top))
+                                ))
+                                .animation(.smooth(duration: 0.3, extraBounce: 0), value: categoryManager.isCategoryCollapsed(categoryGroup.category))
+                            } else {
+                                // Empty container for smooth collapse animation
+                                Color.clear
+                                    .frame(height: 0)
+                                    .transition(.opacity)
+                                    .animation(.smooth(duration: 0.3, extraBounce: 0), value: categoryManager.isCategoryCollapsed(categoryGroup.category))
                             }
                         }
-                        .animation(.easeInOut(duration: 0.25), value: categoryManager.isCategoryCollapsed(categoryGroup.category))
                         .id("category-\(categoryGroup.category?.id.uuidString ?? "uncategorized")")
                     }
                 }

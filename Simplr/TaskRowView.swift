@@ -54,7 +54,7 @@ struct TaskRowView: View {
         case left, right
     }
     
-    // Optimized gesture state container
+    // Optimized gesture state container with performance tracking
     private struct GestureState {
         var initialDirection: SwipeDirection? = nil
         var hasShownIcon = false
@@ -63,6 +63,7 @@ struct TaskRowView: View {
         var isActive = false
         var gestureStartTime: Date? = nil
         var isScrollGesture = false
+        var initialTouchLocation: CGPoint? = nil
         
         mutating func reset() {
             initialDirection = nil
@@ -72,6 +73,7 @@ struct TaskRowView: View {
             isActive = false
             gestureStartTime = nil
             isScrollGesture = false
+            initialTouchLocation = nil
         }
         
         mutating func markAsScrollGesture() {
@@ -79,7 +81,7 @@ struct TaskRowView: View {
         }
     }
     
-    // URGENT category pulsating animation states - optimized for performance
+    // URGENT category indication states - ultra-optimized for maximum performance
     @State private var urgentGlowIntensity: CGFloat = 0.0
     @State private var urgentTintOpacity: CGFloat = 0.0
     
@@ -417,7 +419,7 @@ struct TaskRowView: View {
                     .opacity(isUrgentTask && !task.isCompleted ? 0 : 1)
             )
             .overlay(
-                // Optimized urgent red glow border - contained within card bounds
+                // Ultra-optimized urgent red border - static for maximum performance
                 RoundedRectangle(cornerRadius: 24)
                     .strokeBorder(
                         LinearGradient(
@@ -431,12 +433,11 @@ struct TaskRowView: View {
                         lineWidth: 1.5
                     )
                     .opacity(isUrgentTask && !task.isCompleted ? 1.0 : 0)
-                    .animation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true), value: urgentGlowIntensity)
             )
             .scaleEffect(isPressed ? 0.99 : 1.0)
             .opacity(completionOpacity)
             .overlay(
-                // Red tint overlay for urgent tasks with inner glow
+                // Red tint overlay for urgent tasks - static for maximum performance
                 RoundedRectangle(cornerRadius: 24)
                     .fill(
                         RadialGradient(
@@ -451,7 +452,6 @@ struct TaskRowView: View {
                         )
                     )
                     .allowsHitTesting(false)
-                    .animation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true), value: urgentTintOpacity)
             )
             .animation(UIOptimizer.optimizedAnimation(duration: 0.15), value: isPressed)
 
@@ -463,14 +463,68 @@ struct TaskRowView: View {
             .zIndex(2) // Task card layer - above action buttons
         }
         .clipShape(RoundedRectangle(cornerRadius: 24)) // Ensure clean clipping with rounded corners
-        .gesture(
-            // Highly optimized drag gesture for seamless scrolling
-            DragGesture(minimumDistance: 2, coordinateSpace: .local)
+        .simultaneousGesture(
+            // Ultra-responsive horizontal swipe detection with minimal latency
+            DragGesture(minimumDistance: 8, coordinateSpace: .global)
                 .onChanged { value in
-                    handleDragChanged(value)
+                    // Balanced diagonal swipe prevention with responsive thresholds
+                    let verticalDistance = abs(value.translation.height)
+                    let horizontalDistance = abs(value.translation.width)
+                    
+                    // Calculate angle in degrees from horizontal (relaxed for better responsiveness)
+                    let angleInDegrees = abs(atan2(verticalDistance, horizontalDistance) * 180 / .pi)
+                    
+                    // Optimized velocity analysis for smooth interaction
+                    let verticalVelocity = abs(value.velocity.height)
+                    let horizontalVelocity = abs(value.velocity.width)
+                    
+                    // Balanced scroll detection - more permissive for better responsiveness
+                    let isScrollGesture = (
+                        verticalDistance > 12 ||  // Relaxed vertical threshold
+                        angleInDegrees > 30 ||  // Relaxed angle constraint (was 15°)
+                        (verticalVelocity > horizontalVelocity * 0.8 && verticalDistance > 8)  // Balanced velocity check
+                    )
+                    
+                    if isScrollGesture {
+                        gestureState.markAsScrollGesture()
+                        resetToNeutralState()
+                        return
+                    }
+                    
+                    // Responsive horizontal swipe detection
+                    let isSmoothSwipe = (
+                        horizontalDistance > 8 &&  // Reduced threshold for responsiveness
+                        angleInDegrees <= 30 &&  // Relaxed angle constraint
+                        horizontalVelocity > 50  // Reduced minimum velocity
+                    )
+                    
+                    if isSmoothSwipe && !gestureState.isScrollGesture {
+                        handleDragChanged(value)
+                    }
                 }
                 .onEnded { value in
-                    handleDragEnded(value)
+                    // Balanced angle-based swipe completion with smooth responsiveness
+                    let verticalDistance = abs(value.translation.height)
+                    let horizontalDistance = abs(value.translation.width)
+                    
+                    // Calculate angle in degrees from horizontal
+                    let angleInDegrees = abs(atan2(verticalDistance, horizontalDistance) * 180 / .pi)
+                    
+                    // Optimized velocity analysis for smooth completion
+                    let verticalVelocity = abs(value.velocity.height)
+                    let horizontalVelocity = abs(value.velocity.width)
+                    
+                    let isSmoothCompletion = (
+                        horizontalDistance > 12 &&  // Reduced completion threshold
+                        angleInDegrees <= 35 &&  // More permissive angle for completion
+                        horizontalVelocity > 30  // Relaxed velocity requirement
+                    )
+                    
+                    if !gestureState.isScrollGesture && isSmoothCompletion {
+                        handleDragEnded(value)
+                    } else {
+                        resetToNeutralState()
+                    }
                 }
         )
         .simultaneousGesture(
@@ -677,9 +731,10 @@ struct TaskRowView: View {
         let horizontalTranslation = abs(value.translation.width)
         let verticalTranslation = abs(value.translation.height)
         
-        // Initialize gesture timing if this is the first movement
+        // Initialize gesture timing and location if this is the first movement
         if gestureState.gestureStartTime == nil {
             gestureState.gestureStartTime = Date()
+            gestureState.initialTouchLocation = value.startLocation
         }
         
         // If this is marked as a scroll gesture, don't process further
@@ -687,19 +742,32 @@ struct TaskRowView: View {
             return
         }
         
-        // Enhanced scroll detection with improved thresholds for smoother interaction
-        let isDefinitelyScrollGesture = (
-            // Strong vertical movement with very little horizontal component
-            (verticalTranslation > 20 && horizontalTranslation < 8) ||
-            // Very fast vertical velocity with minimal horizontal
-            (abs(value.velocity.height) > 350 && abs(value.velocity.width) < 80)
+        // Ultra-strict angle-based scroll detection
+        let angleInDegrees = abs(atan2(verticalTranslation, horizontalTranslation) * 180 / .pi)
+        let verticalVelocity = abs(value.velocity.height)
+        let horizontalVelocity = abs(value.velocity.width)
+        
+        // Optimized diagonal swipe prevention with responsive feel
+        let isScrollGesture = (
+            verticalTranslation > 15 ||  // Balanced vertical threshold
+            angleInDegrees > 35 ||  // Balanced angle constraint
+            (verticalVelocity > horizontalVelocity * 0.6 && verticalTranslation > 10)  // Balanced velocity check
         )
         
-        if isDefinitelyScrollGesture {
+        if isScrollGesture {
             gestureState.markAsScrollGesture()
-            if isDragging {
-                resetToNeutralState()
-            }
+            resetToNeutralState()
+            return
+        }
+        
+        // Responsive horizontal swipe detection
+        let isSmoothSwipe = (
+            horizontalTranslation > 8 &&  // Reduced threshold for responsiveness
+            angleInDegrees <= 35 &&  // Balanced angle constraint
+            horizontalVelocity > 40  // Reduced minimum velocity for smoother interaction
+        )
+        
+        if !isSmoothSwipe {
             return
         }
         
@@ -709,7 +777,7 @@ struct TaskRowView: View {
         
         // If confirmations are showing, handle dismissal gesture
         if showBothActionsConfirmation {
-            let dismissThreshold: CGFloat = 25 // Reduced for more responsive dismissal
+            let dismissThreshold: CGFloat = 20
             if translation > dismissThreshold {
                 dismissConfirmationsSmooth()
                 return
@@ -719,12 +787,7 @@ struct TaskRowView: View {
         
         // Only respond to left swipes (negative translation)
         guard translation < 0 else {
-            // Right swipes reset to neutral with ultra-smooth animation - throttled for performance
-            UIOptimizer.shared.throttle(key: "rightSwipeReset", interval: 0.016) {
-                if dragOffset != 0 {
-                    resetToNeutralState()
-                }
-            }
+            resetToNeutralState()
             return
         }
         
@@ -732,40 +795,28 @@ struct TaskRowView: View {
         let translationDelta = abs(translation - gestureState.lastTranslation)
         guard translationDelta > 1.0 else { return }
         
-        // Reduced threshold for more responsive gesture initiation
-        guard horizontalTranslation > 8 else { return }
-        
-        // Relaxed vertical constraint for smoother diagonal swipes
-        guard horizontalTranslation > verticalTranslation * 0.5 else { return }
-        
-        // Determine initial swipe direction on first significant movement
+        // Determine initial swipe direction on first movement
         if gestureState.initialDirection == nil && abs(translation) > 8 {
             gestureState.initialDirection = .left
         }
         
-        // Trigger gesture start haptic on first movement with lower threshold
-        if !isDragging && abs(translation) > 5 {
+        // Trigger gesture start haptic on movement
+        if !isDragging && abs(translation) > 8 {
             HapticManager.shared.gestureStart()
             HapticManager.shared.prepareForGestures()
         }
         
-        // Optimized icon state management with smoother transitions
+        // Optimized icon state management
         if gestureState.hasShownIcon {
             handleIconShownStateSmooth(translation: translation)
             return
         }
         
-        // Normal gesture processing with ultra-smooth performance optimizations - throttled
-        UIOptimizer.shared.throttle(key: "leftSwipeUpdate", interval: 0.016) {
+        // Ultra-responsive gesture processing with minimal throttling
+        UIOptimizer.shared.throttle(key: "leftSwipeUpdate", interval: 0.008) {  // Maximum responsiveness
             let limitedTranslation = max(-maxDragDistance, translation)
-            
-            // Use ultra-smooth animation for 120fps with reduced friction
             updateDragStateSmooth(translation: limitedTranslation)
-            
-            // Calculate progress and update visual feedback with enhanced smoothness
             updateVisualFeedbackSmooth(translation: limitedTranslation)
-            
-            // Handle haptic feedback efficiently with improved timing
             handleHapticFeedbackSmooth(translation: limitedTranslation)
         }
         
@@ -773,7 +824,11 @@ struct TaskRowView: View {
         gestureState.lastTranslation = translation
     }
     
-    // MARK: - Optimized Helper Methods for Gesture Handling
+    // MARK: - Scroll-Aware Gesture Handling System
+    
+    /// Ultra-optimized gesture reset that immediately defers to parent ScrollView
+    /// This method is critical for fixing the scrolling issue where expanded task cards
+    /// would prevent vertical scrolling in the parent ScrollView
     
     private func resetToNeutralState() {
         // Immediately clear scroll gesture flag to allow scrolling
@@ -841,22 +896,22 @@ struct TaskRowView: View {
     }
     
     private func updateVisualFeedbackSmooth(translation: CGFloat) {
-        // Optimized progress calculation with performance improvements
+        // Ultra-smooth progress calculation for responsive feel
         let newDragProgress = min(1.0, abs(translation) / abs(actionThreshold))
         
-        // Only update progress if it changed significantly to reduce re-renders
-        if abs(newDragProgress - dragProgress) > 0.01 {
+        // Responsive progress updates with minimal threshold
+        if abs(newDragProgress - dragProgress) > 0.005 {
             dragProgress = newDragProgress
         }
         
-        // Optimized icon threshold for consistent behavior
-        let iconThreshold: CGFloat = 35
+        // Responsive icon threshold for smooth interaction
+        let iconThreshold: CGFloat = 25
         let shouldShowIcons = abs(translation) > iconThreshold
         
-        // Batch state updates only when necessary to minimize performance impact
+        // Immediate responsive icon updates with smooth animation
         if shouldShowIcons != showDeleteIcon || shouldShowIcons != showEditIcon {
-            // Single animation block for both icons to reduce animation overhead
-            withAnimation(.interactiveSpring(response: 0.4, dampingFraction: 0.9, blendDuration: 0)) {
+            // Ultra-smooth spring animation for immediate response
+            withAnimation(.spring(response: 0.2, dampingFraction: 0.95, blendDuration: 0)) {
                 showDeleteIcon = shouldShowIcons
                 showEditIcon = shouldShowIcons
             }
@@ -912,15 +967,15 @@ struct TaskRowView: View {
         gestureState.isActive = false
         gestureState.isScrollGesture = false
         
-        // If confirmations are already showing, handle dismissal with improved responsiveness
+        // If confirmations are already showing, handle dismissal with ultra-smooth responsiveness
         if showBothActionsConfirmation {
-            let dismissThreshold: CGFloat = 25 // Reduced for more responsive dismissal
+            let dismissThreshold: CGFloat = 15 // Ultra-responsive dismissal
             
             if translation > dismissThreshold {
                 dismissConfirmationsSmooth()
             } else {
                 // Snap back to confirmation position with ultra-smooth animation
-                withAnimation(.interactiveSpring(response: 0.3, dampingFraction: 0.85, blendDuration: 0)) {
+                withAnimation(.spring(response: 0.25, dampingFraction: 0.9, blendDuration: 0)) {
                     dragOffset = -140
                 }
             }
@@ -941,13 +996,13 @@ struct TaskRowView: View {
             return
         }
         
-        // Enhanced gesture recognition with improved velocity sensitivity
+        // Ultra-smooth gesture recognition with responsive thresholds
         let shouldShowBothActionsConfirmation = shouldTriggerConfirmationSmooth(translation: translation, velocity: velocity)
         
         if shouldShowBothActionsConfirmation {
             // Show both actions confirmation with ultra-smooth animation
             HapticManager.shared.gestureThreshold()
-            withAnimation(.interactiveSpring(response: 0.3, dampingFraction: 0.85, blendDuration: 0)) {
+            withAnimation(.spring(response: 0.25, dampingFraction: 0.9, blendDuration: 0)) {
                 showBothActionsConfirmation = true
                 dragOffset = -140
             }
@@ -959,10 +1014,10 @@ struct TaskRowView: View {
     }
     
     private func shouldTriggerConfirmationSmooth(translation: CGFloat, velocity: CGFloat) -> Bool {
-        // Ultra-smooth gesture recognition with improved sensitivity
+        // Ultra-responsive gesture recognition with balanced thresholds
         let distanceThreshold = translation < actionThreshold
-        let velocityThreshold = translation < -60 && velocity < -700 // Reduced thresholds for better responsiveness
-        let combinedThreshold = translation < -50 && velocity < -400 // More accessible combined threshold
+        let velocityThreshold = translation < -40 && velocity < -500 // Responsive velocity threshold
+        let combinedThreshold = translation < -35 && velocity < -300 // Balanced combined threshold
         
         return distanceThreshold || velocityThreshold || combinedThreshold
     }
@@ -1060,8 +1115,8 @@ struct TaskRowView: View {
         gestureState.isScrollGesture = false
         gestureState.isActive = false
         
-        // Performance-optimized dismissal animation with unified timing
-        withAnimation(.interactiveSpring(response: 0.35, dampingFraction: 0.95, blendDuration: 0)) {
+        // Ultra-smooth dismissal animation with optimized performance
+        withAnimation(.spring(response: 0.2, dampingFraction: 0.98, blendDuration: 0)) {
             dragOffset = 0
             isDragging = false
             dragProgress = 0
@@ -1130,8 +1185,8 @@ struct TaskRowView: View {
     }
     
     private func resetGestureState() {
-        // Performance-optimized reset animation with unified timing to prevent jitter
-        withAnimation(.interactiveSpring(response: 0.35, dampingFraction: 0.95, blendDuration: 0)) {
+        // Ultra-smooth reset animation with unified timing to prevent jitter
+        withAnimation(.spring(response: 0.2, dampingFraction: 0.98, blendDuration: 0)) {
             dragOffset = 0
             isDragging = false
             dragProgress = 0
@@ -1155,28 +1210,22 @@ struct TaskRowView: View {
         taskManager.duplicateTask(task)
     }
     
-    /// Starts the optimized red glow pulsating animation for URGENT category tasks
+    /// Starts the ultra-optimized urgent indication with minimal performance impact
     private func startUrgentPulsatingAnimation() {
         // Only animate if task is not completed and is URGENT
         guard isUrgentTask && !task.isCompleted else { return }
         
-        // Single, optimized animation for both glow and tint
-        // Using a longer duration for a more subtle, elegant pulse
-        withAnimation(
-            Animation.easeInOut(duration: 1.2)
-                .repeatForever(autoreverses: true)
-        ) {
-            urgentGlowIntensity = 0.7  // Moderate glow intensity for visibility without being overwhelming
-            urgentTintOpacity = 0.6    // Subtle red tint on the card
-        }
+        // Ultra-lightweight static indication instead of continuous animation
+        // This eliminates performance overhead during swipe gestures
+        urgentGlowIntensity = 0.8  // Static high visibility
+        urgentTintOpacity = 0.3    // Subtle static tint
     }
     
-    /// Stops the URGENT pulsating animation with device-optimized performance
+    /// Stops the URGENT indication with instant performance
     private func stopUrgentPulsatingAnimation() {
-        withAnimation(UIOptimizer.optimizedAnimation()) {
-            urgentGlowIntensity = 0.0
-            urgentTintOpacity = 0.0
-        }
+        // Instant removal without animation to maximize responsiveness
+        urgentGlowIntensity = 0.0
+        urgentTintOpacity = 0.0
     }
     
     private func dueDatePill(_ date: Date) -> some View {

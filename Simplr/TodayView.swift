@@ -316,6 +316,9 @@ struct TodayView: View {
                         .font(.system(size: 16, weight: .medium, design: .rounded))
                         .foregroundColor(theme.textSecondary)
                         .opacity(0.8)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                        .truncationMode(.tail)
                 }
                 
                 Spacer(minLength: 0)
@@ -509,7 +512,7 @@ struct TodayView: View {
                                 taskCount: categoryGroup.tasks.count
                             )
                             
-                            // Tasks in this category with optimized animation
+                            // Tasks in this category with enhanced fade animation
                             let isCollapsed = categoryManager.isCategoryCollapsed(categoryGroup.category)
                             
                             if !isCollapsed {
@@ -524,12 +527,19 @@ struct TodayView: View {
                                 .padding(.horizontal, 8)
                                 .clipped() // Optimize rendering performance
                                 .transition(.asymmetric(
-                                    insertion: .opacity.combined(with: .scale(scale: 0.95, anchor: .top)),
-                                    removal: .opacity.combined(with: .scale(scale: 0.95, anchor: .top))
+                                    insertion: .opacity.combined(with: .scale(scale: 0.98, anchor: .top)),
+                                    removal: .opacity.combined(with: .scale(scale: 0.98, anchor: .top))
                                 ))
-                                .animation(.easeInOut(duration: 0.25), value: isCollapsed)
+                                .animation(.smooth(duration: 0.3, extraBounce: 0), value: isCollapsed)
+                            } else {
+                                // Empty container for smooth collapse animation
+                                Color.clear
+                                    .frame(height: 0)
+                                    .transition(.opacity)
+                                    .animation(.smooth(duration: 0.3, extraBounce: 0), value: isCollapsed)
                             }
                         }
+                        .id("category-\(categoryGroup.category?.id.uuidString ?? "uncategorized")")
                     }
                 }
             }

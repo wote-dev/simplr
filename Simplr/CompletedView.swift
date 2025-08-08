@@ -437,6 +437,8 @@ struct CompletedView: View {
                                         endPoint: .trailing
                                     )
                                 )
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.8)
                                 .tracking(-0.2)
                             
                             Spacer()

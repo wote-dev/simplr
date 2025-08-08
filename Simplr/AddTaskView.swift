@@ -100,6 +100,7 @@ struct AddTaskView: View {
         }
         .onAppear {
             setupInitialValues()
+            // Only focus title field when creating new task, not when editing
             isTitleFocused = taskToEdit == nil
         }
         .overlay(successOverlay)
@@ -164,7 +165,7 @@ struct AddTaskView: View {
                         CustomTextField(
                             text: $title, 
                             placeholder: "Enter task title", 
-                            isFirstResponder: true,
+                            isFirstResponder: taskToEdit == nil,
                             allowsTextSelection: true
                         )
                         .frame(height: 48)
@@ -651,6 +652,11 @@ struct AddTaskView: View {
     }
     
     private func saveTask() {
+        // Performance optimization: Auto-save pending checklist item for seamless UX
+        if !newChecklistItemTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            addChecklistItem()
+        }
+        
         let trimmedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedTitle.isEmpty else {
             HapticManager.shared.validationError()

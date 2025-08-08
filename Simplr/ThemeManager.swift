@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Combine
+import WidgetKit
 
 // MARK: - Theme Mode
 enum ThemeMode: String, CaseIterable {
@@ -294,6 +295,20 @@ class ThemeManager: ObservableObject {
     
     private func saveThemeMode() {
         userDefaults.set(themeMode.rawValue, forKey: themeModeKey)
+        
+        // Sync with widget via shared UserDefaults
+        if let sharedDefaults = UserDefaults(suiteName: "group.com.danielzverev.simplr") {
+            sharedDefaults.set(themeMode.rawValue, forKey: "ThemeMode")
+            
+            // Also sync system dark mode state
+            #if os(iOS)
+            let isDark = UITraitCollection.current.userInterfaceStyle == .dark
+            sharedDefaults.set(isDark, forKey: "SystemDarkMode")
+            #endif
+            
+            // Force widget reload to pick up new theme
+            WidgetCenter.shared.reloadAllTimelines()
+        }
     }
 }
 

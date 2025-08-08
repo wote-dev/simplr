@@ -17,7 +17,7 @@ struct OnboardingView: View {
     
     private let steps = [
         OnboardingStep(
-            icon: "checkmark.circle.fill",
+            icon: "app",
             title: "Welcome to Simplr"
         ),
         OnboardingStep(
@@ -43,34 +43,32 @@ struct OnboardingView: View {
             theme.background
                 .ignoresSafeArea()
             
-            VStack(spacing: 50) {
-                Spacer(minLength: 30)
+            VStack(spacing: 40) {
+                Spacer(minLength: 60)
                 
-                // App icon and title
-                VStack(spacing: 24) {
-                    Image(themedIcon: "simplr", themeManager: themeManager)
-                        .resizable()
-                        .frame(width: 80, height: 80)
-                    
-                    Text("Simplr")
-                        .font(.largeTitle)
-                        .fontWeight(.bold)
-                        .foregroundColor(theme.text)
-                }
+
                 
                 // Step content with swipe gesture
                 VStack(spacing: 40) {
                     let step = steps[currentStep]
                     
-                    Image(systemName: step.icon)
-                        .font(.system(size: 80, weight: .light))
-                        .foregroundColor(theme.accent)
-                        .scaleEffect(1.0)
-                        .transition(.asymmetric(
-                            insertion: .move(edge: .trailing).combined(with: .opacity).combined(with: .scale(scale: 0.8)),
-                            removal: .move(edge: .leading).combined(with: .opacity).combined(with: .scale(scale: 1.2))
-                        ))
-                        .animation(.spring(response: 0.6, dampingFraction: 0.8), value: currentStep)
+                    Group {
+                        if currentStep == 0 {
+                            Image(themedIcon: "simplr", themeManager: themeManager)
+                                .resizable()
+                                .frame(width: 80, height: 80)
+                        } else {
+                            Image(systemName: step.icon)
+                                .font(.system(size: 80, weight: .light))
+                                .foregroundColor(theme.accent)
+                        }
+                    }
+                    .scaleEffect(1.0)
+                    .transition(.asymmetric(
+                        insertion: .move(edge: .trailing).combined(with: .opacity).combined(with: .scale(scale: 0.8)),
+                        removal: .move(edge: .leading).combined(with: .opacity).combined(with: .scale(scale: 1.2))
+                    ))
+                    .animation(.spring(response: 0.6, dampingFraction: 0.8), value: currentStep)
                     
                     Text(step.title)
                         .font(.title2)
