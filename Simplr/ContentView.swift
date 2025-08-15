@@ -73,10 +73,11 @@ extension Image {
 }
 
 struct ContentView: View {
-    @EnvironmentObject var taskManager: TaskManager
-    @EnvironmentObject var categoryManager: CategoryManager
     @EnvironmentObject var themeManager: ThemeManager
+    @EnvironmentObject var categoryManager: CategoryManager
+    @EnvironmentObject var taskManager: TaskManager
     @EnvironmentObject var premiumManager: PremiumManager
+    @StateObject private var profileManager = ProfileManager.shared
     @Environment(\.theme) var theme
     @State private var showingAddTask = false
     @State private var taskToEdit: Task?
@@ -251,11 +252,42 @@ struct ContentView: View {
                             x: 0,
                             y: 0.5
                         )
-
                 }
             }
             
+            // Profile switching icon - only show if user is using a non-default profile
+            if profileManager.currentProfile != .personal {
+                Menu {
+                    ForEach(UserProfile.allCases, id: \.self) { profile in
+                        Button(action: {
+                            profileManager.switchToProfile(profile)
+                            HapticManager.shared.buttonTap()
+                        }) {
+                            Label(profile.displayName, systemImage: profile.icon)
+                        }
+                    }
+                } label: {
                     ZStack {
+                        Circle()
+                            .fill(theme.surfaceGradient)
+                            .frame(width: 36, height: 36)
+                            .applyNeumorphicShadow(theme.neumorphicButtonStyle)
+                        
+                        Image(systemName: profileManager.currentProfile.icon)
+                            .foregroundColor(getIconColor(for: theme))
+                            .font(.system(size: 16, weight: .medium))
+                            .shadow(
+                                color: theme.background == .black ? Color.white.opacity(0.1) : Color.clear,
+                                radius: 1,
+                                x: 0,
+                                y: 0.5
+                            )
+                    }
+                }
+                .transition(.scale.combined(with: .opacity))
+            }
+            
+            ZStack {
                 Circle()
                     .fill(theme.surfaceGradient)
                     .frame(width: 36, height: 36)

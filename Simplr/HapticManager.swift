@@ -11,80 +11,99 @@ import UIKit
 class HapticManager {
     static let shared = HapticManager()
     
-    private init() {}
+    private init() {
+        setupPreparationTimer()
+    }
+    
+    // MARK: - Pre-allocated Haptic Generators
+    private let lightImpactGenerator = UIImpactFeedbackGenerator(style: .light)
+    private let softImpactGenerator = UIImpactFeedbackGenerator(style: .soft)
+    private let mediumImpactGenerator = UIImpactFeedbackGenerator(style: .medium)
+    private let notificationGenerator = UINotificationFeedbackGenerator()
+    private let selectionGenerator = UISelectionFeedbackGenerator()
+    
+    // MARK: - Performance Optimization
+    private var lastHapticTime: Date = .distantPast
+    private let hapticDebounceInterval: TimeInterval = 0.05 // 50ms debounce
+    private var preparationTimer: Timer?
+    private let preparationInterval: TimeInterval = 2.0
     
     // MARK: - Haptic Feedback Methods
     
     /// Light haptic feedback for task completion
     func taskCompleted() {
-        let impact = UIImpactFeedbackGenerator(style: .light)
-        impact.impactOccurred()
+        guard shouldTriggerHaptic() else { return }
+        lightImpactGenerator.impactOccurred()
     }
     
     /// Subtle haptic feedback for task uncomplete
     func taskUncompleted() {
-        let impact = UIImpactFeedbackGenerator(style: .soft)
-        impact.impactOccurred()
+        guard shouldTriggerHaptic() else { return }
+        softImpactGenerator.impactOccurred()
     }
     
     /// Success haptic feedback for adding a new task
     func taskAdded() {
-        let notification = UINotificationFeedbackGenerator()
-        notification.notificationOccurred(.success)
+        guard shouldTriggerHaptic() else { return }
+        notificationGenerator.notificationOccurred(.success)
     }
     
     /// Warning haptic feedback for task deletion
     func taskDeleted() {
-        let impact = UIImpactFeedbackGenerator(style: .medium)
-        impact.impactOccurred()
+        guard shouldTriggerHaptic() else { return }
+        mediumImpactGenerator.impactOccurred()
     }
     
     /// Light haptic feedback for button taps and UI interactions
     func buttonTap() {
-        let impact = UIImpactFeedbackGenerator(style: .light)
-        impact.impactOccurred()
+        guard shouldTriggerHaptic() else { return }
+        lightImpactGenerator.impactOccurred()
     }
     
-    /// Gentle haptic feedback for theme changes - balanced between noticeable and non-intrusive
+    /// Gentle haptic feedback for theme changes - optimized for rapid theme switching
     func themeChange() {
-        let impact = UIImpactFeedbackGenerator(style: .soft)
-        impact.impactOccurred(intensity: 0.9)
+        // Use shorter debounce for theme changes to feel more responsive
+        let now = Date()
+        if now.timeIntervalSince(lastHapticTime) >= 0.02 { // 20ms for theme changes
+            lastHapticTime = now
+            softImpactGenerator.impactOccurred(intensity: 0.9)
+        }
     }
     
     /// Subtle haptic feedback for selection changes
     func selectionChange() {
-        let selection = UISelectionFeedbackGenerator()
-        selection.selectionChanged()
+        guard shouldTriggerHaptic() else { return }
+        selectionGenerator.selectionChanged()
     }
     
     /// Subtle haptic feedback for tab selection changes
     func selectionChanged() {
-        let selection = UISelectionFeedbackGenerator()
-        selection.selectionChanged()
+        guard shouldTriggerHaptic() else { return }
+        selectionGenerator.selectionChanged()
     }
     
     /// Success haptic feedback for general operations
     func successFeedback() {
-        let notification = UINotificationFeedbackGenerator()
-        notification.notificationOccurred(.success)
+        guard shouldTriggerHaptic() else { return }
+        notificationGenerator.notificationOccurred(.success)
     }
     
     /// Success haptic for reminder notifications
     func reminderReceived() {
-        let notification = UINotificationFeedbackGenerator()
-        notification.notificationOccurred(.success)
+        guard shouldTriggerHaptic() else { return }
+        notificationGenerator.notificationOccurred(.success)
     }
     
     /// Warning haptic for overdue tasks
     func taskOverdue() {
-        let impact = UIImpactFeedbackGenerator(style: .soft)
-        impact.impactOccurred(intensity: 0.4)
+        guard shouldTriggerHaptic() else { return }
+        softImpactGenerator.impactOccurred(intensity: 0.4)
     }
     
     /// Error haptic for validation failures
     func validationError() {
-        let impact = UIImpactFeedbackGenerator(style: .soft)
-        impact.impactOccurred(intensity: 0.5)
+        guard shouldTriggerHaptic() else { return }
+        softImpactGenerator.impactOccurred(intensity: 0.5)
     }
     
 
@@ -93,101 +112,125 @@ class HapticManager {
     
     /// Subtle haptic feedback when swipe gesture begins
     func gestureStart() {
-        let impact = UIImpactFeedbackGenerator(style: .soft)
-        impact.impactOccurred()
+        guard shouldTriggerHaptic() else { return }
+        softImpactGenerator.impactOccurred()
     }
     
     /// Progressive haptic feedback during gesture movement
     func gestureProgress() {
-        let impact = UIImpactFeedbackGenerator(style: .soft)
-        impact.impactOccurred(intensity: 0.5)
+        guard shouldTriggerHaptic() else { return }
+        softImpactGenerator.impactOccurred(intensity: 0.5)
     }
     
     /// Strong haptic feedback when gesture reaches threshold
     func gestureThreshold() {
-        let impact = UIImpactFeedbackGenerator(style: .medium)
-        impact.impactOccurred()
+        guard shouldTriggerHaptic() else { return }
+        mediumImpactGenerator.impactOccurred()
     }
     
     /// Completion haptic for successful swipe gesture
     func gestureCompleted() {
-        let notification = UINotificationFeedbackGenerator()
-        notification.notificationOccurred(.success)
+        guard shouldTriggerHaptic() else { return }
+        notificationGenerator.notificationOccurred(.success)
     }
     
     /// Cancel haptic when gesture is released before threshold
     func gestureCancelled() {
-        let impact = UIImpactFeedbackGenerator(style: .soft)
-        impact.impactOccurred(intensity: 0.3)
+        guard shouldTriggerHaptic() else { return }
+        softImpactGenerator.impactOccurred(intensity: 0.3)
     }
     
     /// Strong haptic for swipe to complete gesture
     func swipeToComplete() {
-        let impact = UIImpactFeedbackGenerator(style: .medium)
-        impact.impactOccurred()
+        guard shouldTriggerHaptic() else { return }
+        mediumImpactGenerator.impactOccurred()
         
         // Add a slight delay for a satisfying double-tap effect
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            let secondImpact = UIImpactFeedbackGenerator(style: .light)
-            secondImpact.impactOccurred()
+            self.lightImpactGenerator.impactOccurred()
         }
     }
     
     /// Strong haptic for swipe to delete gesture
     func swipeToDelete() {
-        let impact = UIImpactFeedbackGenerator(style: .medium)
-        impact.impactOccurred()
+        guard shouldTriggerHaptic() else { return }
+        mediumImpactGenerator.impactOccurred()
     }
     
     // MARK: - Context Menu and Preview Haptics
     
     /// Haptic feedback when context menu preview appears
     func previewAppears() {
-        let impact = UIImpactFeedbackGenerator(style: .soft)
-        impact.impactOccurred()
+        guard shouldTriggerHaptic() else { return }
+        softImpactGenerator.impactOccurred()
     }
     
     /// Subtle haptic when context menu preview is dismissed
     func previewDismissed() {
-        let impact = UIImpactFeedbackGenerator(style: .soft)
-        impact.impactOccurred(intensity: 0.5)
+        guard shouldTriggerHaptic() else { return }
+        softImpactGenerator.impactOccurred(intensity: 0.5)
     }
     
     /// Haptic feedback for context menu action selection
     func contextMenuAction() {
-        let impact = UIImpactFeedbackGenerator(style: .light)
-        impact.impactOccurred()
+        guard shouldTriggerHaptic() else { return }
+        lightImpactGenerator.impactOccurred()
     }
     
     // MARK: - Prepare Methods (for better performance)
     
     /// Prepare haptic generators for better responsiveness
     func prepareForInteraction() {
-        let impact = UIImpactFeedbackGenerator(style: .light)
-        impact.prepare()
-        
-        let softImpact = UIImpactFeedbackGenerator(style: .soft)
-        softImpact.prepare()
-        
-        let notification = UINotificationFeedbackGenerator()
-        notification.prepare()
-        
-        let selection = UISelectionFeedbackGenerator()
-        selection.prepare()
+        lightImpactGenerator.prepare()
+        softImpactGenerator.prepare()
+        notificationGenerator.prepare()
+        selectionGenerator.prepare()
     }
     
     /// Prepare haptic generators specifically for gesture interactions
     func prepareForGestures() {
-        let softImpact = UIImpactFeedbackGenerator(style: .soft)
-        softImpact.prepare()
-        
-        let mediumImpact = UIImpactFeedbackGenerator(style: .medium)
-        mediumImpact.prepare()
-        
-        let lightImpact = UIImpactFeedbackGenerator(style: .light)
-        lightImpact.prepare()
-        
-        let notification = UINotificationFeedbackGenerator()
-        notification.prepare()
+        softImpactGenerator.prepare()
+        mediumImpactGenerator.prepare()
+        lightImpactGenerator.prepare()
+        notificationGenerator.prepare()
+    }
+    
+    /// Continuous preparation for optimal responsiveness
+    func continuousPreparation() {
+        lightImpactGenerator.prepare()
+        softImpactGenerator.prepare()
+        mediumImpactGenerator.prepare()
+        notificationGenerator.prepare()
+        selectionGenerator.prepare()
+    }
+    
+    // MARK: - Performance Optimization Methods
+    
+    /// Debounce haptic triggers to prevent performance issues during rapid interactions
+    private func shouldTriggerHaptic() -> Bool {
+        let now = Date()
+        if now.timeIntervalSince(lastHapticTime) >= hapticDebounceInterval {
+            lastHapticTime = now
+            return true
+        }
+        return false
+    }
+    
+    /// Setup timer for continuous preparation to maintain responsiveness
+    private func setupPreparationTimer() {
+        preparationTimer?.invalidate()
+        preparationTimer = Timer.scheduledTimer(
+            withTimeInterval: preparationInterval,
+            repeats: true
+        ) { [weak self] _ in
+            self?.continuousPreparation()
+        }
+        preparationTimer?.tolerance = 0.5
+    }
+    
+    /// Cleanup resources when no longer needed
+    deinit {
+        preparationTimer?.invalidate()
+        preparationTimer = nil
     }
 }

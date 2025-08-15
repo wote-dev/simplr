@@ -18,6 +18,8 @@ struct CompletedView: View {
     @State private var selectedSortOption: SortOption = .creationDateNewest
     @State private var showEmptyState = false
     @State private var emptyStateAnimationPhase = 0
+    @State private var isAnimatingEmptyState = false
+    @State private var emptyStateOpacity = 0.0
     @Namespace private var taskNamespace
     
     // Spotlight navigation
@@ -222,41 +224,67 @@ struct CompletedView: View {
     
     // MARK: - Helper Functions
     
+    /// Ultra-smooth empty state animation trigger with coordinated timing
+    private func triggerUltraSmoothEmptyStateAnimation() {
+        guard !isAnimatingEmptyState else { return }
+        
+        isAnimatingEmptyState = true
+        
+        // Reset animation states
+        withAnimation(.none) {
+            emptyStateAnimationPhase = 0
+            emptyStateOpacity = 0.0
+        }
+        
+        // Fade in container first
+        withAnimation(UIOptimizer.optimizedEmptyStateContainerAnimation()) {
+            emptyStateOpacity = 1.0
+        }
+        
+        // Coordinated staggered animation sequence
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.06) {
+            withAnimation(UIOptimizer.optimizedEmptyStateIconAnimation()) {
+                emptyStateAnimationPhase = 1
+            }
+            // Subtle haptic feedback for premium feel
+            let impactFeedback = UIImpactFeedbackGenerator(style: .soft)
+            impactFeedback.impactOccurred()
+        }
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
+            withAnimation(UIOptimizer.optimizedEmptyStateTitleAnimation()) {
+                emptyStateAnimationPhase = 2
+            }
+        }
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) {
+            withAnimation(UIOptimizer.optimizedEmptyStateSubtitleAnimation()) {
+                emptyStateAnimationPhase = 3
+            }
+            isAnimatingEmptyState = false
+        }
+    }
+    
     /// Handles the transition animation when empty state appears or disappears
     private func handleEmptyStateTransition(isEmpty: Bool) {
         if isEmpty {
-            // Show empty state with staggered animation
+            // Show empty state with ultra-smooth animation
             withAnimation(UIOptimizer.optimizedEmptyStateContainerAnimation()) {
                 showEmptyState = true
             }
             
-            // Staggered animation sequence with haptic feedback
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                withAnimation(UIOptimizer.optimizedEmptyStateIconAnimation()) {
-                    emptyStateAnimationPhase = 1
-                }
-                // Light haptic feedback for icon appearance
-                let impactFeedback = UIImpactFeedbackGenerator(style: .light)
-                impactFeedback.impactOccurred()
-            }
-            
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                withAnimation(UIOptimizer.optimizedEmptyStateTitleAnimation()) {
-                    emptyStateAnimationPhase = 2
-                }
-            }
-            
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                withAnimation(UIOptimizer.optimizedEmptyStateSubtitleAnimation()) {
-                    emptyStateAnimationPhase = 3
-                }
+            // Trigger enhanced animation sequence
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.02) {
+                triggerUltraSmoothEmptyStateAnimation()
             }
         } else {
-            // Hide empty state immediately when tasks are added
-            withAnimation(UIOptimizer.optimizedEmptyStateContainerAnimation()) {
+            // Hide empty state with smooth fade out
+            withAnimation(UIOptimizer.optimizedEmptyStateContainerAnimation().speed(1.5)) {
                 showEmptyState = false
                 emptyStateAnimationPhase = 0
+                emptyStateOpacity = 0.0
             }
+            isAnimatingEmptyState = false
         }
     }
     
@@ -359,7 +387,7 @@ struct CompletedView: View {
     
     private var emptyStateView: some View {
         VStack(spacing: 24) {
-            // Icon with optimized staggered animation
+            // Icon with ultra-smooth fluid animation
             Image(systemName: "checkmark.seal")
                 .font(.system(size: 50, weight: .light))
                 .foregroundStyle(theme.accentGradient)
@@ -369,53 +397,40 @@ struct CompletedView: View {
                     x: 0,
                     y: 2
                 )
-                .scaleEffect(emptyStateAnimationPhase >= 1 ? 1.0 : 0.3)
+                .scaleEffect(emptyStateAnimationPhase >= 1 ? 1.0 : 0.6)
                 .opacity(emptyStateAnimationPhase >= 1 ? 1.0 : 0.0)
-                .offset(y: emptyStateAnimationPhase >= 1 ? 0 : 20)
+                .offset(y: emptyStateAnimationPhase >= 1 ? 0 : 12)
                 .animation(UIOptimizer.optimizedEmptyStateIconAnimation(), value: emptyStateAnimationPhase)
-                .floating(intensity: 2, duration: 4.0)
+                .floating(intensity: 1.5, duration: 5.0)
             
             VStack(spacing: 16) {
                 Text("No Completed Tasks")
                     .font(.system(size: 28, weight: .bold, design: .rounded))
                     .foregroundStyle(theme.accentGradient)
                     .tracking(-0.3)
-                    .scaleEffect(emptyStateAnimationPhase >= 2 ? 1.0 : 0.8)
+                    .scaleEffect(emptyStateAnimationPhase >= 2 ? 1.0 : 0.85)
                     .opacity(emptyStateAnimationPhase >= 2 ? 1.0 : 0.0)
-                    .offset(y: emptyStateAnimationPhase >= 2 ? 0 : 15)
+                    .offset(y: emptyStateAnimationPhase >= 2 ? 0 : 8)
                     .animation(UIOptimizer.optimizedEmptyStateTitleAnimation(), value: emptyStateAnimationPhase)
                 
                 Text("Complete some tasks to see them here!")
                     .font(.system(size: 18, weight: .medium, design: .rounded))
-                    .foregroundColor(theme.text)
+                    .foregroundColor(theme.text.opacity(0.9))
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 40)
-                    .scaleEffect(emptyStateAnimationPhase >= 3 ? 1.0 : 0.8)
+                    .scaleEffect(emptyStateAnimationPhase >= 3 ? 1.0 : 0.9)
                     .opacity(emptyStateAnimationPhase >= 3 ? 1.0 : 0.0)
-                    .offset(y: emptyStateAnimationPhase >= 3 ? 0 : 10)
+                    .offset(y: emptyStateAnimationPhase >= 3 ? 0 : 6)
                     .animation(UIOptimizer.optimizedEmptyStateSubtitleAnimation(), value: emptyStateAnimationPhase)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(.top, -50)
+        .opacity(emptyStateOpacity)
+        .animation(.easeInOut(duration: 0.15), value: emptyStateOpacity)
         .transition(UIOptimizer.optimizedEmptyStateTransition())
         .onAppear {
-            // Trigger staggered animation sequence
-            withAnimation(.none) {
-                emptyStateAnimationPhase = 0
-            }
-            
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                emptyStateAnimationPhase = 1
-            }
-            
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                emptyStateAnimationPhase = 2
-            }
-            
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                emptyStateAnimationPhase = 3
-            }
+            triggerUltraSmoothEmptyStateAnimation()
         }
     }
     
@@ -542,21 +557,19 @@ struct CompletedView: View {
     private func clearAllCompleted() {
         let completedTasksToDelete = completedTasks
         
-        // Use optimized animation for smooth transition to empty state
+        // Use ultra-smooth animation for seamless transition to empty state
         withAnimation(UIOptimizer.optimizedStateTransitionAnimation()) {
             for task in completedTasksToDelete {
                 taskManager.deleteTask(task)
             }
         }
         
-        // Provide haptic feedback for user confirmation
+        // Provide premium haptic feedback for user confirmation
         HapticManager.shared.successFeedback()
         
-        // Ensure smooth empty state appearance with slight delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            withAnimation(UIOptimizer.optimizedEmptyStateContainerAnimation()) {
-                // Trigger empty state animation refresh
-            }
+        // Ensure ultra-smooth empty state appearance
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) {
+            triggerUltraSmoothEmptyStateAnimation()
         }
     }
 }

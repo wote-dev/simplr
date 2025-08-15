@@ -17,6 +17,7 @@ struct SettingsView: View {
     @EnvironmentObject var categoryManager: CategoryManager
     @EnvironmentObject var premiumManager: PremiumManager
     @EnvironmentObject var taskManager: TaskManager
+    @StateObject private var profileManager = ProfileManager.shared
 
     @Environment(\.theme) var theme
     @Environment(\.dismiss) var dismiss
@@ -43,6 +44,11 @@ struct SettingsView: View {
                 
                 ScrollView {
                     VStack(spacing: 24) {
+                        // Profile Section
+                        settingsSection(title: "Profile", icon: "person.2") {
+                            profileSectionContent
+                        }
+                        
                         // Theme Section
                         settingsSection(title: "Appearance", icon: "paintbrush") {
                             VStack(spacing: 16) {
@@ -228,7 +234,7 @@ struct SettingsView: View {
                             VStack(spacing: 16) {
                                 settingsRow(
                                     title: "Version",
-                                    value: "1.9",
+                                    value: "1.9.7",
                                     icon: "app.badge"
                                 )
                                 
@@ -514,6 +520,60 @@ struct SettingsView: View {
         }
         .padding(.vertical, 4) // Added vertical padding for better touch targets
         .contentShape(Rectangle())
+    }
+    
+    private var profileSectionContent: some View {
+        VStack(spacing: 16) {
+            HStack {
+                Text("Current Profile")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundColor(theme.text)
+                
+                Spacer()
+                
+                Text(profileManager.currentProfile.displayName)
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(theme.accent)
+            }
+            
+            profileSelectionGrid
+        }
+    }
+    
+    private var profileSelectionGrid: some View {
+        LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 12) {
+            ForEach(UserProfile.allCases, id: \.self) { profile in
+                profileButton(for: profile)
+            }
+        }
+    }
+    
+    private func profileButton(for profile: UserProfile) -> some View {
+        Button(action: {
+            profileManager.switchToProfile(profile)
+            HapticManager.shared.buttonTap()
+        }) {
+            VStack(spacing: 6) {
+                Image(systemName: profile.icon)
+                    .font(.system(size: 18, weight: .medium))
+                    .foregroundColor(profileManager.currentProfile == profile ? theme.background : theme.accent)
+                
+                Text(profile.displayName)
+                    .font(.system(size: 11, weight: .medium, design: .rounded))
+                    .foregroundColor(profileManager.currentProfile == profile ? theme.background : theme.text)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 8)
+            .background(
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(profileManager.currentProfile == profile ? 
+                          AnyShapeStyle(theme.accentGradient) : 
+                          AnyShapeStyle(theme.surface))
+            )
+        }
+        .animatedButton()
     }
     
     private var footerView: some View {

@@ -16,9 +16,20 @@ class CategoryManager: ObservableObject {
     @Published var collapsedCategories: Set<String> = [] // Track collapsed categories by name
     
     private let userDefaults = UserDefaults(suiteName: "group.com.danielzverev.simplr") ?? UserDefaults.standard
-    private let categoriesKey = "SavedCategories"
-    private let selectedFilterKey = "SelectedCategoryFilter"
-    private let collapsedCategoriesKey = "CollapsedCategories"
+    private let profileManager = ProfileManager.shared
+    
+    // Dynamic keys based on current profile
+    private var categoriesKey: String {
+        return profileManager.getCategoriesKey()
+    }
+    
+    private var selectedFilterKey: String {
+        return profileManager.getSelectedFilterKey()
+    }
+    
+    private var collapsedCategoriesKey: String {
+        return profileManager.getCollapsedCategoriesKey()
+    }
     
     // Performance optimization: Cache category lookups
     private var categoryLookupCache: [UUID: TaskCategory] = [:]
@@ -39,6 +50,15 @@ class CategoryManager: ObservableObject {
     ]
     
     init() {
+        // Listen for profile changes
+        NotificationCenter.default.addObserver(
+            forName: NSNotification.Name("ProfileDidChange"),
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.handleProfileChange()
+        }
+        
         loadCategories()
         loadSelectedFilter()
         loadCollapsedCategories()
@@ -126,6 +146,23 @@ class CategoryManager: ObservableObject {
         // Save and rebuild cache
         saveCategories()
         rebuildCache()
+    }
+    
+    /// Handle profile changes by reloading categories for the new profile
+    private func handleProfileChange() {
+        // Clear current state
+        categories.removeAll()
+        selectedCategoryFilter = nil
+        collapsedCategories.removeAll()
+        categoryLookupCache.removeAll()
+        
+        // Load data for the new profile
+        loadCategories()
+        loadSelectedFilter()
+        loadCollapsedCategories()
+        rebuildCache()
+        refreshPredefinedCategories()
+        ensureDefaultExpandedState()
     }
     
     func updateCategory(_ category: TaskCategory) {

@@ -474,20 +474,46 @@ struct TodayView: View {
                     .scaleEffect(emptyStateAnimationPhase >= 2 ? 1.0 : 0.8)
                     .opacity(emptyStateAnimationPhase >= 2 ? 1.0 : 0.0)
                     .offset(y: emptyStateAnimationPhase >= 2 ? 0 : 20)
-                    .animation(.adaptiveSmooth.delay(0.4), value: emptyStateAnimationPhase)
+                    .animation(.adaptiveSmooth.delay(0.3), value: emptyStateAnimationPhase)
                 
-                Text("No tasks due today. Enjoy your free time!")
-                    .font(.system(size: 18, weight: .medium, design: .rounded))
-                    .foregroundColor(theme.text)
+                Text("Add your first task to get started")
+                    .font(.system(size: 16, weight: .medium, design: .rounded))
+                    .foregroundColor(theme.textSecondary)
                     .multilineTextAlignment(.center)
+                    .lineSpacing(4)
                     .padding(.horizontal, 40)
                     .scaleEffect(emptyStateAnimationPhase >= 3 ? 1.0 : 0.9)
                     .opacity(emptyStateAnimationPhase >= 3 ? 1.0 : 0.0)
                     .offset(y: emptyStateAnimationPhase >= 3 ? 0 : 15)
                     .animation(.adaptiveSmooth.delay(0.6), value: emptyStateAnimationPhase)
             }
-            .opacity(showingAddTask ? 0.7 : 1.0)
-            .animation(.adaptiveSmooth, value: showingAddTask)
+            
+            // Add task button with enhanced styling
+            Button {
+                withAnimation(.adaptiveBouncy) {
+                    showingAddTask = true
+                }
+                HapticManager.shared.buttonTap()
+            } label: {
+                HStack(spacing: 12) {
+                    Image(systemName: "plus")
+                        .font(.system(size: 18, weight: .semibold))
+                    Text("Add Your First Task")
+                        .font(.system(size: 16, weight: .semibold, design: .rounded))
+                }
+                .foregroundColor(.white)
+                .padding(.horizontal, 24)
+                .padding(.vertical, 14)
+                .background(
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(theme.accentGradient)
+                )
+                .scaleEffect(emptyStateAnimationPhase >= 3 ? 1.0 : 0.9)
+                .opacity(emptyStateAnimationPhase >= 3 ? 1.0 : 0.0)
+                .offset(y: emptyStateAnimationPhase >= 3 ? 0 : 15)
+                .animation(.adaptiveSmooth.delay(0.6), value: emptyStateAnimationPhase)
+            }
+            .animatedButton()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(.top, -50)

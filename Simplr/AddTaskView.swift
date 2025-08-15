@@ -586,47 +586,73 @@ struct AddTaskView: View {
     private var successOverlay: some View {
         ZStack {
             if showingSuccess {
-                // Full screen celebration overlay
-                Color.black.opacity(0.3)
-                    .ignoresSafeArea()
-                    .transition(.opacity)
+                // Theme-adherent celebration overlay with theme-matched blur
+                ZStack {
+                    // Theme-matched background blur
+                    theme.background
+                        .opacity(0.85)
+                        .blur(radius: 20)
+                        .ignoresSafeArea()
+                        .transition(.opacity.animation(.easeInOut(duration: 0.25)))
+                    
+                    // Theme surface overlay for consistency
+                    theme.surface
+                        .opacity(0.6)
+                        .blur(radius: 12)
+                        .ignoresSafeArea()
+                        .transition(.opacity.animation(.easeInOut(duration: 0.3)))
+                }
                 
                 VStack(spacing: 20) {
-                    // Large animated checkmark
+                    // Theme-adherent animated checkmark
                     ZStack {
+                        // Subtle glow using theme accent
                         Circle()
-                            .fill(.green.gradient)
-                            .frame(width: 80, height: 80)
+                            .fill(theme.success.gradient.opacity(0.25))
+                            .frame(width: 110, height: 110)
+                            .blur(radius: 16)
+                            .scaleEffect(showingSuccess ? 1.0 : 0.6)
+                            .opacity(showingSuccess ? 0.5 : 0.0)
+                            .animation(.easeOut(duration: 0.4).delay(0.1), value: showingSuccess)
+                        
+                        // Main checkmark with theme success color
+                        Circle()
+                            .fill(theme.success.gradient)
+                            .frame(width: 76, height: 76)
                             .scaleEffect(showingSuccess ? 1.0 : 0.1)
-                            .animation(.bouncy(duration: 0.6, extraBounce: 0.3), value: showingSuccess)
+                            .animation(.bouncy(duration: 0.6, extraBounce: 0.2), value: showingSuccess)
                         
                         Image(systemName: "checkmark")
-                            .font(.system(size: 32, weight: .bold))
-                            .foregroundColor(.white)
+                            .font(.system(size: 30, weight: .bold))
+                            .foregroundColor(theme.background)
                             .scaleEffect(showingSuccess ? 1.0 : 0.1)
-                            .animation(.bouncy(duration: 0.6, extraBounce: 0.3).delay(0.1), value: showingSuccess)
+                            .animation(.bouncy(duration: 0.6, extraBounce: 0.2).delay(0.12), value: showingSuccess)
                     }
                     
-                    // Success text
+                    // Theme-adherent success text
                     VStack(spacing: 8) {
                         Text(taskToEdit == nil ? "Task Created!" : "Task Updated!")
                             .font(.title2)
                             .fontWeight(.bold)
-                            .foregroundColor(.white)
+                            .foregroundColor(theme.text)
                             .scaleEffect(showingSuccess ? 1.0 : 0.8)
                             .opacity(showingSuccess ? 1.0 : 0.0)
-                            .animation(.bouncy(duration: 0.5, extraBounce: 0.2).delay(0.2), value: showingSuccess)
+                            .animation(.bouncy(duration: 0.5, extraBounce: 0.1).delay(0.2), value: showingSuccess)
                         
                         Text(taskToEdit == nil ? "Your task has been added successfully" : "Your changes have been saved")
                             .font(.subheadline)
-                            .foregroundColor(.white.opacity(0.9))
+                            .foregroundColor(theme.textSecondary)
                             .multilineTextAlignment(.center)
                             .scaleEffect(showingSuccess ? 1.0 : 0.8)
                             .opacity(showingSuccess ? 1.0 : 0.0)
-                            .animation(.bouncy(duration: 0.5, extraBounce: 0.2).delay(0.3), value: showingSuccess)
+                            .animation(.bouncy(duration: 0.5, extraBounce: 0.1).delay(0.3), value: showingSuccess)
                     }
+                    .padding(.horizontal, 32)
                 }
-                .transition(.scale(scale: 0.5).combined(with: .opacity))
+                .transition(.asymmetric(
+                    insertion: .scale(scale: 0.8).combined(with: .opacity),
+                    removal: .scale(scale: 0.9).combined(with: .opacity)
+                ))
             }
         }
     }
@@ -652,6 +678,10 @@ struct AddTaskView: View {
     }
     
     private func saveTask() {
+        // Dismiss keyboard first for full animation view
+        isTitleFocused = false
+        hideKeyboardSmoothly()
+        
         // Performance optimization: Auto-save pending checklist item for seamless UX
         if !newChecklistItemTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             addChecklistItem()
@@ -692,7 +722,8 @@ struct AddTaskView: View {
             showingSuccess = true
         }
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+        // Optimized delay for balanced UX with background blur animation
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
             dismiss()
         }
     }

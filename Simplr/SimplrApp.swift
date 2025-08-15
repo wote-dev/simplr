@@ -18,6 +18,7 @@ struct SimplrApp: App {
     @StateObject private var taskManager = TaskManager()
     @StateObject private var categoryManager = CategoryManager()
     @StateObject private var premiumManager = PremiumManager()
+    @StateObject private var profileManager = ProfileManager.shared
     // Celebration manager removed
     @State private var showOnboarding = !UserDefaults.standard.bool(forKey: "HasCompletedOnboarding")
     @State private var showThemeSelection = false
@@ -135,6 +136,7 @@ struct SimplrApp: App {
             .environmentObject(taskManager)
             .environmentObject(categoryManager)
             .environmentObject(premiumManager)
+            .environmentObject(profileManager)
             // Celebration manager environment object removed
         }
     }

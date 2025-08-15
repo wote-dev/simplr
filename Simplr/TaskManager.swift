@@ -22,7 +22,12 @@ class TaskManager: ObservableObject {
     @Published var tasks: [Task] = []
     
     private let userDefaults = UserDefaults(suiteName: "group.com.danielzverev.simplr") ?? UserDefaults.standard
-    private let tasksKey = "SavedTasks"
+    private let profileManager = ProfileManager.shared
+    
+    // Dynamic tasks key based on current profile
+    private var tasksKey: String {
+        return profileManager.getTasksKey()
+    }
     
     // Reference to CategoryManager for Spotlight integration
     private var categoryManager: CategoryManager?
@@ -49,6 +54,15 @@ class TaskManager: ObservableObject {
     private var lastTasksUpdate = Date.distantPast
     
     init() {
+        // Listen for profile changes
+        NotificationCenter.default.addObserver(
+            forName: NSNotification.Name("ProfileDidChange"),
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.handleProfileChange()
+        }
+        
         loadTasks()
         requestNotificationPermission()
         setupNotificationHandling()
@@ -198,19 +212,23 @@ class TaskManager: ObservableObject {
     // MARK: - Task Management
     
     func addTask(_ task: Task) {
-        tasks.append(task)
+        // Ensure task has the current profile ID
+        var profiledTask = task
+        profiledTask.profileId = profileManager.currentProfile.rawValue
+        
+        tasks.append(profiledTask)
         invalidateCache()
         saveTasksWithImmediateBadgeUpdate()
         
         // Index the new task in Spotlight
         let categories = categoryManager?.categories ?? []
-        SpotlightManager.shared.indexTask(task, categories: categories)
+        SpotlightManager.shared.indexTask(profiledTask, categories: categories)
         
         // Haptic feedback for adding a task
         HapticManager.shared.taskAdded()
         
-        if task.hasReminder, let reminderDate = task.reminderDate {
-            scheduleNotification(for: task, at: reminderDate)
+        if profiledTask.hasReminder, let reminderDate = profiledTask.reminderDate {
+            scheduleNotification(for: profiledTask, at: reminderDate)
         }
     }
     
@@ -1000,6 +1018,20 @@ class TaskManager: ObservableObject {
             // Haptic feedback for clearing tasks
             HapticManager.shared.successFeedback()
         }
+    }
+    
+    /// Handle profile changes by reloading tasks for the new profile
+    private func handleProfileChange() {
+        // Clear current tasks and cache
+        tasks.removeAll()
+        invalidateCache()
+        
+        // Load tasks for the new profile
+        loadTasks()
+        
+        // Update badge and Spotlight index
+        updateBadgeImmediately()
+        updateSpotlightIndex()
     }
     
     /// Call this method when the app becomes active to clean up old tasks

@@ -122,17 +122,17 @@ struct ThemeSelectionOnboardingView: View {
             // Show paywall for premium themes
             premiumManager.showPaywall()
         } else {
-            // Set debounce flag to prevent rapid changes
+            // Set debounce flag to prevent rapid changes - reduced debounce time for responsiveness
             isChangingTheme = true
             
-            // Optimize theme change with proper animation and state management
-            withAnimation(.easeInOut(duration: 0.3)) {
+            // Optimize theme change with faster animation for responsiveness
+            withAnimation(.easeInOut(duration: 0.2)) {
                 selectedTheme = mode
                 themeManager.setThemeMode(mode, checkPremium: false)
             }
             
-            // Reset debounce flag after animation completes
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+            // Reset debounce flag after shorter delay - improved responsiveness
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
                 isChangingTheme = false
             }
         }

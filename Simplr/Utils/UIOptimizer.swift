@@ -279,109 +279,56 @@ class UIOptimizer: ObservableObject {
         }
     }
     
-    // MARK: - Empty State Optimized Animations
+    // MARK: - Empty State Ultra-Smooth Animations
     
-    /// Ultra-smooth empty state container animation with staggered timing
+    /// Ultra-smooth empty state container animation with fluid curves
     static func optimizedEmptyStateContainerAnimation() -> Animation {
         if PerformanceConfig.shouldUseReducedAnimations {
             return .easeInOut(duration: 0.25)
         }
         
-        let devicePerformance = getDevicePerformanceLevel()
-        switch devicePerformance {
-        case .high:
-            return .spring(
-                response: 0.5,
-                dampingFraction: 0.8,
-                blendDuration: 0.1
-            ).speed(1.2)
-        case .medium:
-            return .spring(
-                response: 0.6,
-                dampingFraction: 0.85,
-                blendDuration: 0.15
-            )
-        case .low:
-            return .easeInOut(duration: 0.3)
-        }
+        return Animation.interpolatingSpring(mass: 1.0,
+                                           stiffness: PerformanceConfig.Animation.emptyStateInterpolatingStiffness,
+                                           damping: PerformanceConfig.Animation.emptyStateInterpolatingDamping)
     }
     
-    /// Optimized icon animation with gentle bounce effect
+    /// Ultra-smooth icon animation with fluid bounce and overshoot
     static func optimizedEmptyStateIconAnimation() -> Animation {
         if PerformanceConfig.shouldUseReducedAnimations {
             return .easeInOut(duration: 0.2)
         }
         
-        let devicePerformance = getDevicePerformanceLevel()
-        switch devicePerformance {
-        case .high:
-            return .spring(
-                response: 0.6,
-                dampingFraction: 0.75,
-                blendDuration: 0.1
-            ).delay(0.1).speed(1.3)
-        case .medium:
-            return .spring(
-                response: 0.7,
-                dampingFraction: 0.8,
-                blendDuration: 0.15
-            ).delay(0.1)
-        case .low:
-            return .easeInOut(duration: 0.25).delay(0.05)
-        }
+        return Animation.interpolatingSpring(mass: 1.0,
+                                           stiffness: PerformanceConfig.Animation.emptyStateInterpolatingStiffness * 1.2,
+                                           damping: PerformanceConfig.Animation.emptyStateInterpolatingDamping * 0.9)
+            .delay(PerformanceConfig.Animation.emptyStateIconDelay)
     }
     
-    /// Optimized title animation with subtle entrance effect
+    /// Ultra-smooth title animation with gentle overshoot
     static func optimizedEmptyStateTitleAnimation() -> Animation {
         if PerformanceConfig.shouldUseReducedAnimations {
             return .easeInOut(duration: 0.2)
         }
         
-        let devicePerformance = getDevicePerformanceLevel()
-        switch devicePerformance {
-        case .high:
-            return .spring(
-                response: 0.5,
-                dampingFraction: 0.85,
-                blendDuration: 0.1
-            ).delay(0.2).speed(1.2)
-        case .medium:
-            return .spring(
-                response: 0.6,
-                dampingFraction: 0.9,
-                blendDuration: 0.15
-            ).delay(0.15)
-        case .low:
-            return .easeInOut(duration: 0.25).delay(0.1)
-        }
+        return Animation.interpolatingSpring(mass: 1.0,
+                                           stiffness: PerformanceConfig.Animation.emptyStateInterpolatingStiffness * 1.1,
+                                           damping: PerformanceConfig.Animation.emptyStateInterpolatingDamping * 1.1)
+            .delay(PerformanceConfig.Animation.emptyStateTitleDelay)
     }
     
-    /// Optimized subtitle animation with final stagger
+    /// Ultra-smooth subtitle animation with final gentle entrance
     static func optimizedEmptyStateSubtitleAnimation() -> Animation {
         if PerformanceConfig.shouldUseReducedAnimations {
             return .easeInOut(duration: 0.2)
         }
         
-        let devicePerformance = getDevicePerformanceLevel()
-        switch devicePerformance {
-        case .high:
-            return .spring(
-                response: 0.4,
-                dampingFraction: 0.9,
-                blendDuration: 0.1
-            ).delay(0.3).speed(1.1)
-        case .medium:
-            return .spring(
-                response: 0.5,
-                dampingFraction: 0.95,
-                blendDuration: 0.15
-            ).delay(0.25)
-        case .low:
-            return .easeInOut(duration: 0.25).delay(0.15)
-        }
+        return Animation.interpolatingSpring(mass: 1.0,
+                                           stiffness: PerformanceConfig.Animation.emptyStateInterpolatingStiffness,
+                                           damping: PerformanceConfig.Animation.emptyStateInterpolatingDamping * 1.2)
+            .delay(PerformanceConfig.Animation.emptyStateSubtitleDelay)
     }
     
-    /// Optimized empty state transition with smooth scaling
+    /// Ultra-smooth empty state transition with fluid scaling
     static func optimizedEmptyStateTransition() -> AnyTransition {
         if PerformanceConfig.shouldUseReducedAnimations {
             return AnyTransition.opacity
@@ -391,28 +338,57 @@ class UIOptimizer: ObservableObject {
         switch devicePerformance {
         case .high:
             return AnyTransition.asymmetric(
-                insertion: .scale(scale: 0.8, anchor: .center)
+                insertion: .scale(scale: 0.85, anchor: .center)
                     .combined(with: .opacity)
-                    .combined(with: .offset(y: 20))
+                    .combined(with: .offset(y: 8))
                     .animation(optimizedEmptyStateContainerAnimation()),
                 removal: .scale(scale: 0.9, anchor: .center)
                     .combined(with: .opacity)
-                    .combined(with: .offset(y: -10))
-                    .animation(.easeInOut(duration: 0.2))
+                    .combined(with: .offset(y: -5))
+                    .animation(optimizedEmptyStateContainerAnimation().speed(1.2))
             )
         case .medium:
             return AnyTransition.asymmetric(
                 insertion: .scale(scale: 0.9, anchor: .center)
                     .combined(with: .opacity)
+                    .combined(with: .offset(y: 12))
                     .animation(optimizedEmptyStateContainerAnimation()),
-                removal: .scale(scale: 0.95, anchor: .center)
+                removal: .scale(scale: 0.92, anchor: .center)
                     .combined(with: .opacity)
-                    .animation(.easeInOut(duration: 0.2))
+                    .combined(with: .offset(y: -8))
+                    .animation(optimizedEmptyStateContainerAnimation().speed(1.1))
             )
         case .low:
-            return AnyTransition.opacity.animation(.easeInOut(duration: 0.25))
+            return AnyTransition.opacity.animation(.easeInOut(duration: 0.2))
         }
     }
+    
+    /// Enhanced empty state animation coordinator for synchronized timing
+    static func enhancedEmptyStateCoordinator() -> Animation {
+        if PerformanceConfig.shouldUseReducedAnimations {
+            return .easeInOut(duration: 0.3)
+        }
+        
+        let devicePerformance = getDevicePerformanceLevel()
+        switch devicePerformance {
+        case .high:
+            return .interpolatingSpring(
+                stiffness: 180,
+                damping: 20,
+                initialVelocity: 0.3
+            )
+        case .medium:
+            return .interpolatingSpring(
+                stiffness: 160,
+                damping: 22,
+                initialVelocity: 0.2
+            )
+        case .low:
+            return .easeInOut(duration: 0.35)
+        }
+    }
+    
+
     
     /// Optimized task list transition for smooth state changes
     static func optimizedTaskListTransition() -> AnyTransition {
