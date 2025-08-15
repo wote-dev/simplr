@@ -160,12 +160,15 @@ struct CustomTextField: UIViewRepresentable {
         }
 
         func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-            // Smooth keyboard dismissal with gentle spring animation
-            UIView.animate(withDuration: 0.45, delay: 0, usingSpringWithDamping: 0.9, initialSpringVelocity: 0.3, options: [.curveEaseInOut, .allowUserInteraction, .beginFromCurrentState]) {
-                textField.resignFirstResponder()
-            } completion: { _ in
-                self.parent.onCommit?()
+            // Only dismiss keyboard if no onCommit handler is provided
+            if parent.onCommit == nil {
+                UIView.animate(withDuration: 0.45, delay: 0, usingSpringWithDamping: 0.9, initialSpringVelocity: 0.3, options: [.curveEaseInOut, .allowUserInteraction, .beginFromCurrentState]) {
+                    textField.resignFirstResponder()
+                }
             }
+            
+            // Always call onCommit for navigation logic
+            parent.onCommit?()
             return true
         }
         
@@ -208,12 +211,15 @@ struct CustomTextField: UIViewRepresentable {
         func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
             // Check if return key was pressed
             if text == "\n" {
-                // For single-line behavior, dismiss keyboard smoothly with gentle animation
-                UIView.animate(withDuration: 0.45, delay: 0, usingSpringWithDamping: 0.9, initialSpringVelocity: 0.3, options: [.curveEaseInOut, .allowUserInteraction, .beginFromCurrentState]) {
-                    textView.resignFirstResponder()
-                } completion: { _ in
-                    self.parent.onCommit?()
+                // Only dismiss keyboard if no onCommit handler is provided
+                if parent.onCommit == nil {
+                    UIView.animate(withDuration: 0.45, delay: 0, usingSpringWithDamping: 0.9, initialSpringVelocity: 0.3, options: [.curveEaseInOut, .allowUserInteraction, .beginFromCurrentState]) {
+                        textView.resignFirstResponder()
+                    }
                 }
+                
+                // Always call onCommit for navigation logic
+                parent.onCommit?()
                 return false // Prevent the newline from being added
             }
             return true

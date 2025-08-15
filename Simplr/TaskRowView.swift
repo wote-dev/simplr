@@ -194,36 +194,36 @@ struct TaskRowView: View {
             
             // Main task content
             HStack(spacing: 12) {
-                // Completion toggle with enhanced animations
+                // Ultra-smooth completion toggle optimized for 120fps
                 Button(action: {
                     performCompletionToggle()
                 }) {
                     ZStack {
-                        // Ultra-optimized completion icon with device-adaptive animation
+                        // Simplified completion icon with minimal state changes
                         Image(systemName: (task.isCompleted || showCheckmark) ? "checkmark.circle.fill" : "circle")
                             .font(.system(size: 32, weight: .medium))
                             .foregroundColor((task.isCompleted || showCheckmark) ? theme.success : theme.textTertiary)
                             .scaleEffect(completionScale)
                             .animation(
-                                UIOptimizer.completionAnimation(),  // Device-optimized animation
-                                value: completionScale  // Single animation trigger for maximum performance
+                                .spring(response: 0.25, dampingFraction: 0.85),
+                                value: completionScale
                             )
                             .matchedGeometryEffect(id: "\(task.id)-completion", in: namespace)
                         
-                        // Ultra-optimized particle effect with device-adaptive performance
+                        // Optimized particle effect with minimal overhead
                         if showCompletionParticles {
-                            ForEach(0..<5, id: \.self) { index in  // Further reduced to 5 particles for optimal performance
+                            ForEach(0..<2, id: \.self) { index in  // Ultra-minimal particles
                                 Circle()
-                                    .fill(theme.success)
-                                    .frame(width: 2.5, height: 2.5)  // Even smaller particles for smoother animation
+                                    .fill(theme.success.opacity(0.8))
+                                    .frame(width: 2.5, height: 2.5)
                                     .offset(
-                                        x: cos(Double(index) * .pi / 2.5) * 20,  // Reduced radius for tighter effect
-                                        y: sin(Double(index) * .pi / 2.5) * 20
+                                        x: cos(Double(index) * .pi) * 12,
+                                        y: sin(Double(index) * .pi) * 12
                                     )
-                                    .scaleEffect(showCompletionParticles ? 0 : 1)
-                                    .opacity(showCompletionParticles ? 0 : 1)
+                                    .scaleEffect(showCompletionParticles ? 1 : 0)
+                                    .opacity(showCompletionParticles ? 0.7 : 0)
                                     .animation(
-                                        UIOptimizer.particleAnimation(delay: Double(index) * 0.02),  // Device-optimized with faster sequence
+                                        UIOptimizer.particleAnimation(),
                                         value: showCompletionParticles
                                     )
                             }
@@ -231,11 +231,8 @@ struct TaskRowView: View {
                     }
                 }
                 .buttonStyle(PlainButtonStyle())
-                .scaleEffect(isPressed ? 0.97 : 1.0)  // Minimal scale for ultra-subtle effect
-                .animation(
-                    UIOptimizer.buttonResponseAnimation(),  // Device-optimized ultra-fast response
-                    value: isPressed
-                )
+                .scaleEffect(isPressed ? 0.98 : 1.0, anchor: .center)
+                .animation(.spring(response: 0.1), value: isPressed)
                 
                 // Main content area with text on left and pills on right
                 HStack(alignment: .top, spacing: 12) {
@@ -1136,50 +1133,58 @@ struct TaskRowView: View {
     }
     
     private func performCompletionToggle() {
-        // Prepare haptic feedback for better responsiveness
-        HapticManager.shared.prepareForInteraction()
+        // Ultra-smooth completion toggle optimized for 120fps
+        let isCompleting = !task.isCompleted
         
-        // Device-optimized animation for maximum performance
+        // Immediate haptic feedback for responsive feel
+        if isCompleting {
+            HapticManager.shared.taskCompleted()
+        } else {
+            HapticManager.shared.taskUncompleted()
+        }
+        
+        // Ultra-fast animation using optimized system
         withAnimation(UIOptimizer.completionAnimation()) {
-            if !task.isCompleted {
-                // Animate completion - immediate visual feedback
-                completionScale = 1.1  // Further reduced scale for ultra-smooth animation
-                showCompletionParticles = true
+            if isCompleting {
+                completionScale = 1.05
                 showCheckmark = true
-                HapticManager.shared.taskCompleted()
             } else {
-                // Animate un-completion - immediate visual feedback
+                completionScale = 0.95
                 showCheckmark = false
-                completionScale = 1.05  // Minimal scale for uncomplete
-                HapticManager.shared.taskUncompleted()
             }
         }
         
-        // Trigger the actual completion toggle with ultra-fast delay for immediate feedback
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.02) {  // Ultra-fast delay
+        // Particle effect - only for completion, immediate reset for uncomplete
+        if isCompleting {
+            showCompletionParticles = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                showCompletionParticles = false
+            }
+        } else {
+            showCompletionParticles = false
+        }
+        
+        // Immediate task toggle with minimal delay
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
             onToggleCompletion()
             
-            // Optimized URGENT animation handling
+            // URGENT animation handling
             if isUrgentTask {
-                if !task.isCompleted {
+                if isCompleting {
                     stopUrgentPulsatingAnimation()
                 } else {
-                    // Reduced delay for better responsiveness
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) {
                         startUrgentPulsatingAnimation()
                     }
                 }
             }
         }
         
-        // Ultra-optimized reset with device-adaptive animation and reduced timing
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {  // Further reduced for faster feedback
-            withAnimation(UIOptimizer.completionAnimation()) {  // Device-optimized reset animation
+        // Single reset animation after main animation completes
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            withAnimation(.spring(response: 0.2, dampingFraction: 0.9)) {
                 completionScale = 1.0
-                showCompletionParticles = false
             }
-            
-            // Reset gestureCompleted flag to allow external state synchronization
             gestureCompleted = false
         }
     }

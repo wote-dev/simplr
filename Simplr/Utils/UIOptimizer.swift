@@ -193,54 +193,54 @@ class UIOptimizer: ObservableObject {
         }
     }
     
-    /// High-performance completion animation optimized for 60fps
+    /// Ultra-fast completion animation for 120fps toggle responsiveness
     static func completionAnimation() -> Animation {
         if PerformanceConfig.shouldUseReducedAnimations {
+            return .easeInOut(duration: 0.12)
+        }
+        
+        let devicePerformance = getDevicePerformanceLevel()
+        switch devicePerformance {
+        case .high:
+            return .spring(response: 0.18, dampingFraction: 0.8, blendDuration: 0.02)
+        case .medium:
+            return .spring(response: 0.2, dampingFraction: 0.75, blendDuration: 0.03)
+        case .low:
             return .easeInOut(duration: 0.15)
         }
-        
-        let devicePerformance = getDevicePerformanceLevel()
-        switch devicePerformance {
-        case .high:
-            return .interpolatingSpring(stiffness: 800, damping: 25).speed(1.3)
-        case .medium:
-            return .interpolatingSpring(stiffness: 700, damping: 28).speed(1.1)
-        case .low:
-            return .easeInOut(duration: 0.2)
-        }
     }
     
-    /// Optimized particle animation for completion effects
+    /// Ultra-fast particle animation for 120fps completion effects
     static func particleAnimation(delay: Double = 0) -> Animation {
         if PerformanceConfig.shouldUseReducedAnimations {
-            return .linear(duration: 0.1).delay(delay)
+            return .linear(duration: 0.08).delay(delay)
         }
         
         let devicePerformance = getDevicePerformanceLevel()
         switch devicePerformance {
         case .high:
-            return .interpolatingSpring(stiffness: 600, damping: 30).delay(delay)
+            return .spring(response: 0.12, dampingFraction: 0.85).delay(delay)
         case .medium:
-            return .interpolatingSpring(stiffness: 500, damping: 35).delay(delay)
+            return .spring(response: 0.15, dampingFraction: 0.8).delay(delay)
         case .low:
-            return .easeOut(duration: 0.15).delay(delay)
+            return .easeOut(duration: 0.12).delay(delay)
         }
     }
     
-    /// Ultra-fast button response animation
+    /// Ultra-fast button response animation for instant feedback
     static func buttonResponseAnimation() -> Animation {
         if PerformanceConfig.shouldUseReducedAnimations {
-            return .linear(duration: 0.08)
+            return .linear(duration: 0.06)
         }
         
         let devicePerformance = getDevicePerformanceLevel()
         switch devicePerformance {
         case .high:
-            return .interpolatingSpring(stiffness: 900, damping: 35).speed(1.5)
+            return .spring(response: 0.1, dampingFraction: 0.7, blendDuration: 0.01)
         case .medium:
-            return .interpolatingSpring(stiffness: 800, damping: 40).speed(1.2)
+            return .spring(response: 0.12, dampingFraction: 0.65, blendDuration: 0.02)
         case .low:
-            return .easeInOut(duration: 0.12)
+            return .easeInOut(duration: 0.1)
         }
     }
     

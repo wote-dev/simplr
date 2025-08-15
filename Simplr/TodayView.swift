@@ -253,6 +253,21 @@ struct TodayView: View {
         } message: { task in
             Text("Are you sure you want to delete '\(task.title)'?")
         }
+        .confirmationDialog("Switch Profile", isPresented: $showingProfileSwitcher) {
+            ForEach(UserProfile.allCases, id: \.self) { profile in
+                Button(role: profile == profileManager.currentProfile ? .cancel : nil) {
+                    if profile != profileManager.currentProfile {
+                        withAnimation(.smoothSpring) {
+                            profileManager.switchToProfile(profile)
+                        }
+                    }
+                } label: {
+                    Label(profile.displayName, systemImage: profile.icon)
+                }
+            }
+        } message: {
+            Text("Switch between your Personal and Work profiles")
+        }
         .onChange(of: selectedTaskId) { _, newTaskId in
             handleSpotlightTaskSelection(newTaskId)
         }
@@ -300,26 +315,46 @@ struct TodayView: View {
         }
     }
     
+    @StateObject private var profileManager = ProfileManager.shared
+    @State private var showingProfileSwitcher = false
+    
     private var headerView: some View {
         VStack(spacing: 0) {
             // Main header content
             HStack(alignment: .firstTextBaseline, spacing: 20) {
-                VStack(alignment: .leading, spacing: 8) {
-                    // Title with consistent typography
-                    Text("Today")
-                        .font(.system(size: 34, weight: .bold, design: .rounded))
-                        .foregroundStyle(theme.accentGradient)
-                        .tracking(-0.5)
-                    
-                    // Subtitle with consistent hierarchy
-                    Text(todayDateString)
-                        .font(.system(size: 16, weight: .medium, design: .rounded))
-                        .foregroundColor(theme.textSecondary)
-                        .opacity(0.8)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.8)
-                        .truncationMode(.tail)
-                }
+                        Button(action: {
+                            if profileManager.shouldShowProfileSwitcher() {
+                                showingProfileSwitcher = true
+                                HapticManager.shared.selectionChange()
+                            }
+                        }) {
+                            VStack(alignment: .leading, spacing: 4) {
+                                HStack(alignment: .center, spacing: 4) {
+                                    Text("Today")
+                                        .font(.system(size: 34, weight: .bold, design: .rounded))
+                                        .foregroundStyle(theme.accentGradient)
+                                        .tracking(-0.5)
+                                    
+                                    // Profile indicator badge - only show when actively using both profiles
+                                    if profileManager.shouldShowProfileSwitcher() {
+                                        profileBadge
+                                    }
+                                }
+                                
+                                // Date subtitle positioned below the Today heading and profile badge
+                                Text(todayDateString)
+                                    .font(.system(size: 16, weight: .medium, design: .rounded))
+                                    .foregroundColor(theme.textSecondary)
+                                    .opacity(0.8)
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.8)
+                                    .truncationMode(.tail)
+                            }
+                        }
+                .buttonStyle(PlainButtonStyle())
+                .accessibilityLabel("Today - \(profileManager.currentProfile.displayName) Profile")
+                .accessibilityHint(profileManager.shouldShowProfileSwitcher() ? "Double tap to switch between Personal and Work profiles" : "Today's tasks")
+                .accessibilityAddTraits(profileManager.shouldShowProfileSwitcher() ? .isButton : [])
                 
                 Spacer(minLength: 0)
                 
@@ -615,6 +650,30 @@ struct TodayView: View {
         let formatter = DateFormatter()
         formatter.dateFormat = "EEEE, MMMM d"
         return formatter.string(from: Date())
+    }
+    
+    private var profileBadge: some View {
+        ZStack {
+            // Badge background with optimized rendering
+            Circle()
+                .fill(theme.surfaceGradient)
+                .frame(width: 24, height: 24)
+                .overlay(
+                    Circle()
+                        .stroke(theme.border.opacity(0.3), lineWidth: 0.5)
+                )
+                .shadow(color: theme.shadow.opacity(0.1), radius: 2, x: 0, y: 1)
+            
+            // Profile icon with optimized rendering
+            Image(systemName: profileManager.currentProfile.icon)
+                .font(.system(size: 12, weight: .bold))
+                .foregroundColor(profileManager.currentProfile.color)
+                .accessibilityLabel("Current profile: \(profileManager.currentProfile.displayName)")
+                .accessibilityHint("Tap to switch between Personal and Work profiles")
+        }
+        .transition(.scale.combined(with: .opacity))
+        .animation(.spring(response: 0.2, dampingFraction: 0.8), value: profileManager.currentProfile)
+        .drawingGroup() // Performance optimization for complex rendering
     }
     
     // MARK: - Sort Option Persistence

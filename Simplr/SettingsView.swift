@@ -543,11 +543,12 @@ struct SettingsView: View {
     }
     
     private var profileSelectionGrid: some View {
-        LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 12) {
+        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: 2), spacing: 8) {
             ForEach(UserProfile.allCases, id: \.self) { profile in
                 profileButton(for: profile)
             }
         }
+        .padding(.horizontal, 4)
     }
     
     private func profileButton(for profile: UserProfile) -> some View {
@@ -556,24 +557,42 @@ struct SettingsView: View {
             HapticManager.shared.buttonTap()
         }) {
             VStack(spacing: 6) {
-                Image(systemName: profile.icon)
-                    .font(.system(size: 18, weight: .medium))
-                    .foregroundColor(profileManager.currentProfile == profile ? theme.background : theme.accent)
+                ZStack {
+                    // Circular background for selected state
+                    Circle()
+                        .fill(profileManager.currentProfile == profile ? 
+                              AnyShapeStyle(theme.accentGradient) : 
+                              AnyShapeStyle(theme.surface))
+                        .frame(width: 48, height: 48)
+                        .overlay(
+                            Circle()
+                                .stroke(profileManager.currentProfile == profile ? 
+                                         Color.clear : 
+                                         theme.border.opacity(0.4), 
+                                         lineWidth: 0.8)
+                        )
+                        .animation(.easeInOut(duration: 0.15), value: profileManager.currentProfile)
+                    
+                    // Icon with optimized size
+                    Image(systemName: profile.icon)
+                        .font(.system(size: 22, weight: .semibold))
+                        .foregroundColor(profileManager.currentProfile == profile ? theme.background : theme.accent)
+                        .transition(.scale.combined(with: .opacity))
+                }
                 
+                // Profile name text underneath
                 Text(profile.displayName)
-                    .font(.system(size: 11, weight: .medium, design: .rounded))
-                    .foregroundColor(profileManager.currentProfile == profile ? theme.background : theme.text)
+                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                    .foregroundColor(profileManager.currentProfile == profile ? theme.accent : theme.textSecondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.9)
             }
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 8)
-            .background(
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(profileManager.currentProfile == profile ? 
-                          AnyShapeStyle(theme.accentGradient) : 
-                          AnyShapeStyle(theme.surface))
-            )
+            .padding(.vertical, 6)
         }
-        .animatedButton()
+        .buttonStyle(PlainButtonStyle())
+        .scaleEffect(profileManager.currentProfile == profile ? 1.02 : 1.0)
+        .animation(.spring(response: 0.2, dampingFraction: 0.8), value: profileManager.currentProfile)
     }
     
     private var footerView: some View {

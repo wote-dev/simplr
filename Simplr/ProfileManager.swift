@@ -101,7 +101,7 @@ extension TaskCategory {
 // MARK: - Profile Manager
 class ProfileManager: ObservableObject {
     @Published var currentProfile: UserProfile = .personal
-    @Published var isProfileSwitchingEnabled: Bool = false
+    @Published var isProfileSwitchingEnabled: Bool = true
     
     private let userDefaults = UserDefaults(suiteName: "group.com.danielzverev.simplr") ?? UserDefaults.standard
     private let currentProfileKey = "CurrentUserProfile"
@@ -286,7 +286,7 @@ class ProfileManager: ObservableObject {
     }
     
     func shouldShowProfileSwitcher() -> Bool {
-        return isProfileSwitchingEnabled && (hasDataInProfile(.personal) || hasDataInProfile(.work))
+        return hasDataInProfile(.personal) && hasDataInProfile(.work)
     }
 }
 

@@ -24,6 +24,7 @@ struct AddTaskView: View {
     @State private var checklistItems: [ChecklistItem] = []
     @State private var newChecklistItemTitle = ""
     @FocusState private var isTitleFocused: Bool
+    @FocusState private var focusedChecklistIndex: Int?
     @State private var showingSuccess = false
     @State private var isTextFieldActive = false
     @State private var lastTapLocation: CGPoint = .zero
@@ -344,16 +345,20 @@ struct AddTaskView: View {
                 
                 // Content
                 VStack(alignment: .leading, spacing: 12) {
-                    ForEach($checklistItems) { $item in
+                    ForEach(Array($checklistItems.enumerated()), id: \.element.id) { index, $item in
                         HStack {
                             CustomTextField(
                                 text: $item.title, 
                                 placeholder: "Checklist item",
+                                onCommit: {
+                                    handleChecklistReturn(for: index)
+                                },
                                 allowsTextSelection: true
                             )
                             .frame(height: 48)
                             .onTapGesture {
                                 isTextFieldActive = true
+                                focusedChecklistIndex = index
                             }
                             Button(action: {
                                 if let index = checklistItems.firstIndex(where: { $0.id == item.id }) {
@@ -376,22 +381,27 @@ struct AddTaskView: View {
 
                     HStack {
                         CustomTextField(
-                            text: $newChecklistItemTitle, 
-                            placeholder: "Add new item",
-                            onCommit: addChecklistItem,
-                            allowsTextSelection: true
-                        )
-                        .frame(height: 48)
-                        .onTapGesture {
-                            isTextFieldActive = true
-                        }
-                        
-                        Button(action: addChecklistItem) {
-                            Image(systemName: "plus.circle.fill")
-                                .font(.system(size: 20, weight: .medium))
-                                .foregroundColor(theme.accent)
-                        }
-                        .disabled(newChecklistItemTitle.isEmpty)
+                        text: $newChecklistItemTitle,
+                        placeholder: "Add new item",
+                        onCommit: {
+                            if !newChecklistItemTitle.isEmpty {
+                                addChecklistItem()
+                            }
+                        },
+                        allowsTextSelection: true
+                    )
+                    .frame(height: 48)
+                    .focused($focusedChecklistIndex, equals: -1)
+                    .onTapGesture {
+                        isTextFieldActive = true
+                        focusedChecklistIndex = -1
+                    }
+                    Button(action: addChecklistItem) {
+                        Image(systemName: "plus.circle.fill")
+                            .font(.system(size: 20, weight: .semibold))
+                            .foregroundColor(newChecklistItemTitle.isEmpty ? .gray : .accentColor)
+                    }
+                    .disabled(newChecklistItemTitle.isEmpty)
                         .opacity(newChecklistItemTitle.isEmpty ? 0.5 : 1.0)
                     }
                 }
@@ -675,6 +685,11 @@ struct AddTaskView: View {
         guard !newChecklistItemTitle.isEmpty else { return }
         checklistItems.append(ChecklistItem(title: newChecklistItemTitle))
         newChecklistItemTitle = ""
+        
+        // Focus on the newly created item
+        DispatchQueue.main.async {
+            focusedChecklistIndex = checklistItems.count - 1
+        }
     }
     
     private func saveTask() {
@@ -743,6 +758,21 @@ struct AddTaskView: View {
             }
             // Subtle haptic feedback for smooth user experience
             HapticManager.shared.buttonTap()
+        }
+    }
+    
+    private func handleChecklistReturn(for currentIndex: Int) {
+        let nextIndex = currentIndex + 1
+        
+        if nextIndex < checklistItems.count {
+            // Move to next existing item
+            focusedChecklistIndex = nextIndex
+        } else {
+            // Add new item and focus on it
+            addChecklistItem()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                focusedChecklistIndex = checklistItems.count - 1
+            }
         }
     }
 }
