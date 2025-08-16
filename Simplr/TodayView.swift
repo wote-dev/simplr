@@ -25,6 +25,7 @@ struct TodayView: View {
     @State private var showingSettings = false
     @State private var showEmptyState = false
     @State private var emptyStateAnimationPhase = 0
+    @State private var isAnimatingEmptyState = false
     
     // Shared UserDefaults for widget synchronization
     private let sharedUserDefaults = UserDefaults(suiteName: "group.com.danielzverev.simplr")
@@ -482,7 +483,7 @@ struct TodayView: View {
     
     private var emptyStateView: some View {
         VStack(spacing: 24) {
-            // House icon with enhanced smooth animation and staggered appearance
+            // House icon with ultra-smooth animation
             Image(systemName: "house")
                 .font(.system(size: 50, weight: .light))
                 .foregroundStyle(theme.accentGradient)
@@ -492,24 +493,22 @@ struct TodayView: View {
                     x: 0,
                     y: 2
                 )
-                .scaleEffect(showingAddTask ? 1.1 : 1.0)
-                .scaleEffect(emptyStateAnimationPhase >= 1 ? 1.0 : 0.3)
+                .scaleEffect(emptyStateAnimationPhase >= 1 ? 1.0 : 0.6)
                 .opacity(emptyStateAnimationPhase >= 1 ? 1.0 : 0.0)
-                .offset(y: emptyStateAnimationPhase >= 1 ? 0 : 30)
-                .animation(.adaptiveSmooth, value: showingAddTask)
-                .animation(.adaptiveElastic.delay(0.2), value: emptyStateAnimationPhase)
-                .floating(intensity: 3, duration: 3.0) // Subtle floating animation
+                .offset(y: emptyStateAnimationPhase >= 1 ? 0 : 25)
+                .animation(.ultraSmooth(duration: 0.42), value: emptyStateAnimationPhase)
+                .floating(intensity: 1, duration: 4.0) // Ultra-smooth subtle floating
             
-            // Text content with staggered smooth animations
+            // Text content with ultra-smooth staggered animations
             VStack(spacing: 16) {
                 Text("All Clear for Today!")
                     .font(.system(size: 28, weight: .bold, design: .rounded))
                     .foregroundStyle(theme.accentGradient)
                     .tracking(-0.3)
-                    .scaleEffect(emptyStateAnimationPhase >= 2 ? 1.0 : 0.8)
+                    .scaleEffect(emptyStateAnimationPhase >= 2 ? 1.0 : 0.85)
                     .opacity(emptyStateAnimationPhase >= 2 ? 1.0 : 0.0)
-                    .offset(y: emptyStateAnimationPhase >= 2 ? 0 : 20)
-                    .animation(.adaptiveSmooth.delay(0.3), value: emptyStateAnimationPhase)
+                    .offset(y: emptyStateAnimationPhase >= 2 ? 0 : 15)
+                    .animation(.ultraSmooth(duration: 0.38).delay(0.12), value: emptyStateAnimationPhase)
                 
                 Text("Add your first task to get started")
                     .font(.system(size: 16, weight: .medium, design: .rounded))
@@ -519,11 +518,11 @@ struct TodayView: View {
                     .padding(.horizontal, 40)
                     .scaleEffect(emptyStateAnimationPhase >= 3 ? 1.0 : 0.9)
                     .opacity(emptyStateAnimationPhase >= 3 ? 1.0 : 0.0)
-                    .offset(y: emptyStateAnimationPhase >= 3 ? 0 : 15)
-                    .animation(.adaptiveSmooth.delay(0.6), value: emptyStateAnimationPhase)
+                    .offset(y: emptyStateAnimationPhase >= 3 ? 0 : 10)
+                    .animation(.ultraSmooth(duration: 0.35).delay(0.24), value: emptyStateAnimationPhase)
             }
             
-            // Add task button with enhanced styling
+            // Add task button with ultra-smooth animation
             Button {
                 withAnimation(.adaptiveBouncy) {
                     showingAddTask = true
@@ -545,16 +544,16 @@ struct TodayView: View {
                 )
                 .scaleEffect(emptyStateAnimationPhase >= 3 ? 1.0 : 0.9)
                 .opacity(emptyStateAnimationPhase >= 3 ? 1.0 : 0.0)
-                .offset(y: emptyStateAnimationPhase >= 3 ? 0 : 15)
-                .animation(.adaptiveSmooth.delay(0.6), value: emptyStateAnimationPhase)
+                .offset(y: emptyStateAnimationPhase >= 3 ? 0 : 10)
+                .animation(.ultraSmooth(duration: 0.35).delay(0.36), value: emptyStateAnimationPhase)
             }
             .animatedButton()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(.top, -50)
         .transition(.asymmetric(
-            insertion: .scale(scale: 0.8).combined(with: .opacity).combined(with: .offset(y: 20)),
-            removal: .scale(scale: 0.9).combined(with: .opacity).combined(with: .offset(y: -10))
+            insertion: .scale(scale: 0.85).combined(with: .opacity).combined(with: .offset(y: 15)),
+            removal: .scale(scale: 0.9).combined(with: .opacity).combined(with: .offset(y: -8))
         ))
     }
     
@@ -699,43 +698,54 @@ struct TodayView: View {
     
     private func handleEmptyStateTransition(isEmpty: Bool) {
         if isEmpty {
-            // Show empty state with smooth transition
-            withAnimation(.adaptiveSmooth.delay(0.1)) {
+            // Prevent animation overlap
+            guard !isAnimatingEmptyState else { return }
+            isAnimatingEmptyState = true
+            
+            // Show empty state container with ultra-smooth fade
+            withAnimation(UIOptimizer.optimizedEmptyStateContainerAnimation()) {
                 showEmptyState = true
             }
             
-            // Reset animation phase and start staggered animations
-            emptyStateAnimationPhase = 0
-            
-            // Trigger staggered animation phases
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                withAnimation(.adaptiveElastic) {
-                    emptyStateAnimationPhase = 1 // House icon
-                }
+            // Reset animation states for clean start
+            withAnimation(.none) {
+                emptyStateAnimationPhase = 0
             }
             
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-                withAnimation(.adaptiveSmooth) {
+            // Ultra-smooth staggered animation sequence
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) {
+                withAnimation(UIOptimizer.optimizedEmptyStateIconAnimation()) {
+                    emptyStateAnimationPhase = 1 // House icon
+                }
+                // Subtle haptic feedback for premium feel
+                let impactFeedback = UIImpactFeedbackGenerator(style: .soft)
+                impactFeedback.impactOccurred()
+            }
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.16) {
+                withAnimation(UIOptimizer.optimizedEmptyStateTitleAnimation()) {
                     emptyStateAnimationPhase = 2 // Title text
                 }
             }
             
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
-                withAnimation(.adaptiveSmooth) {
-                    emptyStateAnimationPhase = 3 // Subtitle text
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.24) {
+                withAnimation(UIOptimizer.optimizedEmptyStateSubtitleAnimation()) {
+                    emptyStateAnimationPhase = 3 // Subtitle + button
                 }
+                isAnimatingEmptyState = false
             }
             
-            // Add subtle haptic feedback for completion
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+            // Coordinated haptic feedback
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.32) {
                 HapticManager.shared.successFeedback()
             }
         } else {
-            // Hide empty state immediately when tasks are added
-            withAnimation(.adaptiveSmooth) {
+            // Hide empty state immediately with ultra-smooth transition
+            withAnimation(UIOptimizer.optimizedStateTransitionAnimation()) {
                 showEmptyState = false
                 emptyStateAnimationPhase = 0
             }
+            isAnimatingEmptyState = false
         }
     }
 }

@@ -8,6 +8,9 @@
 import Foundation
 import SwiftUI
 import os.log
+#if !WIDGET_TARGET
+import WidgetKit
+#endif
 
 // MARK: - User Profile
 enum UserProfile: String, CaseIterable, Codable {
@@ -151,6 +154,13 @@ class ProfileManager: ObservableObject {
             ]
         )
         
+        // Force immediate widget update to reflect new profile data
+        #if !WIDGET_TARGET
+        if #available(iOS 14.0, *) {
+            WidgetCenter.shared.reloadAllTimelines()
+        }
+        #endif
+        
         // Haptic feedback
         HapticManager.shared.selectionChange()
         
@@ -244,6 +254,7 @@ class ProfileManager: ObservableObject {
     
     private func saveCurrentProfile() {
         userDefaults.set(currentProfile.rawValue, forKey: currentProfileKey)
+        userDefaults.set(currentProfile.rawValue, forKey: "CurrentProfile") // For widget compatibility
     }
     
     private func loadCurrentProfile() {

@@ -15,8 +15,13 @@ class CategoryManager: ObservableObject {
     @Published var selectedCategoryFilter: UUID? = nil // nil means "All"
     @Published var collapsedCategories: Set<String> = [] // Track collapsed categories by name
     
-    private let userDefaults = UserDefaults(suiteName: "group.com.danielzverev.simplr") ?? UserDefaults.standard
+    private let userDefaults = UserDefaults(suiteName: "group.com.danielzverev.simplr") ?? .standard
     private let profileManager = ProfileManager.shared
+    
+    private var tasksKey: String {
+        let profile = profileManager.currentProfile
+        return "SavedTasks_\(profile.rawValue)"
+    }
     
     // Dynamic keys based on current profile
     private var categoriesKey: String {
@@ -446,7 +451,11 @@ class CategoryManager: ObservableObject {
             userDefaults.set(encoded, forKey: categoriesKey)
             
             // Trigger immediate widget update since categories affect widget filtering
-            WidgetCenter.shared.reloadAllTimelines()
+            #if !WIDGET_EXTENSION
+            if #available(iOS 14.0, *) {
+                WidgetCenter.shared.reloadAllTimelines()
+            }
+            #endif
         }
     }
     
@@ -506,6 +515,13 @@ class CategoryManager: ObservableObject {
         } else {
             userDefaults.removeObject(forKey: selectedFilterKey)
         }
+        
+        // Force widget update when filter changes
+        #if !WIDGET_EXTENSION
+        if #available(iOS 14.0, *) {
+            WidgetCenter.shared.reloadAllTimelines()
+        }
+        #endif
     }
     
     private func loadSelectedFilter() {
@@ -518,6 +534,13 @@ class CategoryManager: ObservableObject {
     private func saveCollapsedCategories() {
         let collapsedArray = Array(collapsedCategories)
         userDefaults.set(collapsedArray, forKey: collapsedCategoriesKey)
+        
+        // Force widget update when category collapse state changes
+        #if !WIDGET_EXTENSION
+        if #available(iOS 14.0, *) {
+            WidgetCenter.shared.reloadAllTimelines()
+        }
+        #endif
         
         // Performance optimization: Synchronize immediately for better reliability
         userDefaults.synchronize()
@@ -553,7 +576,7 @@ class CategoryManager: ObservableObject {
         }
         
         // Update tasks in UserDefaults directly since we don't have access to TaskManager here
-        if let tasksData = userDefaults.data(forKey: "SavedTasks"),
+        if let tasksData = userDefaults.data(forKey: tasksKey),
            var tasks = try? JSONDecoder().decode([Task].self, from: tasksData) {
             
             var tasksUpdated = false
@@ -569,7 +592,7 @@ class CategoryManager: ObservableObject {
             // Save updated tasks if any changes were made
             if tasksUpdated {
                 if let encodedTasks = try? JSONEncoder().encode(tasks) {
-                    userDefaults.set(encodedTasks, forKey: "SavedTasks")
+                    userDefaults.set(encodedTasks, forKey: tasksKey)
                     print("Migrated \(uuidMapping.count) predefined category UUIDs")
                 }
             }

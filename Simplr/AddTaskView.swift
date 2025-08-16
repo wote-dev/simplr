@@ -726,7 +726,8 @@ struct AddTaskView: View {
                 hasReminder: hasReminder,
                 reminderDate: hasReminder ? reminderDate : nil,
                 categoryId: selectedCategory?.id,
-                checklist: checklistItems
+                checklist: checklistItems,
+                profileId: ProfileManager.shared.currentProfile.rawValue
             )
             taskManager.addTask(newTask)
         }

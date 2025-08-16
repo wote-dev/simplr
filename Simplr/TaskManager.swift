@@ -9,7 +9,9 @@ import Foundation
 import UserNotifications
 import UIKit
 import os.log
+#if !WIDGET_TARGET
 import WidgetKit
+#endif
 
 enum FilterOption: String, CaseIterable {
     case all = "All"
@@ -246,7 +248,8 @@ class TaskManager: ObservableObject {
             dueDate: dueDate,
             hasReminder: hasReminder,
             reminderDate: reminderDate,
-            categoryId: categoryId
+            categoryId: categoryId,
+            profileId: profileManager.currentProfile.rawValue
         )
         addTask(newTask)
     }
@@ -268,6 +271,11 @@ class TaskManager: ObservableObject {
                     updatedTask.completedAt = nil
                     HapticManager.shared.taskUncompleted()
                 }
+            }
+
+            // Ensure profileId is preserved when updating tasks
+            if updatedTask.profileId == nil {
+                updatedTask.profileId = oldTask.profileId ?? profileManager.currentProfile.rawValue
             }
 
             // Always cancel the old notification to prevent duplicates
@@ -300,6 +308,11 @@ class TaskManager: ObservableObject {
             } else {
                 updatedTask.completedAt = nil
             }
+        }
+        
+        // Ensure profileId is preserved when updating tasks
+        if updatedTask.profileId == nil {
+            updatedTask.profileId = oldTask.profileId ?? profileManager.currentProfile.rawValue
         }
         
         // Update task immediately
@@ -451,7 +464,8 @@ class TaskManager: ObservableObject {
             dueDate: task.dueDate,
             hasReminder: task.hasReminder,
             reminderDate: task.reminderDate,
-            categoryId: task.categoryId
+            categoryId: task.categoryId,
+            profileId: profileManager.currentProfile.rawValue
         )
         
         addTask(duplicatedTask)
@@ -471,8 +485,14 @@ class TaskManager: ObservableObject {
                 // This is critical for badge updates to work correctly
                 userDefaults.synchronize()
                 
-                // Trigger immediate widget update
+                // Update badge after saving tasks
+                requestBadgeUpdate()
+                
+                // Force immediate widget update for real-time synchronization
                 WidgetCenter.shared.reloadAllTimelines()
+                
+                // Post notification for UI updates
+                NotificationCenter.default.post(name: Notification.Name("tasksDidChange"), object: nil)
             }
         }
     }
@@ -525,13 +545,24 @@ class TaskManager: ObservableObject {
                let decodedTasks = try? JSONDecoder().decode([Task].self, from: data) {
                 
                 // Migrate existing completed tasks that don't have completedAt date
-                tasks = decodedTasks.map { task in
+                // Also ensure tasks have the correct profileId for the current profile
+                let currentProfileId = profileManager.currentProfile.rawValue
+                tasks = decodedTasks.compactMap { task in
                     var migratedTask = task
+                    
+                    // Migrate completedAt for completed tasks
                     if task.isCompleted && task.completedAt == nil {
-                        // For existing completed tasks, set completedAt to createdAt as a reasonable fallback
                         migratedTask.completedAt = task.createdAt
                     }
-                    return migratedTask
+                    
+                    // Ensure tasks have the correct profileId for the current profile
+                    // This handles cases where tasks might not have profileId set
+                    if migratedTask.profileId == nil {
+                        migratedTask.profileId = currentProfileId
+                    }
+                    
+                    // Only include tasks that belong to the current profile
+                    return migratedTask.profileId == currentProfileId ? migratedTask : nil
                 }
                 
                 // Save the migrated data back

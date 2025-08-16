@@ -52,8 +52,12 @@ struct ToggleTaskIntent: AppIntent {
             throw WidgetError.unableToAccessSharedData
         }
         
+        // Determine current profile (default to personal for widget)
+        let profileKey = userDefaults.string(forKey: "CurrentProfile") ?? "personal"
+        let tasksKey = "SavedTasks_\(profileKey)"
+        
         // Load tasks
-        guard let data = userDefaults.data(forKey: "SavedTasks"),
+        guard let data = userDefaults.data(forKey: tasksKey),
               var tasks = try? JSONDecoder().decode([Task].self, from: data) else {
             print("[Widget] Error: Unable to load tasks from UserDefaults")
             throw WidgetError.unableToLoadTasks
@@ -88,7 +92,7 @@ struct ToggleTaskIntent: AppIntent {
             throw WidgetError.unableToLoadTasks
         }
         
-        userDefaults.set(encodedData, forKey: "SavedTasks")
+        userDefaults.set(encodedData, forKey: tasksKey)
         userDefaults.synchronize() // Force immediate sync
         print("[Widget] Tasks saved to UserDefaults")
         
@@ -126,9 +130,13 @@ struct AddQuickTaskIntent: AppIntent {
             throw WidgetError.unableToAccessSharedData
         }
         
+        // Determine current profile (default to personal for widget)
+        let profileKey = userDefaults.string(forKey: "CurrentProfile") ?? "personal"
+        let tasksKey = "SavedTasks_\(profileKey)"
+        
         // Load existing tasks
         var tasks: [Task] = []
-        if let data = userDefaults.data(forKey: "SavedTasks"),
+        if let data = userDefaults.data(forKey: tasksKey),
            let decodedTasks = try? JSONDecoder().decode([Task].self, from: data) {
             tasks = decodedTasks
         }
@@ -139,7 +147,7 @@ struct AddQuickTaskIntent: AppIntent {
         
         // Save updated tasks
         if let encodedData = try? JSONEncoder().encode(tasks) {
-            userDefaults.set(encodedData, forKey: "SavedTasks")
+            userDefaults.set(encodedData, forKey: tasksKey)
         }
         
         return .result()

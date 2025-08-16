@@ -65,7 +65,7 @@ class UIOptimizer: ObservableObject {
     /// Optimized spring animation for form sections with performance considerations
     static func formSectionAnimation() -> Animation {
         if PerformanceConfig.shouldUseReducedAnimations {
-            return .easeInOut(duration: 0.2)
+            return .easeInOut(duration: 0.15)
         }
         
         let devicePerformance = getDevicePerformanceLevel()
@@ -79,7 +79,7 @@ class UIOptimizer: ObservableObject {
                 blendDuration: 0.05
             )
         case .low:
-            return .easeInOut(duration: 0.25)
+            return .easeInOut(duration: 0.15)
         }
     }
     
@@ -100,7 +100,7 @@ class UIOptimizer: ObservableObject {
                 blendDuration: 0.05
             )
         case .low:
-            return .easeInOut(duration: 0.2)
+            return .easeInOut(duration: 0.15)
         }
     }
     
@@ -152,7 +152,7 @@ class UIOptimizer: ObservableObject {
                     .animation(datePickerAnimation())
             )
         case .low:
-            return AnyTransition.opacity.animation(.easeInOut(duration: 0.2))
+            return AnyTransition.opacity.animation(.easeInOut(duration: 0.15))
         }
     }
     
@@ -284,7 +284,7 @@ class UIOptimizer: ObservableObject {
     /// Ultra-smooth empty state container animation with fluid curves
     static func optimizedEmptyStateContainerAnimation() -> Animation {
         if PerformanceConfig.shouldUseReducedAnimations {
-            return .easeInOut(duration: 0.25)
+            return .easeInOut(duration: 0.15)
         }
         
         return Animation.interpolatingSpring(mass: 1.0,
@@ -295,7 +295,7 @@ class UIOptimizer: ObservableObject {
     /// Ultra-smooth icon animation with fluid bounce and overshoot
     static func optimizedEmptyStateIconAnimation() -> Animation {
         if PerformanceConfig.shouldUseReducedAnimations {
-            return .easeInOut(duration: 0.2)
+            return .easeInOut(duration: 0.15)
         }
         
         return Animation.interpolatingSpring(mass: 1.0,
@@ -307,7 +307,7 @@ class UIOptimizer: ObservableObject {
     /// Ultra-smooth title animation with gentle overshoot
     static func optimizedEmptyStateTitleAnimation() -> Animation {
         if PerformanceConfig.shouldUseReducedAnimations {
-            return .easeInOut(duration: 0.2)
+            return .easeInOut(duration: 0.15)
         }
         
         return Animation.interpolatingSpring(mass: 1.0,
@@ -319,7 +319,7 @@ class UIOptimizer: ObservableObject {
     /// Ultra-smooth subtitle animation with final gentle entrance
     static func optimizedEmptyStateSubtitleAnimation() -> Animation {
         if PerformanceConfig.shouldUseReducedAnimations {
-            return .easeInOut(duration: 0.2)
+            return .easeInOut(duration: 0.15)
         }
         
         return Animation.interpolatingSpring(mass: 1.0,
@@ -359,7 +359,7 @@ class UIOptimizer: ObservableObject {
                     .animation(optimizedEmptyStateContainerAnimation().speed(1.1))
             )
         case .low:
-            return AnyTransition.opacity.animation(.easeInOut(duration: 0.2))
+            return AnyTransition.opacity.animation(.easeInOut(duration: 0.15))
         }
     }
     
@@ -404,24 +404,24 @@ class UIOptimizer: ObservableObject {
                     .combined(with: .offset(y: 10))
                     .animation(.spring(response: 0.5, dampingFraction: 0.8).speed(1.2)),
                 removal: .opacity.combined(with: .scale(scale: 0.98, anchor: .top))
-                    .animation(.easeInOut(duration: 0.2))
+                    .animation(.easeInOut(duration: 0.15))
             )
         case .medium:
             return AnyTransition.asymmetric(
                 insertion: .opacity.combined(with: .scale(scale: 0.97, anchor: .top))
                     .animation(.spring(response: 0.6, dampingFraction: 0.85)),
                 removal: .opacity.combined(with: .scale(scale: 0.99, anchor: .top))
-                    .animation(.easeInOut(duration: 0.2))
+                    .animation(.easeInOut(duration: 0.15))
             )
         case .low:
-            return AnyTransition.opacity.animation(.easeInOut(duration: 0.25))
+            return AnyTransition.opacity.animation(.easeInOut(duration: 0.15))
         }
     }
     
     /// Optimized task list animation for content appearance
     static func optimizedTaskListAnimation() -> Animation {
         if PerformanceConfig.shouldUseReducedAnimations {
-            return .easeInOut(duration: 0.25)
+            return .easeInOut(duration: 0.15)
         }
         
         let devicePerformance = getDevicePerformanceLevel()
@@ -446,7 +446,7 @@ class UIOptimizer: ObservableObject {
     /// Optimized state transition animation for main content switching
     static func optimizedStateTransitionAnimation() -> Animation {
         if PerformanceConfig.shouldUseReducedAnimations {
-            return .easeInOut(duration: 0.2)
+            return .easeInOut(duration: 0.15)
         }
         
         let devicePerformance = getDevicePerformanceLevel()
@@ -464,7 +464,7 @@ class UIOptimizer: ObservableObject {
                 blendDuration: 0.15
             )
         case .low:
-            return .easeInOut(duration: 0.25)
+            return .easeInOut(duration: 0.15)
         }
     }
 }

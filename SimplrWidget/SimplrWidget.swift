@@ -50,16 +50,51 @@ struct TaskProvider: AppIntentTimelineProvider {
             configuration: configuration
         )
         
-        // Update every 5 minutes for more responsive updates, especially after task completion
-        let nextUpdate = Calendar.current.date(byAdding: .minute, value: 5, to: currentDate)!
+        // Update every 30 seconds for maximum responsiveness with profile switching
+        // This ensures widgets update immediately when profile changes
+        let nextUpdate = Calendar.current.date(byAdding: .second, value: 30, to: currentDate)!
         return Timeline(entries: [entry], policy: .after(nextUpdate))
     }
     
+    // MARK: - Caching Support
+    private static var lastProfileKey: String? = nil
+    private static var cachedTasks: [Task] = []
+    private static var cachedCategories: [TaskCategory] = []
+    private static var cacheTimestamp: Date = Date.distantPast
+    
     private func loadTasks(for configuration: WidgetConfigurationIntent) -> [Task] {
-        guard let userDefaults = UserDefaults(suiteName: "group.com.danielzverev.simplr"),
-              let data = userDefaults.data(forKey: "SavedTasks"),
-              let allTasks = try? JSONDecoder().decode([Task].self, from: data) else {
+        guard let userDefaults = UserDefaults(suiteName: "group.com.danielzverev.simplr") else {
             return []
+        }
+        
+        // Determine current profile (default to personal for widget)
+        let profileKey = userDefaults.string(forKey: "CurrentProfile") ?? "personal"
+        let tasksKey = "SavedTasks_\(profileKey)"
+        let categoriesKey = "SavedCategories_\(profileKey)"
+        
+        // Check cache validity (5 second cache to balance performance and freshness)
+        let cacheValid = Date().timeIntervalSince(TaskProvider.cacheTimestamp) < 5.0
+        if cacheValid && TaskProvider.lastProfileKey == profileKey {
+            return TaskProvider.cachedTasks
+        }
+        
+        // Update cache keys
+        TaskProvider.lastProfileKey = profileKey
+        TaskProvider.cacheTimestamp = Date()
+        
+        // Load tasks
+        guard let tasksData = userDefaults.data(forKey: tasksKey),
+              let allTasks = try? JSONDecoder().decode([Task].self, from: tasksData) else {
+            TaskProvider.cachedTasks = []
+            return []
+        }
+        
+        // Load categories for filtering
+        if let categoriesData = userDefaults.data(forKey: categoriesKey),
+           let categories = try? JSONDecoder().decode([TaskCategory].self, from: categoriesData) {
+            TaskProvider.cachedCategories = categories
+        } else {
+            TaskProvider.cachedCategories = []
         }
         
         let calendar = Calendar.current
@@ -67,61 +102,55 @@ struct TaskProvider: AppIntentTimelineProvider {
         
         // Filter tasks to match TodayView's exact logic
         let filteredTasks = allTasks.filter { task in
-            // Exclude completed tasks from today view - they should only appear in completed section
+            // Exclude completed tasks from today view
             guard !task.isCompleted else { return false }
             
             // Apply category filter if specified
             if let categoryFilter = configuration.categoryFilter, !categoryFilter.isEmpty {
-                // Load categories to find the category ID
-                if let categoryData = userDefaults.data(forKey: "SavedCategories"),
-                   let categories = try? JSONDecoder().decode([TaskCategory].self, from: categoryData) {
-                    if let category = categories.first(where: { $0.name == categoryFilter }) {
-                        guard task.categoryId == category.id else { return false }
-                    }
+                if let category = TaskProvider.cachedCategories.first(where: { $0.name == categoryFilter }) {
+                    guard task.categoryId == category.id else { return false }
                 }
             }
             
-            // Check if task has a due date
+            // Check due date logic
             if let dueDate = task.dueDate {
-                // Include tasks due today or overdue incomplete tasks
                 return calendar.isDate(dueDate, inSameDayAs: today) || 
                        (dueDate < today && !task.isCompleted)
             }
             
-            // For tasks without due dates, check if they have reminder dates
+            // Check reminder date logic
             if let reminderDate = task.reminderDate {
-                // Only include if reminder is today or in the past
                 return calendar.isDate(reminderDate, inSameDayAs: today) || reminderDate < today
             }
             
-            // Include tasks without due dates or reminder dates (truly undated tasks)
+            // Include undated tasks
             return true
         }
         
-        // Group tasks by category hierarchy like TodayView
+        // Group and sort tasks
         let groupedTasks = groupTasksByCategory(filteredTasks)
-        
-        // Flatten grouped tasks while maintaining category hierarchy order
         var flattenedTasks: [Task] = []
+        let sortOption = loadSortOption()
+        
         for categoryGroup in groupedTasks {
-            // Sort tasks within each category using the selected sort option
-            let sortedCategoryTasks = categoryGroup.tasks.sorted { task1, task2 in
-                return sortTasks(task1: task1, task2: task2, using: loadSortOption())
+            let sortedTasks = categoryGroup.tasks.sorted { task1, task2 in
+                sortTasks(task1: task1, task2: task2, using: sortOption)
             }
-            flattenedTasks.append(contentsOf: sortedCategoryTasks)
+            flattenedTasks.append(contentsOf: sortedTasks)
         }
         
-        // Return first 3 tasks for widget display
-        return Array(flattenedTasks.prefix(3))
+        let result = Array(flattenedTasks.prefix(3))
+        TaskProvider.cachedTasks = result
+        return result
     }
     
     private func loadCategories() -> [TaskCategory] {
-        guard let userDefaults = UserDefaults(suiteName: "group.com.danielzverev.simplr"),
-              let data = userDefaults.data(forKey: "SavedCategories"),
-              let categories = try? JSONDecoder().decode([TaskCategory].self, from: data) else {
+        guard let userDefaults = UserDefaults(suiteName: "group.com.danielzverev.simplr") else {
             return []
         }
-        return categories
+        
+        // Use cached categories from loadTasks for consistency
+        return TaskProvider.cachedCategories
     }
     
     // MARK: - Sort Option Support
@@ -135,8 +164,14 @@ struct TaskProvider: AppIntentTimelineProvider {
     }
     
     private func loadSortOption() -> SortOption {
-        guard let userDefaults = UserDefaults(suiteName: "group.com.danielzverev.simplr"),
-              let savedSortOption = userDefaults.string(forKey: "TodaySortOption"),
+        guard let userDefaults = UserDefaults(suiteName: "group.com.danielzverev.simplr") else {
+            return .priority
+        }
+        
+        let profileKey = userDefaults.string(forKey: "CurrentProfile") ?? "personal"
+        let sortKey = "TodaySortOption_\(profileKey)"
+        
+        guard let savedSortOption = userDefaults.string(forKey: sortKey),
               let sortOption = SortOption(rawValue: savedSortOption) else {
             return .priority // Default to priority sorting
         }

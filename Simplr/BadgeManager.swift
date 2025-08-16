@@ -19,7 +19,13 @@ class BadgeManager: ObservableObject {
     
     @Published private(set) var currentBadgeCount: Int = 0
     
-    private let userDefaults = UserDefaults(suiteName: "group.com.danielzverev.simplr") ?? UserDefaults.standard
+    private let userDefaults = UserDefaults(suiteName: "group.com.danielzverev.simplr") ?? .standard
+    private let profileManager = ProfileManager.shared
+    
+    private var tasksKey: String {
+        let profile = profileManager.currentProfile
+        return "SavedTasks_\(profile.rawValue)"
+    }
     private let badgeEnabledKey = "badgeCountEnabled"
     private let logger = Logger(subsystem: "com.danielzverev.simplr", category: "BadgeManager")
     
@@ -180,7 +186,7 @@ class BadgeManager: ObservableObject {
         }
         
         // Load tasks from UserDefaults (same source as TaskManager)
-        guard let data = userDefaults.data(forKey: "SavedTasks"),
+        guard let data = userDefaults.data(forKey: tasksKey),
               let tasks = try? JSONDecoder().decode([Simplr.Task].self, from: data) else {
             logger.warning("Failed to load tasks for badge count calculation")
             return 0
@@ -290,7 +296,7 @@ extension Notification.Name {
 extension BadgeManager {
     /// Get badge count for specific task categories (for future use)
     func badgeCount(for categoryId: UUID?) async -> Int {
-        guard let data = userDefaults.data(forKey: "SavedTasks"),
+        guard let data = userDefaults.data(forKey: tasksKey),
               let tasks = try? JSONDecoder().decode([Simplr.Task].self, from: data) else {
             return 0
         }
