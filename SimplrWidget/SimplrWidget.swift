@@ -184,12 +184,16 @@ struct TaskProvider: AppIntentTimelineProvider {
     private let categoryHierarchy: [String] = [
         "URGENT",
         "IMPORTANT", 
+        "Deadlines",
+        "Meetings",
+        "Projects",
+        "Communication",
+        "Personal",
         "Work",
         "Health",
         "Learning",
         "Shopping",
         "Travel",
-        "Personal",
         "Uncategorized"
     ]
     

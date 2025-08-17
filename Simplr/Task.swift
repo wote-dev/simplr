@@ -56,7 +56,7 @@ struct TaskCategory: Identifiable, Codable, Hashable {
     ]
     
     static let personalPredefined: [TaskCategory] = [
-        .personal, .shopping, .health, .learning, .travel, .important, .urgent
+        .personal, .work, .shopping, .health, .learning, .travel, .important, .urgent
     ]
     
     static func == (lhs: TaskCategory, rhs: TaskCategory) -> Bool {

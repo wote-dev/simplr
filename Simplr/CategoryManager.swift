@@ -18,6 +18,10 @@ class CategoryManager: ObservableObject {
     private let userDefaults = UserDefaults(suiteName: "group.com.danielzverev.simplr") ?? .standard
     private let profileManager = ProfileManager.shared
     
+    // CRITICAL FIX: Debounce mechanism to prevent rapid successive toggle calls
+    private var lastToggleTime: [String: Date] = [:]
+    private let toggleDebounceInterval: TimeInterval = 0.1 // 100ms debounce
+    
     private var tasksKey: String {
         let profile = profileManager.currentProfile
         return "SavedTasks_\(profile.rawValue)"
@@ -49,12 +53,12 @@ class CategoryManager: ObservableObject {
         "Meetings",
         "Projects",
         "Communication",
+        "Personal",
         "Work",
         "Health",
         "Learning",
         "Shopping",
         "Travel",
-        "Personal",
         "Uncategorized"
     ]
     
@@ -238,12 +242,22 @@ class CategoryManager: ObservableObject {
         // Defensive programming: Ensure we have a valid category name
         guard !categoryName.isEmpty else { return }
         
-        // CRITICAL FIX: Prevent rapid successive calls that could cause state corruption
-        // Use a debounce mechanism to ensure only one toggle operation at a time
+        // CRITICAL FIX: Implement debounce mechanism to prevent rapid successive calls
+        let now = Date()
+        if let lastToggle = lastToggleTime[categoryName],
+           now.timeIntervalSince(lastToggle) < toggleDebounceInterval {
+            // Ignore rapid successive calls to prevent state corruption
+            return
+        }
+        
+        // Update last toggle time
+        lastToggleTime[categoryName] = now
+        
+        // CRITICAL FIX: Ensure thread-safe operation with immediate UI feedback
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
             
-            // Optimized toggle with single haptic feedback and immediate save for reliability
+            // Optimized toggle with atomic operation for reliability
             let wasCollapsed = self.collapsedCategories.contains(categoryName)
             
             // Perform the toggle operation atomically
@@ -259,7 +273,16 @@ class CategoryManager: ObservableObject {
             
             // Force UI update to ensure immediate visual feedback
             self.objectWillChange.send()
+            
+            // Clean up old debounce entries to prevent memory leaks
+            self.cleanupOldDebounceEntries()
         }
+    }
+    
+    /// Cleans up old debounce entries to prevent memory accumulation
+    private func cleanupOldDebounceEntries() {
+        let cutoffTime = Date().addingTimeInterval(-60) // Remove entries older than 1 minute
+        lastToggleTime = lastToggleTime.filter { $0.value > cutoffTime }
     }
     
     func isCategoryCollapsed(_ category: TaskCategory?) -> Bool {

@@ -12,7 +12,6 @@ struct UpcomingView: View {
     @EnvironmentObject var themeManager: ThemeManager
     @EnvironmentObject var categoryManager: CategoryManager
     @Environment(\.theme) var theme
-    @State private var showingAddTask = false
     @State private var taskToEdit: Task?
     @State private var searchText = ""
     @State private var showingDeleteAlert = false
@@ -212,11 +211,6 @@ struct UpcomingView: View {
             .navigationBarHidden(true)
         }
         .searchable(text: $searchText, prompt: "Search upcoming tasks...")
-        .sheet(isPresented: $showingAddTask) {
-            NavigationView {
-                AddTaskView(taskManager: taskManager)
-            }
-        }
         .sheet(item: $taskToEdit) { task in
             NavigationView {
                 AddTaskView(taskManager: taskManager, taskToEdit: task)
@@ -367,36 +361,6 @@ struct UpcomingView: View {
                             .frame(width: 44, height: 44)
                     }
                     .animatedButton()
-                    
-                    // Enhanced add button
-                    Button {
-                        withAnimation(.adaptiveBouncy) {
-                            showingAddTask = true
-                        }
-                        HapticManager.shared.buttonTap()
-                    } label: {
-                        ZStack {
-                            // Background
-                            Circle()
-                                .fill(theme.accentGradient)
-                                .frame(width: 50, height: 50)
-                                .applyNeumorphicShadow(theme.neumorphicButtonStyle)
-                            
-                            // Plus icon
-                            Image(systemName: "plus")
-                                .font(.system(size: 20, weight: .semibold))
-                                .foregroundColor(theme.background)
-                                .shadow(
-                                    color: theme.background == .black ? Color.white.opacity(0.3) : Color.black.opacity(0.3),
-                                    radius: 2,
-                                    x: 0,
-                                    y: 1
-                                )
-                        }
-                        .scaleEffect(showingAddTask ? 0.95 : 1.0)
-                        .animation(.adaptiveSnappy, value: showingAddTask)
-                    }
-                    .animatedButton()
                 }
             }
             .padding(.horizontal, 24)
@@ -473,8 +437,7 @@ struct UpcomingView: View {
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
             }
-            .opacity(showingAddTask ? 0.6 : 1.0)
-            .animation(.adaptiveSmooth, value: showingAddTask)
+            // Add task functionality is now handled by MainTabView
             
 
         }
@@ -562,13 +525,13 @@ struct UpcomingView: View {
                                     insertion: .opacity.combined(with: .scale(scale: 0.98, anchor: .top)),
                                     removal: .opacity.combined(with: .scale(scale: 0.98, anchor: .top))
                                 ))
-                                .animation(.smooth(duration: 0.3, extraBounce: 0), value: categoryManager.isCategoryCollapsed(categoryGroup.category))
+                                .animation(.easeInOut(duration: 0.35), value: categoryManager.isCategoryCollapsed(categoryGroup.category))
                             } else {
-                                // Empty container for smooth collapse animation
+                                // ENHANCED: Ultra-smooth collapse animation for empty state
                                 Color.clear
                                     .frame(height: 0)
-                                    .transition(.opacity)
-                                    .animation(.smooth(duration: 0.3, extraBounce: 0), value: categoryManager.isCategoryCollapsed(categoryGroup.category))
+                                    .transition(.opacity.combined(with: .scale(scale: 1.0, anchor: .top)))
+                                    .animation(.ultraSmooth(duration: 0.35), value: categoryManager.isCategoryCollapsed(categoryGroup.category))
                             }
                         }
                         .id("category-\(categoryGroup.category?.id.uuidString ?? "uncategorized")")

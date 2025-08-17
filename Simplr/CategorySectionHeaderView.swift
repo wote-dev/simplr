@@ -61,6 +61,34 @@ struct CategorySectionHeaderView: View {
         categoryManager.isCategoryCollapsed(category)
     }
     
+    /// Optimized toggle action with visual feedback and haptic response
+    /// Restricts interaction to only chevron, category color, and category name
+    private func performToggleAction() {
+        // Provide immediate visual feedback
+        withAnimation(.interpolatingSpring(stiffness: 500, damping: 30)) {
+            isPressed = true
+        }
+        
+        // Reset visual state after brief delay
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            withAnimation(.interpolatingSpring(stiffness: 500, damping: 30)) {
+                isPressed = false
+            }
+        }
+        
+        // PERFORMANCE: Use ultra-smooth animation for task card collapse/expand
+        withAnimation(.ultraSmoothTaskCard(duration: 0.35)) {
+            if let onToggleCollapse = onToggleCollapse {
+                onToggleCollapse()
+            } else {
+                categoryManager.toggleCategoryCollapse(category)
+            }
+        }
+        
+        // Provide haptic feedback for successful interaction
+        HapticManager.shared.selectionChange()
+    }
+    
     /// Optimized theme-adaptive chevron color with performance caching
     private var themeAdaptiveChevronColor: Color {
         // Enhanced theme-specific chevron colors for better visibility and consistency
@@ -93,38 +121,14 @@ struct CategorySectionHeaderView: View {
                 .font(.system(size: 12, weight: .semibold))
                 .foregroundColor(themeAdaptiveChevronColor)
                 .rotationEffect(.degrees(isCollapsed ? -90 : 0))
-                .animation(.easeInOut(duration: 0.3), value: isCollapsed)
+                .animation(.adaptiveSmooth, value: isCollapsed)
                 .frame(width: 12, height: 12)
-                .contentShape(Rectangle()) // Improved touch target
                 .scaleEffect(isPressed ? 0.98 : 1.0)
-                .gesture(
-                    DragGesture(minimumDistance: 0)
-                        .onChanged { _ in
-                            if !isPressed {
-                                withAnimation(.interpolatingSpring(stiffness: 500, damping: 30)) {
-                                    isPressed = true
-                                }
-                            }
-                        }
-                        .onEnded { _ in
-                            withAnimation(.interpolatingSpring(stiffness: 500, damping: 30)) {
-                                isPressed = false
-                            }
-                            
-                            // Perform the toggle action with proper animation and haptic feedback
-                            withAnimation(.easeInOut(duration: 0.3)) {
-                                if let onToggleCollapse = onToggleCollapse {
-                                    onToggleCollapse()
-                                } else {
-                                    categoryManager.toggleCategoryCollapse(category)
-                                }
-                            }
-                            
-                            // Provide haptic feedback after successful toggle
-                            HapticManager.shared.selectionChange()
-                        }
-                )
-            // Category icon/indicator - make tappable for collapse
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    performToggleAction()
+                }
+            // Category icon/indicator
             Group {
                 if let category = category {
                     if isUrgentCategory {
@@ -234,35 +238,11 @@ struct CategorySectionHeaderView: View {
                         .foregroundColor(theme.textSecondary)
                 }
             }
-            .contentShape(Rectangle())
             .scaleEffect(isPressed ? 0.98 : 1.0)
-            .gesture(
-                DragGesture(minimumDistance: 0)
-                    .onChanged { _ in
-                        if !isPressed {
-                            withAnimation(.interpolatingSpring(stiffness: 500, damping: 30)) {
-                                isPressed = true
-                            }
-                        }
-                    }
-                    .onEnded { _ in
-                        withAnimation(.interpolatingSpring(stiffness: 500, damping: 30)) {
-                            isPressed = false
-                        }
-                        
-                        // Perform the toggle action with proper animation and haptic feedback
-                        withAnimation(.easeInOut(duration: 0.3)) {
-                            if let onToggleCollapse = onToggleCollapse {
-                                onToggleCollapse()
-                            } else {
-                                categoryManager.toggleCategoryCollapse(category)
-                            }
-                        }
-                        
-                        // Provide haptic feedback after successful toggle
-                        HapticManager.shared.selectionChange()
-                    }
-            )
+            .contentShape(Rectangle())
+            .onTapGesture {
+                performToggleAction()
+            }
             
             // Category name
             Text(displayName.uppercased())
@@ -272,33 +252,10 @@ struct CategorySectionHeaderView: View {
                 )
                 .tracking(0.5)
                 .scaleEffect(isPressed ? 0.98 : 1.0)
-                .gesture(
-                    DragGesture(minimumDistance: 0)
-                        .onChanged { _ in
-                            if !isPressed {
-                                withAnimation(.interpolatingSpring(stiffness: 500, damping: 30)) {
-                                    isPressed = true
-                                }
-                            }
-                        }
-                        .onEnded { _ in
-                            withAnimation(.interpolatingSpring(stiffness: 500, damping: 30)) {
-                                isPressed = false
-                            }
-                            
-                            // Perform the toggle action with proper animation and haptic feedback
-                            withAnimation(.easeInOut(duration: 0.25)) {
-                                if let onToggleCollapse = onToggleCollapse {
-                                    onToggleCollapse()
-                                } else {
-                                    categoryManager.toggleCategoryCollapse(category)
-                                }
-                            }
-                            
-                            // Provide haptic feedback after successful toggle
-                            HapticManager.shared.selectionChange()
-                        }
-                )
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    performToggleAction()
+                }
             
             // Task count
             Text("\(taskCount)")
@@ -316,7 +273,7 @@ struct CategorySectionHeaderView: View {
         .padding(.horizontal, 20)
         .padding(.vertical, 12)
         .background(Color.clear)
-        .animation(.interpolatingSpring(stiffness: 500, damping: 30), value: isPressed)
+        .animation(.adaptiveSnappy, value: isPressed)
     }
 }
 

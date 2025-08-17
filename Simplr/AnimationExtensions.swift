@@ -175,6 +175,45 @@ extension Animation {
         }
     }
     
+    /// Ultra-smooth task card collapse/expand animation with staggered timing
+    static func ultraSmoothTaskCard(duration: Double = 0.32) -> Animation {
+        if #available(iOS 17.0, *) {
+            return .smooth(duration: duration, extraBounce: 0.03)
+        } else {
+            return Animation.interpolatingSpring(
+                stiffness: 520,
+                damping: 38,
+                initialVelocity: 0.9
+            )
+        }
+    }
+    
+    /// Ultra-smooth task card entry animation for staggered appearance
+    static func ultraSmoothTaskCardEntry(duration: Double = 0.28) -> Animation {
+        if #available(iOS 17.0, *) {
+            return .smooth(duration: duration, extraBounce: 0.02)
+        } else {
+            return Animation.interpolatingSpring(
+                stiffness: 580,
+                damping: 42,
+                initialVelocity: 0.8
+            )
+        }
+    }
+    
+    /// Ultra-smooth task card exit animation for staggered disappearance
+    static func ultraSmoothTaskCardExit(duration: Double = 0.25) -> Animation {
+        if #available(iOS 17.0, *) {
+            return .smooth(duration: duration, extraBounce: 0.01)
+        } else {
+            return Animation.interpolatingSpring(
+                stiffness: 620,
+                damping: 45,
+                initialVelocity: 0.7
+            )
+        }
+    }
+    
     /// Instant response animation for gestures
     static func instantResponse(duration: Double = 0.16) -> Animation {
         Animation.interpolatingSpring(
@@ -182,6 +221,46 @@ extension Animation {
             damping: 25,
             initialVelocity: 1.3
         )
+    }
+}
+
+// MARK: - Ultra-Smooth Task Card Transitions
+extension AnyTransition {
+    /// Ultra-smooth task card entry with staggered timing
+    static func ultraSmoothTaskCardEntry(index: Int, total: Int) -> AnyTransition {
+        _ = Double(index) * 0.025
+        _ = 0.28 + (Double(index) * 0.01)
+        
+        return AnyTransition.asymmetric(
+            insertion: .opacity
+                .combined(with: .scale(scale: 0.92, anchor: .top))
+                .combined(with: .offset(y: 12)),
+            removal: .identity
+        )
+    }
+    
+    /// Ultra-smooth task card exit with staggered timing
+    static func ultraSmoothTaskCardExit(index: Int, total: Int) -> AnyTransition {
+        _ = Double(index) * 0.02
+        _ = 0.25 + (Double(total - index - 1) * 0.008)
+        
+        return AnyTransition.asymmetric(
+            insertion: .identity,
+            removal: .opacity
+                .combined(with: .scale(scale: 0.88, anchor: .top))
+                .combined(with: .offset(y: -8))
+        )
+    }
+}
+
+// MARK: - Ultra-Smooth Animation Extensions
+extension Animation {
+    static func ultraSmoothTaskCardEntryAnimation(duration: Double) -> Animation {
+        Animation.smooth(duration: duration, extraBounce: 0.15)
+    }
+    
+    static func ultraSmoothTaskCardExitAnimation(duration: Double) -> Animation {
+        Animation.smooth(duration: duration, extraBounce: 0.05)
     }
 }
 

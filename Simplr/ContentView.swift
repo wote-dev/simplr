@@ -274,7 +274,7 @@ struct ContentView: View {
                             .applyNeumorphicShadow(theme.neumorphicButtonStyle)
                         
                         Image(systemName: profileManager.currentProfile.icon)
-                            .foregroundColor(getIconColor(for: theme))
+                            .foregroundColor(profileManager.currentProfile.themeAwareColor(for: theme))
                             .font(.system(size: 16, weight: .medium))
                             .shadow(
                                 color: theme.background == .black ? Color.white.opacity(0.1) : Color.clear,

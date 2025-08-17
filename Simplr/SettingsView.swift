@@ -234,7 +234,7 @@ struct SettingsView: View {
                             VStack(spacing: 16) {
                                 settingsRow(
                                     title: "Version",
-                                    value: "1.9.8",
+                                    value: "1.9.9",
                                     icon: "app.badge"
                                 )
                                 
@@ -576,7 +576,7 @@ struct SettingsView: View {
                     // Icon with optimized size
                     Image(systemName: profile.icon)
                         .font(.system(size: 22, weight: .semibold))
-                        .foregroundColor(profileManager.currentProfile == profile ? theme.background : theme.accent)
+                        .foregroundColor(profileManager.currentProfile == profile ? theme.background : profile.themeAwareColor(for: theme))
                         .transition(.scale.combined(with: .opacity))
                 }
                 

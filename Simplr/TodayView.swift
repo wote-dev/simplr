@@ -14,7 +14,7 @@ struct TodayView: View {
     @EnvironmentObject var categoryManager: CategoryManager
     @EnvironmentObject var themeManager: ThemeManager
     @Environment(\.theme) var theme
-    @State private var showingAddTask = false
+    // showingAddTask state is now handled by MainTabView
     @State private var taskToEdit: Task?
     @State private var searchText = ""
     @State private var showingDeleteAlert = false
@@ -26,6 +26,7 @@ struct TodayView: View {
     @State private var showEmptyState = false
     @State private var emptyStateAnimationPhase = 0
     @State private var isAnimatingEmptyState = false
+    @State private var refreshTrigger = false
     
     // Shared UserDefaults for widget synchronization
     private let sharedUserDefaults = UserDefaults(suiteName: "group.com.danielzverev.simplr")
@@ -220,15 +221,13 @@ struct TodayView: View {
                 .onChange(of: todayTasks.isEmpty) { _, isEmpty in
                     handleEmptyStateTransition(isEmpty: isEmpty)
                 }
+                
+                // Floating action button now handled by MainTabView
             }
             .navigationBarHidden(true)
         }
         .searchable(text: $searchText, prompt: "Search today's tasks...")
-        .sheet(isPresented: $showingAddTask) {
-            NavigationView {
-                AddTaskView(taskManager: taskManager)
-            }
-        }
+        // Add task sheet is now handled by MainTabView
         .sheet(item: $taskToEdit) { task in
             NavigationView {
                 AddTaskView(taskManager: taskManager, taskToEdit: task)
@@ -276,8 +275,9 @@ struct TodayView: View {
             // CRITICAL FIX: Refresh view when category state changes
             // This ensures collapse/expand states remain consistent after task completion changes
             withAnimation(.easeInOut(duration: 0.25)) {
-                // Force view refresh by updating a state variable
+                // Force view refresh by toggling a state variable
                 // The animation ensures smooth transitions
+                refreshTrigger.toggle()
             }
         }
         .onAppear {
@@ -323,44 +323,42 @@ struct TodayView: View {
         VStack(spacing: 0) {
             // Main header content
             HStack(alignment: .firstTextBaseline, spacing: 20) {
-                        Button(action: {
-                            if profileManager.shouldShowProfileSwitcher() {
-                                showingProfileSwitcher = true
-                                HapticManager.shared.selectionChange()
-                            }
-                        }) {
-                            VStack(alignment: .leading, spacing: 4) {
-                                HStack(alignment: .center, spacing: 6) {
-                                    Text("Today")
-                                        .font(.system(size: 34, weight: .bold, design: .rounded))
-                                        .foregroundStyle(theme.accentGradient)
-                                        .tracking(-0.5)
-                                    
-                                    // Profile indicator - seamlessly integrated as part of the text
-                                    if profileManager.shouldShowProfileSwitcher() {
-                                        profileBadge
-                                            .padding(.leading, 2)
-                                    }
-                                }
-                                
-                                // Date subtitle positioned below the Today heading and profile badge
-                                Text(todayDateString)
-                                    .font(.system(size: 16, weight: .medium, design: .rounded))
-                                    .foregroundColor(theme.textSecondary)
-                                    .opacity(0.8)
-                                    .lineLimit(1)
-                                    .minimumScaleFactor(0.8)
-                                    .truncationMode(.tail)
-                            }
-                        }
-                .buttonStyle(PlainButtonStyle())
-                .accessibilityLabel("Today - \(profileManager.currentProfile.displayName) Profile")
-                .accessibilityHint(profileManager.shouldShowProfileSwitcher() ? "Double tap to switch between Personal and Work profiles" : "Today's tasks")
-                .accessibilityAddTraits(profileManager.shouldShowProfileSwitcher() ? .isButton : [])
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Today")
+                        .font(.system(size: 34, weight: .bold, design: .rounded))
+                        .foregroundStyle(theme.accentGradient)
+                        .tracking(-0.5)
+                    
+                    // Date subtitle positioned below the Today heading
+                    Text(todayDateString)
+                        .font(.system(size: 16, weight: .medium, design: .rounded))
+                        .foregroundColor(theme.textSecondary)
+                        .opacity(0.8)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                        .truncationMode(.tail)
+                }
+                .accessibilityLabel("Today's tasks")
                 
                 Spacer(minLength: 0)
                 
-                HStack(spacing: 12) {
+                HStack(spacing: 8) {
+                    // Profile selector (if available)
+                    if profileManager.shouldShowProfileSwitcher() {
+                        Button(action: {
+                            showingProfileSwitcher = true
+                            HapticManager.shared.selectionChange()
+                        }) {
+                            Image(systemName: profileManager.currentProfile.icon)
+                                .font(.system(size: 18, weight: .medium))
+                                .foregroundColor(theme.accent)
+                                .frame(width: 44, height: 44)
+                        }
+                        .animatedButton()
+                        .accessibilityLabel("Current profile: \(profileManager.currentProfile.displayName)")
+                        .accessibilityHint("Tap to switch between Personal and Work profiles")
+                    }
+                    
                     // Sort and Filter menu button
                     Menu {
                         // Sort Section
@@ -413,34 +411,19 @@ struct TodayView: View {
                     }
                     .animatedButton()
                     
+                    // Settings button with circular background
                     Button {
                         showingSettings = true
                         HapticManager.shared.buttonTap()
                     } label: {
-                        Image(systemName: "gear")
-                            .font(.system(size: 18, weight: .medium))
-                            .foregroundColor(theme.accent)
-                            .frame(width: 44, height: 44)
-                    }
-                    .animatedButton()
-                    
-                    // Enhanced add button with consistent styling
-                    Button {
-                        withAnimation(.adaptiveBouncy) {
-                            showingAddTask = true
-                        }
-                        HapticManager.shared.buttonTap()
-                    } label: {
                         ZStack {
-                            // Background
                             Circle()
                                 .fill(theme.accentGradient)
-                                .frame(width: 50, height: 50)
+                                .frame(width: 48, height: 48)
                                 .applyNeumorphicShadow(theme.neumorphicButtonStyle)
                             
-                            // Plus icon
-                            Image(systemName: "plus")
-                                .font(.system(size: 20, weight: .semibold))
+                            Image(systemName: "gear")
+                                .font(.system(size: 22, weight: .medium))
                                 .foregroundColor(theme.background)
                                 .shadow(
                                     color: theme.background == .black ? Color.white.opacity(0.3) : Color.black.opacity(0.3),
@@ -449,8 +432,6 @@ struct TodayView: View {
                                     y: 1
                                 )
                         }
-                        .scaleEffect(showingAddTask ? 0.95 : 1.0)
-                        .animation(.adaptiveSnappy, value: showingAddTask)
                     }
                     .animatedButton()
                 }
@@ -525,9 +506,7 @@ struct TodayView: View {
             
             // Add task button with ultra-smooth animation
             Button {
-                withAnimation(.adaptiveBouncy) {
-                    showingAddTask = true
-                }
+                // Add task functionality is now handled by MainTabView
                 HapticManager.shared.buttonTap()
             } label: {
                 HStack(spacing: 12) {
@@ -573,31 +552,35 @@ struct TodayView: View {
                                 taskCount: categoryGroup.tasks.count
                             )
                             
-                            // Tasks in this category with enhanced fade animation
+                            // ENHANCED: Ultra-smooth task card collapse/expand animations
                             let isCollapsed = categoryManager.isCategoryCollapsed(categoryGroup.category)
                             
                             if !isCollapsed {
                                 LazyVStack(spacing: 8) {
-                                    ForEach(categoryGroup.tasks, id: \.id) { task in
+                                    ForEach(Array(categoryGroup.tasks.enumerated()), id: \.element.id) { index, task in
                                         taskRowWithEffects(task)
                                             .id("task-\(task.id.uuidString)")
+                                            .transition(.asymmetric(
+                                                insertion: .opacity
+                                                    .combined(with: .scale(scale: 0.92, anchor: .top))
+                                                    .combined(with: .offset(y: 12)),
+                                                removal: .opacity
+                                                    .combined(with: .scale(scale: 0.88, anchor: .top))
+                                                    .combined(with: .offset(y: -8))
+                                            ))
                                     }
                                 }
                                 .padding(.top, 4)
                                 .padding(.bottom, 8)
                                 .padding(.horizontal, 8)
                                 .clipped() // Optimize rendering performance
-                                .transition(.asymmetric(
-                                    insertion: .opacity.combined(with: .scale(scale: 0.98, anchor: .top)),
-                                    removal: .opacity.combined(with: .scale(scale: 0.98, anchor: .top))
-                                ))
-                                .animation(.smooth(duration: 0.3, extraBounce: 0), value: isCollapsed)
+                                .animation(.ultraSmooth(duration: 0.35), value: isCollapsed)
                             } else {
-                                // Empty container for smooth collapse animation
+                                // PERFORMANCE OPTIMIZATION: Enhanced empty state with smooth collapse
                                 Color.clear
                                     .frame(height: 0)
-                                    .transition(.opacity)
-                                    .animation(.smooth(duration: 0.3, extraBounce: 0), value: isCollapsed)
+                                    .transition(.opacity.combined(with: .scale(scale: 1.0, anchor: .top)))
+                                    .animation(.ultraSmooth(duration: 0.32), value: isCollapsed)
                             }
                         }
                         .id("category-\(categoryGroup.category?.id.uuidString ?? "uncategorized")")
@@ -652,35 +635,9 @@ struct TodayView: View {
         return formatter.string(from: Date())
     }
     
-    private var profileBadge: some View {
-        Image(systemName: profileManager.currentProfile.icon)
-            .font(.system(size: 14, weight: .medium))
-            .foregroundStyle(
-                LinearGradient(
-                    gradient: Gradient(colors: [
-                        profileManager.currentProfile.color.opacity(0.8),
-                        theme.accent.opacity(0.6)
-                    ]),
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-            )
-            .background(
-                Circle()
-                    .fill(theme.surfaceGradient)
-                    .frame(width: 18, height: 18)
-                    .opacity(0.15)
-                    .overlay(
-                        Circle()
-                            .stroke(theme.border.opacity(0.2), lineWidth: 0.5)
-                    )
-            )
-            .baselineOffset(2)
-            .accessibilityLabel("Current profile: \(profileManager.currentProfile.displayName)")
-            .accessibilityHint("Tap to switch between Personal and Work profiles")
-            .transition(.opacity)
-            .animation(.easeInOut(duration: 0.2), value: profileManager.currentProfile)
-    }
+
+    
+    // Floating action button functionality is now handled by MainTabView
     
     // MARK: - Sort Option Persistence
     

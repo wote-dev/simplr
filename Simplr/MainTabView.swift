@@ -82,6 +82,9 @@ struct MainTabView: View {
                 // Custom tab bar
                 customTabBar
             }
+            
+            // Floating add task button - appears on all tabs
+            FloatingAddTaskButton(showingAddTask: $showingAddTask)
         }
         .onChange(of: selectedTaskId) { _, newTaskId in
             handleSpotlightNavigation(newTaskId)

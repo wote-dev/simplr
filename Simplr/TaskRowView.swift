@@ -486,49 +486,79 @@ struct TaskRowView: View {
         .clipShape(RoundedRectangle(cornerRadius: 24)) // Ensure clean clipping with rounded corners
         .simultaneousGesture(
                                 // Ultra-smooth 120fps gesture handling with minimal CPU overhead
-                                DragGesture(minimumDistance: 6, coordinateSpace: .global)
+                                DragGesture(minimumDistance: 8, coordinateSpace: .global)
                                     .onChanged { value in
                                         // Throttle gesture updates for 120fps performance
                                         let now = Date()
                                         guard now.timeIntervalSince(lastGestureUpdate) >= gestureUpdateInterval else { return }
                                         lastGestureUpdate = now
                                         
-                                        // Ultra-fast diagonal swipe detection with minimal calculations
+                                        // Enhanced diagonal swipe detection with strict thresholds
                                         let verticalDistance = abs(value.translation.height)
                                         let horizontalDistance = abs(value.translation.width)
-                                        
-                                        // Optimized angle check using fast approximation
-                                        let isScrollGesture = verticalDistance > horizontalDistance * 0.6
-                                        
-                                        // Ultra-responsive velocity processing
                                         let verticalVelocity = abs(value.velocity.height)
-                    let horizontalVelocity = abs(value.velocity.width)
-                    
-                    if isScrollGesture {
-                        gestureState.markAsScrollGesture()
-                        resetToNeutralState()
-                        return
-                    }
-                    
-                    // Ultra-responsive swipe detection with minimal calculations
-                    let isSmoothSwipe = horizontalDistance > 6 && !isScrollGesture
-                    
-                    if isSmoothSwipe && !gestureState.isScrollGesture {
-                        handleDragChanged(value)
-                    }
-                }
+                                        let horizontalVelocity = abs(value.velocity.width)
+                                        
+                                        // Calculate angle in degrees for precise detection
+                                        let angleInDegrees = atan2(verticalDistance, horizontalDistance) * 180 / .pi
+                                        
+                                        // Strict scroll gesture detection - only trigger for clear vertical movement
+                                        let isStrictScrollGesture = (
+                                            // Angle-based detection: > 35 degrees from horizontal
+                                            angleInDegrees > 35 ||
+                                            // Distance-based: vertical movement significantly exceeds horizontal
+                                            (verticalDistance > 25 && verticalDistance > horizontalDistance * 1.8) ||
+                                            // Velocity-based: strong vertical velocity with minimal horizontal
+                                            (verticalVelocity > 800 && verticalVelocity > horizontalVelocity * 2.5)
+                                        )
+                                        
+                                        // Enhanced horizontal swipe detection - allow moderate diagonal movement
+                                        let isValidHorizontalSwipe = (
+                                            // Must have meaningful horizontal movement
+                                            horizontalDistance > 8 &&
+                                            // Angle must be within 30 degrees of horizontal
+                                            angleInDegrees <= 30 &&
+                                            // Horizontal movement should dominate
+                                            horizontalDistance > verticalDistance * 0.8 &&
+                                            // Not already marked as scroll gesture
+                                            !gestureState.isScrollGesture
+                                        )
+                                        
+                                        if isStrictScrollGesture {
+                                            gestureState.markAsScrollGesture()
+                                            resetToNeutralState()
+                                            return
+                                        }
+                                        
+                                        if isValidHorizontalSwipe {
+                                            handleDragChanged(value)
+                                        }
+                                    }
                 .onEnded { value in
-                    // Balanced angle-based swipe completion with smooth responsiveness
+                    // Enhanced completion detection with strict diagonal filtering
                     let verticalDistance = abs(value.translation.height)
                     let horizontalDistance = abs(value.translation.width)
+                    let horizontalVelocity = abs(value.velocity.width)
+                    let verticalVelocity = abs(value.velocity.height)
                     
                     // Calculate angle in degrees from horizontal
-                    let angleInDegrees = abs(atan2(verticalDistance, horizontalDistance) * 180 / .pi)
+                    let angleInDegrees = atan2(verticalDistance, horizontalDistance) * 180 / .pi
                     
-                    // Ultra-fast completion detection for 120fps
-                    let isSmoothCompletion = horizontalDistance > 8 && verticalDistance < horizontalDistance * 0.5
+                    // Strict completion criteria - prevent diagonal swipe completion
+                    let isValidSwipeCompletion = (
+                        // Must have sufficient horizontal movement
+                        horizontalDistance > 12 &&
+                        // Angle must be within 25 degrees of horizontal
+                        angleInDegrees <= 25 &&
+                        // Horizontal movement must clearly dominate
+                        horizontalDistance > verticalDistance * 1.2 &&
+                        // Either sufficient distance or velocity
+                        (horizontalDistance > 40 || horizontalVelocity > 600) &&
+                        // Not marked as scroll gesture
+                        !gestureState.isScrollGesture
+                    )
                     
-                    if !gestureState.isScrollGesture && isSmoothCompletion {
+                    if isValidSwipeCompletion {
                         handleDragEnded(value)
                     } else {
                         resetToNeutralState()

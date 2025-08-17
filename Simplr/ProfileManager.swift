@@ -39,6 +39,26 @@ enum UserProfile: String, CaseIterable, Codable {
         }
     }
     
+    // Theme-aware color that integrates with the current theme
+    func themeAwareColor(for theme: Theme) -> Color {
+        switch self {
+        case .personal:
+            return theme.accent
+        case .work:
+            return theme.primary
+        }
+    }
+    
+    // Theme-aware secondary color for subtle accents
+    func themeAwareSecondaryColor(for theme: Theme) -> Color {
+        switch self {
+        case .personal:
+            return theme.primary.opacity(0.8)
+        case .work:
+            return theme.secondary.opacity(0.8)
+        }
+    }
+    
     // Profile-specific categories
     var defaultCategories: [TaskCategory] {
         switch self {
