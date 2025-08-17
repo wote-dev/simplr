@@ -43,63 +43,14 @@ enum UserProfile: String, CaseIterable, Codable {
     var defaultCategories: [TaskCategory] {
         switch self {
         case .personal:
-            return [
-                .personal,
-                .shopping,
-                .health,
-                .learning,
-                .travel,
-                .important,
-                .urgent
-            ]
+            return TaskCategory.personalPredefined
         case .work:
-            return [
-                .work,
-                .workMeetings,
-                .workProjects,
-                .workDeadlines,
-                .workCommunication,
-                .important,
-                .urgent
-            ]
+            return TaskCategory.workPredefined
         }
     }
 }
 
-// MARK: - Work-specific Categories Extension
-extension TaskCategory {
-    // Work profile specific categories
-    static let workMeetings = TaskCategory(
-        id: UUID(uuidString: "550e8400-e29b-41d4-a716-446655440010")!,
-        name: "Meetings",
-        color: .indigo
-    )
-    
-    static let workProjects = TaskCategory(
-        id: UUID(uuidString: "550e8400-e29b-41d4-a716-446655440011")!,
-        name: "Projects",
-        color: .purple
-    )
-    
-    static let workDeadlines = TaskCategory(
-        id: UUID(uuidString: "550e8400-e29b-41d4-a716-446655440012")!,
-        name: "Deadlines",
-        color: .red
-    )
-    
-    static let workCommunication = TaskCategory(
-        id: UUID(uuidString: "550e8400-e29b-41d4-a716-446655440013")!,
-        name: "Communication",
-        color: .teal
-    )
-    
-    // Updated predefined categories to include work-specific ones
-    static let allPredefined: [TaskCategory] = [
-        .work, .personal, .shopping, .health, .learning, .travel, 
-        .important, .urgent, .workMeetings, .workProjects, 
-        .workDeadlines, .workCommunication
-    ]
-}
+
 
 // MARK: - Profile Manager
 class ProfileManager: ObservableObject {

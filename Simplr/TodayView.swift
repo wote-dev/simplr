@@ -330,15 +330,16 @@ struct TodayView: View {
                             }
                         }) {
                             VStack(alignment: .leading, spacing: 4) {
-                                HStack(alignment: .center, spacing: 4) {
+                                HStack(alignment: .center, spacing: 6) {
                                     Text("Today")
                                         .font(.system(size: 34, weight: .bold, design: .rounded))
                                         .foregroundStyle(theme.accentGradient)
                                         .tracking(-0.5)
                                     
-                                    // Profile indicator badge - only show when actively using both profiles
+                                    // Profile indicator - seamlessly integrated as part of the text
                                     if profileManager.shouldShowProfileSwitcher() {
                                         profileBadge
+                                            .padding(.leading, 2)
                                     }
                                 }
                                 
@@ -652,27 +653,33 @@ struct TodayView: View {
     }
     
     private var profileBadge: some View {
-        ZStack {
-            // Badge background with optimized rendering
-            Circle()
-                .fill(theme.surfaceGradient)
-                .frame(width: 24, height: 24)
-                .overlay(
-                    Circle()
-                        .stroke(theme.border.opacity(0.3), lineWidth: 0.5)
+        Image(systemName: profileManager.currentProfile.icon)
+            .font(.system(size: 14, weight: .medium))
+            .foregroundStyle(
+                LinearGradient(
+                    gradient: Gradient(colors: [
+                        profileManager.currentProfile.color.opacity(0.8),
+                        theme.accent.opacity(0.6)
+                    ]),
+                    startPoint: .top,
+                    endPoint: .bottom
                 )
-                .shadow(color: theme.shadow.opacity(0.1), radius: 2, x: 0, y: 1)
-            
-            // Profile icon with optimized rendering
-            Image(systemName: profileManager.currentProfile.icon)
-                .font(.system(size: 12, weight: .bold))
-                .foregroundColor(profileManager.currentProfile.color)
-                .accessibilityLabel("Current profile: \(profileManager.currentProfile.displayName)")
-                .accessibilityHint("Tap to switch between Personal and Work profiles")
-        }
-        .transition(.scale.combined(with: .opacity))
-        .animation(.spring(response: 0.2, dampingFraction: 0.8), value: profileManager.currentProfile)
-        .drawingGroup() // Performance optimization for complex rendering
+            )
+            .background(
+                Circle()
+                    .fill(theme.surfaceGradient)
+                    .frame(width: 18, height: 18)
+                    .opacity(0.15)
+                    .overlay(
+                        Circle()
+                            .stroke(theme.border.opacity(0.2), lineWidth: 0.5)
+                    )
+            )
+            .baselineOffset(2)
+            .accessibilityLabel("Current profile: \(profileManager.currentProfile.displayName)")
+            .accessibilityHint("Tap to switch between Personal and Work profiles")
+            .transition(.opacity)
+            .animation(.easeInOut(duration: 0.2), value: profileManager.currentProfile)
     }
     
     // MARK: - Sort Option Persistence

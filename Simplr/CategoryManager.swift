@@ -45,12 +45,27 @@ class CategoryManager: ObservableObject {
     private let categoryHierarchy: [String] = [
         "URGENT",
         "IMPORTANT", 
+        "Deadlines",
+        "Meetings",
+        "Projects",
+        "Communication",
         "Work",
         "Health",
         "Learning",
         "Shopping",
         "Travel",
         "Personal",
+        "Uncategorized"
+    ]
+    
+    // Work-specific category hierarchy for work profile
+    private let workCategoryHierarchy: [String] = [
+        "URGENT",
+        "IMPORTANT", 
+        "Deadlines",
+        "Meetings",
+        "Projects",
+        "Communication",
         "Uncategorized"
     ]
     
@@ -144,8 +159,9 @@ class CategoryManager: ObservableObject {
         // Preserve custom categories
         let customCategories = categories.filter { $0.isCustom }
         
-        // Reload with all current predefined categories
-        categories = TaskCategory.predefined
+        // Reload with profile-specific predefined categories
+        let currentPredefined = profileManager.currentProfile == .work ? TaskCategory.workPredefined : TaskCategory.personalPredefined
+        categories = currentPredefined
         categories.append(contentsOf: customCategories)
         
         // Save and rebuild cache
@@ -328,6 +344,7 @@ class CategoryManager: ObservableObject {
     
     func suggestCategory(for taskTitle: String) -> TaskCategory? {
         let title = taskTitle.lowercased()
+        let isWorkProfile = profileManager.currentProfile == .work
         
         // Urgent-related keywords (highest priority)
         if title.contains("urgent") || title.contains("asap") || title.contains("emergency") ||
@@ -343,10 +360,32 @@ class CategoryManager: ObservableObject {
             return categories.first { $0.name == "IMPORTANT" }
         }
         
-        // Work-related keywords
-        if title.contains("meeting") || title.contains("project") || title.contains("work") || 
-           title.contains("client") || title.contains("deadline") || title.contains("email") ||
-           title.contains("presentation") || title.contains("conference") {
+        // Work-specific keywords for work profile
+        if isWorkProfile {
+            if title.contains("meeting") || title.contains("call") || title.contains("sync") ||
+               title.contains("standup") || title.contains("review") || title.contains("demo") {
+                return categories.first { $0.name == "Meetings" }
+            }
+            
+            if title.contains("project") || title.contains("milestone") || title.contains("deliverable") ||
+               title.contains("feature") || title.contains("release") || title.contains("sprint") {
+                return categories.first { $0.name == "Projects" }
+            }
+            
+            if title.contains("deadline") || title.contains("due") || title.contains("submit") ||
+               title.contains("report") || title.contains("assignment") {
+                return categories.first { $0.name == "Deadlines" }
+            }
+            
+            if title.contains("email") || title.contains("message") || title.contains("slack") ||
+               title.contains("communication") || title.contains("update") || title.contains("follow") {
+                return categories.first { $0.name == "Communication" }
+            }
+        }
+        
+        // General work keywords (for both profiles)
+        if title.contains("work") || title.contains("client") || title.contains("business") ||
+           title.contains("office") || title.contains("team") {
             return categories.first { $0.name == "Work" }
         }
         
@@ -384,8 +423,13 @@ class CategoryManager: ObservableObject {
     
     /// Returns the priority order for a category (lower number = higher priority)
     func categoryPriority(for category: TaskCategory?) -> Int {
-        guard let category = category else { return categoryHierarchy.count } // Uncategorized goes last
-        return categoryHierarchy.firstIndex(of: category.name) ?? categoryHierarchy.count
+        guard let category = category else {
+            let hierarchy = profileManager.currentProfile == .work ? workCategoryHierarchy : categoryHierarchy
+            return hierarchy.count // Uncategorized goes last
+        }
+        
+        let hierarchy = profileManager.currentProfile == .work ? workCategoryHierarchy : categoryHierarchy
+        return hierarchy.firstIndex(of: category.name) ?? hierarchy.count
     }
     
     /// Groups tasks by category and returns them in hierarchical order
@@ -473,7 +517,8 @@ class CategoryManager: ObservableObject {
                     customCategories.append(savedCategory)
                 } else {
                     // Check if this is a predefined category with the correct UUID
-                    if TaskCategory.predefined.contains(where: { $0.id == savedCategory.id }) {
+                    let currentPredefined = profileManager.currentProfile == .work ? TaskCategory.workPredefined : TaskCategory.personalPredefined
+                    if currentPredefined.contains(where: { $0.id == savedCategory.id }) {
                         existingPredefinedCategories.append(savedCategory)
                     }
                     // If it's a predefined category with wrong UUID, we'll replace it
@@ -481,7 +526,8 @@ class CategoryManager: ObservableObject {
             }
             
             // Start with the correct predefined categories (with fixed UUIDs)
-            categories = TaskCategory.predefined
+            let currentPredefined = profileManager.currentProfile == .work ? TaskCategory.workPredefined : TaskCategory.personalPredefined
+            categories = currentPredefined
             
             // Add custom categories
             categories.append(contentsOf: customCategories)
@@ -498,8 +544,9 @@ class CategoryManager: ObservableObject {
                 migratePredefinedCategoryUUIDs(savedPredefinedWithWrongUUIDs)
             }
         } else {
-            // No saved data - use default predefined categories for first launch
-            categories = TaskCategory.predefined
+            // No saved data - use profile-specific predefined categories for first launch
+            let currentPredefined = profileManager.currentProfile == .work ? TaskCategory.workPredefined : TaskCategory.personalPredefined
+            categories = currentPredefined
         }
         
         // Always save the current state to persist UUIDs
@@ -569,8 +616,10 @@ class CategoryManager: ObservableObject {
         // Create mapping from old UUID to new UUID
         var uuidMapping: [UUID: UUID] = [:]
         
+        let currentPredefined = profileManager.currentProfile == .work ? TaskCategory.workPredefined : TaskCategory.personalPredefined
+        
         for oldCategory in oldCategories {
-            if let newCategory = TaskCategory.predefined.first(where: { $0.name == oldCategory.name }) {
+            if let newCategory = currentPredefined.first(where: { $0.name == oldCategory.name }) {
                 uuidMapping[oldCategory.id] = newCategory.id
             }
         }
