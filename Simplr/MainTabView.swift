@@ -171,7 +171,7 @@ struct MainTabView: View {
     private var contentView: some View {
         GeometryReader { geometry in
             HStack(spacing: 0) {
-                TodayView(selectedTaskId: $selectedTaskId)
+                TodayView(selectedTaskId: $selectedTaskId, showingAddTask: $showingAddTask)
                     .frame(width: geometry.size.width)
                 
                 UpcomingView(selectedTaskId: $selectedTaskId)

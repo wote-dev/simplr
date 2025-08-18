@@ -104,7 +104,7 @@ struct CategorySectionHeaderView: View {
             if theme is CoffeeTheme {
                 // Warmer tone for coffee theme
                 return theme.textSecondary.opacity(0.85)
-            } else if theme is DarkPurpleTheme || theme is DarkBlueTheme {
+            } else if theme is DarkBlueTheme {
                 // Enhanced visibility for dark themes
                 return theme.textSecondary.opacity(0.9)
             } else {

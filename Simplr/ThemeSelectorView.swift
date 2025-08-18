@@ -18,24 +18,22 @@ struct ThemeSelectorView: View {
     
     var body: some View {
         ZStack {
-            // Background with image support
-            Color.clear
-                .themedBackground(theme)
+            // Optimized background
+            theme.background
+                .ignoresSafeArea()
             
             ScrollView {
-                VStack(spacing: 24) {
-                    // Header description
-                    VStack(spacing: 8) {
-                        Text("Select your preferred appearance")
-                            .font(.subheadline)
-                            .foregroundColor(theme.textSecondary)
-                            .multilineTextAlignment(.center)
-                    }
-                    .padding(.top, 20)
-                    .padding(.horizontal, 20)
+                VStack(spacing: 20) {
+                    // Header description - simplified
+                    Text("Select your preferred appearance")
+                        .font(.subheadline)
+                        .foregroundColor(theme.textSecondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.top, 16)
+                        .padding(.horizontal, 20)
                     
-                    // Theme options
-                    VStack(spacing: 16) {
+                    // Theme options - optimized
+                    LazyVStack(spacing: 12) {
                         ForEach(ThemeMode.allCases, id: \.self) { mode in
                             ThemeOptionCard(
                                 mode: mode,
@@ -50,8 +48,8 @@ struct ThemeSelectorView: View {
                     }
                     .padding(.horizontal, 20)
                     
-                    // Preview section
-                    VStack(spacing: 16) {
+                    // Preview section - simplified
+                    VStack(spacing: 12) {
                         Text("Preview")
                             .font(.headline)
                             .foregroundColor(theme.text)
@@ -71,7 +69,6 @@ struct ThemeSelectorView: View {
                             .foregroundColor(theme.textSecondary.opacity(0.6))
                             .padding(.vertical, 8)
                     }
-                    .animatedButton()
                     .padding(.bottom, 20)
                     #endif
                 }
@@ -86,9 +83,7 @@ struct ThemeSelectorView: View {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button {
                     HapticManager.shared.buttonTap()
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        dismiss()
-                    }
+                    dismiss()
                 } label: {
                     HStack(spacing: 4) {
                         Image(systemName: "chevron.left")
@@ -144,152 +139,73 @@ struct ThemeOptionCard: View {
     let isChanging: Bool
     let onSelect: () -> Void
     
-    /// Premium gold color for locked features - optimized for performance with static computation
-    private var premiumGoldColor: Color {
-        Color(red: 0.85, green: 0.65, blue: 0.13) // Rich gold color that signals premium
+    // Cached colors for performance
+    private let premiumGoldColor = Color(red: 0.85, green: 0.65, blue: 0.13)
+    
+    // Simplified color logic with cached values
+    private var borderColor: Color {
+        theme.border.opacity(isSelected ? 0.8 : 0.3)
     }
     
-    /// Returns subtle, consistent border color for all themes with enhanced visibility for light themes
-    private func getBorderColor(for theme: Theme) -> Color {
-        // Enhanced border visibility for light and kawaii themes while maintaining subtlety
-        if theme is KawaiiTheme {
-            // Kawaii theme: soft pink-gray border that's visible but not prominent
-            return Color(red: 0.75, green: 0.65, blue: 0.68).opacity(0.6)
-        } else if theme is CoffeeTheme {
-            // Coffee theme: warm coffee-tinted border that complements the sepia background
-            return Color(red: 0.72, green: 0.62, blue: 0.52).opacity(0.7)
-        } else if theme.background == Color.white || 
-                  theme.background == Color(red: 0.98, green: 0.98, blue: 0.98) ||
-                  theme.background == Color(red: 0.98, green: 0.99, blue: 1.0) ||
-                  theme.background == Color(red: 0.98, green: 1.0, blue: 0.99) ||
-                  theme.background == Color(red: 0.96, green: 0.94, blue: 0.90) {
-            // Light themes: subtle gray border with better visibility
-            return Color(red: 0.85, green: 0.85, blue: 0.85).opacity(0.7)
-        } else {
-            // Dark themes: use existing border with reduced opacity
-            return theme.border.opacity(0.3)
-        }
-    }
-    
-    /// Returns consistent border width across all themes for uniform appearance
-    private func getBorderWidth(for theme: Theme) -> CGFloat {
-        // Consistent 0.8pt border width for all themes - subtle but visible
-        return 0.8
-    }
-    
-    /// Returns appropriate icon color for non-selected theme options with proper contrast
-    private func getIconColor(for theme: Theme) -> Color {
-        if theme is KawaiiTheme {
-            // Kawaii theme: use accent color for better visibility against light backgrounds
-            return theme.accent
-        } else if theme is CoffeeTheme {
-            // Coffee theme: use accent color for better contrast against sepia background
-            return theme.accent
-        } else if theme.background == Color.white || 
-                  theme.background == Color(red: 0.98, green: 0.98, blue: 0.98) ||
-                  theme.background == Color(red: 0.98, green: 0.99, blue: 1.0) ||
-                  theme.background == Color(red: 0.98, green: 1.0, blue: 0.99) ||
-                  theme.background == Color(red: 0.96, green: 0.94, blue: 0.90) {
-            // Light themes: use text color for better contrast
-            return theme.text
-        } else {
-            // Dark themes and others: use primary color as before
-            return theme.primary
-        }
+    private var iconColor: Color {
+        isSelected ? theme.background : theme.text
     }
     
     var body: some View {
         Button(action: isChanging ? {} : onSelect) {
             HStack(spacing: 16) {
-                // Icon
-                ZStack {
-                    Circle()
-                        .fill(isSelected ? theme.accentGradient : theme.surfaceGradient)
-                        .frame(width: 50, height: 50)
-                        .applyShadow(theme.shadowStyle)
-                    
-                    Image(systemName: mode.icon)
-                        .font(.system(size: 22, weight: .medium))
-                        .foregroundColor(isSelected ? theme.background : getIconColor(for: theme))
-                        .shadow(
-                            color: isSelected ? (theme.background == .black ? Color.white.opacity(0.3) : Color.black.opacity(0.3)) : Color.clear,
-                            radius: isSelected ? 2 : 0,
-                            x: 0,
-                            y: isSelected ? 1 : 0
-                        )
-                }
+                // Simplified icon
+                Circle()
+                    .fill(isSelected ? theme.accent : theme.surface)
+                    .frame(width: 44, height: 44)
+                    .overlay(
+                        Image(systemName: mode.icon)
+                            .font(.system(size: 20, weight: .medium))
+                            .foregroundColor(isSelected ? theme.background : iconColor)
+                    )
                 
-                // Content
-                VStack(alignment: .leading, spacing: 4) {
+                // Simplified content
+                VStack(alignment: .leading, spacing: 2) {
                     HStack {
                         Text(mode.displayName)
                             .font(.headline)
                             .foregroundColor(theme.text)
                         
                         if mode.isPremium {
-                            if canAccess {
-                                Image(systemName: "crown.fill")
-                                    .font(.caption)
-                                    .foregroundColor(Color(red: 1.0, green: 0.6, blue: 0.0))
-                            } else {
-                                Image(systemName: "lock.fill")
-                                    .font(.caption)
-                                    .foregroundColor(premiumGoldColor)
-                            }
+                            Image(systemName: canAccess ? "crown.fill" : "lock.fill")
+                                .font(.caption)
+                                .foregroundColor(canAccess ? Color.orange : premiumGoldColor)
                         }
-                        
-                        Spacer()
                     }
                     
                     Text(description(for: mode))
                         .font(.subheadline)
                         .foregroundColor(theme.textSecondary)
-                        .multilineTextAlignment(.leading)
-                    
-                    if mode.isPremium && !canAccess {
-                        Text("Premium Feature")
-                            .font(.caption)
-                            .fontWeight(.medium)
-                            .foregroundColor(premiumGoldColor)
-                            .padding(.top, 2)
-                    }
+                        .lineLimit(1)
                 }
                 
                 Spacer()
                 
                 // Selection indicator
                 if isSelected {
-                    if isChanging {
-                        // Show loading indicator when theme is changing
-                        ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle(tint: theme.accent))
-                            .scaleEffect(0.8)
-                    } else {
-                        Image(systemName: "checkmark.circle.fill")
-                            .font(.title2)
-                            .foregroundColor(theme.accent)
-                    }
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.title3)
+                        .foregroundColor(theme.accent)
                 }
             }
-            .padding(20)
+            .padding(16)
             .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(theme.surfaceGradient)
-                    .applyShadow(isSelected ? theme.cardShadowStyle : theme.shadowStyle)
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(theme.surface)
                     .overlay(
-                        RoundedRectangle(cornerRadius: 16)
-                            .stroke(
-                                isSelected ? theme.accent : getBorderColor(for: theme),
-                                lineWidth: isSelected ? 2.0 : getBorderWidth(for: theme)
-                            )
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(borderColor, lineWidth: isSelected ? 2 : 1)
                     )
             )
         }
         .buttonStyle(PlainButtonStyle())
-        .scaleEffect(isSelected ? 1.02 : 1.0)
-        .opacity(isChanging && !isSelected ? 0.6 : 1.0)
-        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isSelected)
-        .animation(.easeInOut(duration: 0.2), value: isChanging)
+        .scaleEffect(isSelected ? 1.01 : 1.0)
+        .animation(.easeInOut(duration: 0.15), value: isSelected)
     }
     
     private func description(for mode: ThemeMode) -> String {
@@ -306,8 +222,7 @@ struct ThemeOptionCard: View {
             return "Easy on the eyes"
         case .darkBlue:
             return "Deep and sophisticated"
-        case .darkPurple:
-            return "Rich and mysterious"
+
         case .system:
             return "Follows your device"
         case .kawaii:
@@ -323,184 +238,70 @@ struct ThemeOptionCard: View {
 struct ThemePreviewCard: View {
     @Environment(\.theme) var theme
     
-    /// Returns subtle, consistent border color for all themes in preview with enhanced visibility for light themes
-    private func getPreviewBorderColor(for theme: Theme) -> Color {
-        // Enhanced border visibility for light and kawaii themes while maintaining subtlety
-        if theme is KawaiiTheme {
-            // Kawaii theme: soft pink-gray border that's visible but not prominent
-            return Color(red: 0.75, green: 0.65, blue: 0.68).opacity(0.6)
-        } else if theme is CoffeeTheme {
-            // Coffee theme: warm coffee-tinted border that complements the sepia background
-            return Color(red: 0.72, green: 0.62, blue: 0.52).opacity(0.7)
-        } else if theme.background == Color.white || 
-                  theme.background == Color(red: 0.98, green: 0.98, blue: 0.98) ||
-                  theme.background == Color(red: 0.98, green: 0.99, blue: 1.0) ||
-                  theme.background == Color(red: 0.98, green: 1.0, blue: 0.99) ||
-                  theme.background == Color(red: 0.96, green: 0.94, blue: 0.90) {
-            // Light themes: subtle gray border with better visibility
-            return Color(red: 0.85, green: 0.85, blue: 0.85).opacity(0.7)
-        } else {
-            // Dark themes: use existing border with reduced opacity
-            return theme.border.opacity(0.3)
-        }
-    }
-    
-    /// Returns consistent border width across all themes for uniform appearance in preview
-    private func getPreviewBorderWidth(for theme: Theme) -> CGFloat {
-        // Consistent 0.8pt border width for all themes - subtle but visible
-        return 0.8
-    }
-    
     var body: some View {
-        VStack(spacing: 16) {
-            // Modern task card preview matching current TaskRowView design
+        VStack(spacing: 12) {
+            // Simplified task preview
             HStack(spacing: 12) {
-                // Completion toggle (left side)
                 Circle()
                     .fill(theme.success)
-                    .frame(width: 32, height: 32)
-                    .overlay(
-                        Circle()
-                            .stroke(theme.success, lineWidth: 2)
-                    )
+                    .frame(width: 28, height: 28)
                     .overlay(
                         Image(systemName: "checkmark")
-                            .font(.system(size: 14, weight: .bold))
+                            .font(.system(size: 12, weight: .bold))
                             .foregroundColor(.white)
                     )
-                    .applyNeumorphicShadow(theme.neumorphicPressedStyle)
                 
-                // Main content area with text on left and pills on right
-                HStack(alignment: .top, spacing: 12) {
-                    // Left side: Text content
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Sample Task")
-                            .font(.headline)
-                            .fontWeight(.semibold)
-                            .foregroundColor(theme is KawaiiTheme ? theme.accent : theme.text)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                        
-                        Text("This is how your tasks will look")
-                            .font(.subheadline)
-                            .foregroundColor(theme.textSecondary)
-                            .opacity(0.8)
-                        
-                        // Due date display under task text
-                        HStack(spacing: 6) {
-                            Image(systemName: "calendar")
-                                .font(.caption2)
-                                .foregroundColor(theme.textSecondary)
-                            
-                            Text("Today 2:00 PM")
-                                .font(.caption2)
-                                .fontWeight(.medium)
-                                .foregroundColor(theme.textSecondary)
-                            
-                            Spacer()
-                        }
-                    }
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Sample Task")
+                        .font(.headline)
+                        .foregroundColor(theme.text)
                     
-                    // Right side: Pills (reminder)
-                    VStack(alignment: .trailing, spacing: 6) {
-                        // Reminder pill
-                        HStack(spacing: 3) {
-                            Image(systemName: "bell.fill")
-                                .font(.caption2)
-                            
-                            Text("1:45 PM")
-                                .font(.caption2)
-                                .fontWeight(.medium)
-                        }
-                        .foregroundColor(
-                            // Enhanced visibility for coffee theme preview
-                            theme is CoffeeTheme ?
-                                Color(red: 0.18, green: 0.12, blue: 0.08) : // Dark coffee text for coffee theme
-                                theme.warning
-                        )
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 3)
-                        .background(
-                            Capsule()
-                                .fill(
-                                    // Enhanced coffee theme preview background
-                                    theme is CoffeeTheme ?
-                                        Color(red: 0.45, green: 0.32, blue: 0.22).opacity(0.15) : // Coffee accent background
-                                        theme.warning.opacity(0.1)
-                                )
-                        )
-                        .overlay(
-                            // Enhanced border for coffee theme preview
-                            theme is CoffeeTheme ?
-                                Capsule()
-                                    .stroke(
-                                        Color(red: 0.18, green: 0.12, blue: 0.08).opacity(0.4),
-                                        lineWidth: 0.6
-                                    ) : nil
-                        )
-                    }
+                    Text("This is how your tasks will look")
+                        .font(.subheadline)
+                        .foregroundColor(theme.textSecondary)
+                        .lineLimit(1)
                 }
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 20)
-            .background(
-                RoundedRectangle(cornerRadius: 24)
-                    .fill(
-                        // Enhanced dark mode task card gradient for sleeker look
-                        theme.background == Color(red: 0.02, green: 0.02, blue: 0.02) ?
-                        LinearGradient(
-                            colors: [
-                                Color(red: 0.04, green: 0.04, blue: 0.04),
-                                Color(red: 0.02, green: 0.02, blue: 0.02),
-                                Color(red: 0.03, green: 0.03, blue: 0.03)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ) : theme.surfaceGradient
-                    )
-                    .shadow(
-                        color: theme.background == Color(red: 0.02, green: 0.02, blue: 0.02) ? 
-                            Color.black.opacity(0.8) : theme.shadow.opacity(0.6),
-                        radius: theme.background == Color(red: 0.02, green: 0.02, blue: 0.02) ? 15 : 1.0,
-                        x: 0,
-                        y: theme.background == Color(red: 0.02, green: 0.02, blue: 0.02) ? 8 : 0.3
-                    )
-            )
-            .overlay(
-                // Enhanced border for better definition across all themes - using strokeBorder for clean corners
-                RoundedRectangle(cornerRadius: 24)
-                    .strokeBorder(
-                        getPreviewBorderColor(for: theme),
-                        lineWidth: getPreviewBorderWidth(for: theme)
-                    )
-            )
-            
-            // Mock add button
-            HStack {
+                
                 Spacer()
                 
-                ZStack {
-                    Circle()
-                        .fill(theme.accentGradient)
-                        .frame(width: 44, height: 44)
-                        .applyShadow(theme.cardShadowStyle)
-                    
-                    Image(systemName: "plus")
-                        .foregroundColor(theme.background)
-                        .font(.system(size: 20, weight: .semibold))
-                        .shadow(
-                            color: theme.background == .black ? Color.white.opacity(0.3) : Color.black.opacity(0.3),
-                            radius: 2,
-                            x: 0,
-                            y: 1
-                        )
+                // Reminder pill
+                HStack(spacing: 4) {
+                    Image(systemName: "bell")
+                        .font(.caption)
+                    Text("2:00 PM")
+                        .font(.caption)
                 }
+                .foregroundColor(theme.warning)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(
+                    Capsule()
+                        .fill(theme.warning.opacity(0.1))
+                )
+            }
+            .padding(16)
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(theme.surface)
+            )
+            
+            // Add button preview
+            HStack {
+                Spacer()
+                Circle()
+                    .fill(theme.accent)
+                    .frame(width: 40, height: 40)
+                    .overlay(
+                        Image(systemName: "plus")
+                            .foregroundColor(theme.background)
+                            .font(.system(size: 18, weight: .semibold))
+                    )
             }
         }
-        .padding(20)
+        .padding(16)
         .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(theme.surface.opacity(0.5))
-                .applyShadow(theme.shadowStyle)
+            RoundedRectangle(cornerRadius: 12)
+                .fill(theme.surface.opacity(0.8))
         )
     }
 }

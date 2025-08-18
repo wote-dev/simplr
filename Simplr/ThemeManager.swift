@@ -17,7 +17,7 @@ enum ThemeMode: String, CaseIterable {
     case minimal = "minimal"
     case dark = "dark"
     case darkBlue = "darkBlue"
-    case darkPurple = "darkPurple"
+
     case system = "system"
     case kawaii = "kawaii"
     case serene = "serene"
@@ -31,7 +31,7 @@ enum ThemeMode: String, CaseIterable {
         case .minimal: return "Minimal"
         case .dark: return "Dark"
         case .darkBlue: return "Dark Blue"
-        case .darkPurple: return "Dark Purple"
+
         case .system: return "System"
         case .kawaii: return "Kawaii"
         case .serene: return "Serene"
@@ -47,7 +47,7 @@ enum ThemeMode: String, CaseIterable {
         case .minimal: return "circle.fill"
         case .dark: return "moon.fill"
         case .darkBlue: return "moon.circle.fill"
-        case .darkPurple: return "moon.stars.fill"
+
         case .system: return "circle.lefthalf.filled"
         case .kawaii: return "heart.fill"
         case .serene: return "cloud.fill"
@@ -57,9 +57,9 @@ enum ThemeMode: String, CaseIterable {
     
     var isPremium: Bool {
         switch self {
-        case .light, .lightBlue, .minimal, .dark, .system:
+        case .light, .minimal, .dark, .system:
             return false
-        case .lightGreen, .darkBlue, .darkPurple, .kawaii, .serene, .coffee:
+        case .lightBlue, .lightGreen, .darkBlue, .kawaii, .serene, .coffee:
             return true
         }
     }
@@ -134,8 +134,6 @@ class ThemeManager: ObservableObject {
             case .dark:
                 themeMode = .darkBlue
             case .darkBlue:
-                themeMode = .darkPurple
-            case .darkPurple:
                 themeMode = .light
             case .system:
                 // If in system mode, toggle to opposite of current appearance
@@ -148,13 +146,26 @@ class ThemeManager: ObservableObject {
     }
     
     func updateTheme() {
+        // Update system dark mode state whenever theme updates
+        #if os(iOS)
+        let currentSystemDarkMode = UITraitCollection.current.userInterfaceStyle == .dark
+        isDarkMode = currentSystemDarkMode
+        #endif
+        
         let newTheme: Theme
         
         switch themeMode {
         case .light:
             newTheme = PlainLightTheme()
         case .lightBlue:
-            newTheme = LightTheme()
+            // Check if user has access to Light Blue theme
+            if let premiumManager = premiumManager,
+               premiumManager.hasAccess(to: .premiumAccess) {
+                newTheme = LightTheme()
+            } else {
+                // Fallback to light theme if no access, but preserve the theme selection
+                newTheme = PlainLightTheme()
+            }
         case .lightGreen:
             // Check if user has access to Light Green theme
             if let premiumManager = premiumManager,
@@ -186,15 +197,7 @@ class ThemeManager: ObservableObject {
                 // Fallback to dark theme if no access, but preserve the theme selection
                 newTheme = DarkTheme()
             }
-        case .darkPurple:
-            // Check if user has access to Dark Purple theme
-            if let premiumManager = premiumManager,
-               premiumManager.hasAccess(to: .premiumAccess) {
-                newTheme = DarkPurpleTheme()
-            } else {
-                // Fallback to dark theme if no access, but preserve the theme selection
-                newTheme = DarkTheme()
-            }
+
         case .system:
             newTheme = isDarkMode ? DarkTheme() : PlainLightTheme()
         case .kawaii:
@@ -282,7 +285,7 @@ class ThemeManager: ObservableObject {
         }
         
         switch mode {
-        case .kawaii, .lightGreen, .darkBlue, .darkPurple, .serene, .coffee:
+        case .lightBlue, .kawaii, .lightGreen, .darkBlue, .serene, .coffee:
             return premiumManager.hasAccess(to: .premiumAccess)
         default:
             return true
@@ -293,6 +296,21 @@ class ThemeManager: ObservableObject {
     
     // MARK: - Persistence
     
+    func syncSystemDarkModeToWidget() {
+        // Sync system dark mode state to widget via shared UserDefaults
+        if let sharedDefaults = UserDefaults(suiteName: "group.com.danielzverev.simplr") {
+            #if os(iOS)
+            let isDark = UITraitCollection.current.userInterfaceStyle == .dark
+            sharedDefaults.set(isDark, forKey: "SystemDarkMode")
+            
+            // Force widget reload if in system theme mode
+            if themeMode == .system {
+                WidgetCenter.shared.reloadAllTimelines()
+            }
+            #endif
+        }
+    }
+    
     private func saveThemeMode() {
         userDefaults.set(themeMode.rawValue, forKey: themeModeKey)
         
@@ -300,7 +318,7 @@ class ThemeManager: ObservableObject {
         if let sharedDefaults = UserDefaults(suiteName: "group.com.danielzverev.simplr") {
             sharedDefaults.set(themeMode.rawValue, forKey: "ThemeMode")
             
-            // Also sync system dark mode state
+            // Also sync system dark mode state - always use current system state
             #if os(iOS)
             let isDark = UITraitCollection.current.userInterfaceStyle == .dark
             sharedDefaults.set(isDark, forKey: "SystemDarkMode")

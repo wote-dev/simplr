@@ -269,6 +269,7 @@ class CelebrationManager: ObservableObject {
         let today = Date()
         
         let todayTasks = taskManager.tasks.filter { task in
+            guard task.profileId == ProfileManager.shared.currentProfile.rawValue else { return false }
             guard let dueDate = task.dueDate else { return false }
             return calendar.isDate(dueDate, inSameDayAs: today)
         }
@@ -293,6 +294,7 @@ class CelebrationManager: ObservableObject {
     private func checkSpeedRunner(taskManager: TaskManager) {
         let oneHourAgo = Date().addingTimeInterval(-3600)
         let recentCompletions = taskManager.tasks.filter { task in
+            guard task.profileId == ProfileManager.shared.currentProfile.rawValue else { return false }
             guard let completedAt = task.completedAt else { return false }
             return completedAt > oneHourAgo
         }
@@ -309,7 +311,9 @@ class CelebrationManager: ObservableObject {
     }
     
     private func getCompletedTasksCount(taskManager: TaskManager) -> Int {
-        return taskManager.tasks.filter { $0.isCompleted }.count
+        return taskManager.tasks.filter { task in
+            task.profileId == ProfileManager.shared.currentProfile.rawValue && task.isCompleted
+        }.count
     }
     
     private func getTodayCompletedCount(taskManager: TaskManager) -> Int {
@@ -317,7 +321,8 @@ class CelebrationManager: ObservableObject {
         let today = Date()
         
         return taskManager.tasks.filter { task in
-            guard task.isCompleted,
+            guard task.profileId == ProfileManager.shared.currentProfile.rawValue,
+                  task.isCompleted,
                   let completedAt = task.completedAt else { return false }
             return calendar.isDate(completedAt, inSameDayAs: today)
         }.count

@@ -36,18 +36,18 @@ struct PaywallView: View {
     
     @State private var selectedPlan: PurchasePlan = .premiumAnnual
     @State private var offerings: Offerings?
-    @State private var selectedThemePreview: ThemeMode = .kawaii
-    @State private var previewTheme: Theme = KawaiiTheme()
+    @State private var selectedThemePreview: ThemeMode = .lightBlue
+    @State private var previewTheme: Theme = LightTheme()
     @State private var showWelcomeMessage = false
     @State private var purchaseCompleted = false
-    @State private var selectedPremiumTheme: ThemeMode = .kawaii // Track the theme selected during purchase for post-purchase application
+    @State private var selectedPremiumTheme: ThemeMode = .lightBlue // Track the theme selected during purchase for post-purchase application
     
     // Performance optimization: Cache theme instances to avoid repeated creation
     private let themeCache: [ThemeMode: Theme] = [
+        .lightBlue: LightTheme(),
         .kawaii: KawaiiTheme(),
         .lightGreen: LightGreenTheme(),
         .darkBlue: DarkBlueTheme(),
-        .darkPurple: DarkPurpleTheme(),
         .serene: SereneTheme(),
         .coffee: CoffeeTheme()
     ]
@@ -435,13 +435,13 @@ struct PaywallView: View {
             // Three rows of theme cards for better layout with 6 themes
             VStack(spacing: 12) {
                 HStack(spacing: 12) {
-                    ForEach([ThemeMode.kawaii, ThemeMode.lightGreen], id: \.self) { themeMode in
+                    ForEach([ThemeMode.lightBlue, ThemeMode.kawaii], id: \.self) { themeMode in
                         themePreviewCard(themeMode)
                     }
                 }
                 
                 HStack(spacing: 12) {
-                    ForEach([ThemeMode.darkBlue, ThemeMode.darkPurple], id: \.self) { themeMode in
+                    ForEach([ThemeMode.lightGreen, ThemeMode.darkBlue], id: \.self) { themeMode in
                         themePreviewCard(themeMode)
                     }
                 }

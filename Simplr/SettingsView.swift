@@ -17,7 +17,7 @@ struct SettingsView: View {
     @EnvironmentObject var categoryManager: CategoryManager
     @EnvironmentObject var premiumManager: PremiumManager
     @EnvironmentObject var taskManager: TaskManager
-    @StateObject private var profileManager = ProfileManager.shared
+    @EnvironmentObject var profileManager: ProfileManager
 
     @Environment(\.theme) var theme
     @Environment(\.dismiss) var dismiss
@@ -318,13 +318,9 @@ struct SettingsView: View {
             #endif
         }
         .sheet(isPresented: $showingThemeSelector) {
-            NavigationView {
-                ThemeSelectorView()
-                    .environmentObject(themeManager)
-                    .environmentObject(premiumManager)
-                    .navigationTitle("Choose Theme")
-                    .navigationBarTitleDisplayMode(.inline)
-            }
+            ThemeSelectorView()
+                .environmentObject(themeManager)
+                .environmentObject(premiumManager)
         }
 
     }
@@ -462,7 +458,7 @@ struct SettingsView: View {
         default:
             if theme is CoffeeTheme {
                 return theme.textSecondary.opacity(0.9)
-            } else if theme is DarkPurpleTheme || theme is DarkBlueTheme {
+            } else if theme is DarkBlueTheme {
                 return theme.textSecondary.opacity(0.95)
             } else {
                 return theme.textSecondary
@@ -480,7 +476,7 @@ struct SettingsView: View {
         default:
             if theme is CoffeeTheme {
                 return theme.textTertiary.opacity(0.85)
-            } else if theme is DarkPurpleTheme || theme is DarkBlueTheme {
+            } else if theme is DarkBlueTheme {
                 return theme.textTertiary.opacity(0.9)
             } else {
                 return theme.textTertiary
@@ -632,7 +628,7 @@ struct SettingsView: View {
             default:
                 if theme is CoffeeTheme {
                     return theme.textSecondary.opacity(0.85)
-                } else if theme is DarkPurpleTheme || theme is DarkBlueTheme {
+                } else if theme is DarkBlueTheme {
                     return theme.textSecondary.opacity(0.9)
                 } else {
                     return theme.textSecondary

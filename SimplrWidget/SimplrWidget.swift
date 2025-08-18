@@ -102,6 +102,12 @@ struct TaskProvider: AppIntentTimelineProvider {
         
         // Filter tasks to match TodayView's exact logic
         let filteredTasks = allTasks.filter { task in
+            // Filter by current profile
+            guard let userDefaults = UserDefaults(suiteName: "group.com.danielzverev.simplr"),
+                  task.profileId == (userDefaults.string(forKey: "CurrentProfile") ?? "personal") else {
+                return false
+            }
+            
             // Exclude completed tasks from today view
             guard !task.isCompleted else { return false }
             

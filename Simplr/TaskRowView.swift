@@ -301,7 +301,7 @@ struct TaskRowView: View {
                                     x: 0,
                                     y: 0.5
                                 )
-                                .animation(.easeInOut(duration: 0.15), value: task.isCompleted)
+                                .animation(.none, value: task.isCompleted)  // Eliminates wobble
                                 .matchedGeometryEffect(id: "\(task.id)-title", in: namespace)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                         }
@@ -314,7 +314,7 @@ struct TaskRowView: View {
                                 .lineLimit(2)
                                 .opacity(task.isCompleted ? 0.5 : 0.8)
                                 .scaleEffect(task.isCompleted ? 0.99 : 1.0, anchor: .leading)
-                                .animation(.easeInOut(duration: 0.15), value: task.isCompleted)
+                                .animation(.none, value: task.isCompleted)  // Eliminates wobble
                                 .matchedGeometryEffect(id: "\(task.id)-description", in: namespace)
 
                         }
@@ -324,20 +324,19 @@ struct TaskRowView: View {
                             VStack(alignment: .leading, spacing: 8) {
                                 // Checklist header with integrated progress pill
                                 ChecklistProgressHeader(checklist: task.checklist)
-                                    .animation(.easeInOut(duration: 0.3), value: task.checklist.map { $0.isCompleted })
+                                    .animation(.none, value: task.checklist.map { $0.isCompleted })  // Eliminates wobble
                                 
                                 // Individual checklist items
                                 VStack(alignment: .leading, spacing: 6) {
                                     ForEach(task.checklist) { item in
                                         HStack(spacing: 8) {
-                                            // Optimized single-tap checklist toggle with immediate feedback
+                                            // Ultra-stable checklist toggle - no wobble
                                             Image(systemName: item.isCompleted ? "checkmark.circle.fill" : "circle")
                                                 .font(.system(size: 16, weight: .medium))
                                                 .foregroundColor(item.isCompleted ? theme.success : theme.textTertiary)
                                                 .contentShape(Circle())
                                                 .frame(width: 24, height: 24)
-                                                .scaleEffect(item.isCompleted ? 1.1 : 1.0)
-                                                .animation(.spring(response: 0.3, dampingFraction: 0.6), value: item.isCompleted)
+                                                .animation(.none, value: item.isCompleted)  // Eliminates wobble
                                                 .onTapGesture {
                                                     // Immediate haptic feedback and optimized toggle
                                                     HapticManager.shared.buttonTap()
@@ -349,7 +348,7 @@ struct TaskRowView: View {
                                                 .foregroundColor(item.isCompleted ? theme.textSecondary : theme.text)
                                                 .strikethrough(item.isCompleted)
                                                 .opacity(item.isCompleted ? 0.7 : 1.0)
-                                                .animation(.easeInOut(duration: 0.15), value: item.isCompleted)
+                                                .animation(.none, value: item.isCompleted)  // Eliminates wobble
                                             
                                             Spacer()
                                         }
@@ -717,7 +716,7 @@ struct TaskRowView: View {
     
     /// Returns the appropriate icon color based on the background color for maximum contrast
     private func getIconColor(for baseColor: Color) -> Color {
-        // Handle dark themes (DarkTheme, DarkBlueTheme, and DarkPurpleTheme) with optimized color selection
+        // Handle dark themes (DarkTheme and DarkBlueTheme) with optimized color selection
         if theme is DarkTheme {
             // Dark theme: primary is white, error is bright red - use black icons
             if baseColor == theme.primary {
@@ -736,21 +735,6 @@ struct TaskRowView: View {
             } else if baseColor == theme.warning {
                 // Orange warning background - use dark icon
                 return Color(red: 0.1, green: 0.15, blue: 0.25)
-            } else {
-                // Other colored backgrounds - use white for contrast
-                return Color.white
-            }
-        } else if theme is DarkPurpleTheme {
-            // Dark Purple theme: optimized icon colors for purple-tinted backgrounds
-            if baseColor == theme.primary {
-                // Primary purple background - use dark icon for contrast
-                return Color(red: 0.08, green: 0.05, blue: 0.15)
-            } else if baseColor == theme.error {
-                // Red error background - use white icon
-                return Color.white
-            } else if baseColor == theme.warning {
-                // Orange warning background - use dark icon
-                return Color(red: 0.08, green: 0.05, blue: 0.15)
             } else {
                 // Other colored backgrounds - use white for contrast
                 return Color.white
@@ -1149,7 +1133,7 @@ struct TaskRowView: View {
     }
     
     private func performCompletionToggle() {
-        // Ultra-smooth completion toggle optimized for 120fps
+        // Ultra-buttery smooth completion toggle optimized for 120fps consistency
         let isCompleting = !task.isCompleted
         
         // Immediate haptic feedback for responsive feel
@@ -1159,46 +1143,46 @@ struct TaskRowView: View {
             HapticManager.shared.taskUncompleted()
         }
         
-        // Ultra-fast animation using optimized system
-        withAnimation(UIOptimizer.completionAnimation()) {
+        // Ultra-buttery smooth completion animation
+        withAnimation(UIOptimizer.ultraButteryTaskCompletionAnimation()) {
             if isCompleting {
-                completionScale = 1.05
+                completionScale = 1.08
                 showCheckmark = true
             } else {
-                completionScale = 0.95
+                completionScale = 0.92
                 showCheckmark = false
             }
         }
         
-        // Particle effect - only for completion, immediate reset for uncomplete
+        // Particle effect with ultra-buttery smooth timing
         if isCompleting {
             showCompletionParticles = true
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) {
                 showCompletionParticles = false
             }
         } else {
             showCompletionParticles = false
         }
         
-        // Immediate task toggle with minimal delay
+        // Immediate task toggle with perfectly coordinated timing
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
             onToggleCompletion()
             
-            // URGENT animation handling
+            // URGENT animation handling with ultra-buttery smooth transitions
             if isUrgentTask {
                 if isCompleting {
                     stopUrgentPulsatingAnimation()
                 } else {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
                         startUrgentPulsatingAnimation()
                     }
                 }
             }
         }
         
-        // Single reset animation after main animation completes
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-            withAnimation(.spring(response: 0.2, dampingFraction: 0.9)) {
+        // Ultra-buttery smooth reset animation
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.32) {
+            withAnimation(UIOptimizer.ultraButteryTaskRemovalAnimation()) {
                 completionScale = 1.0
             }
             gestureCompleted = false
@@ -1413,7 +1397,7 @@ struct TaskRowView: View {
         )
         .scaleEffect(task.isCompleted ? 0.95 : 1.0)
         .opacity(task.isCompleted ? 0.6 : 1.0)
-        .animation(.easeInOut(duration: 0.2).delay(0.1), value: task.isCompleted)
+        .animation(.none, value: task.isCompleted)  // Eliminates wobble
     }
     
     private func dueDatePill(dueDate: Date) -> some View {
@@ -1544,7 +1528,7 @@ struct TaskRowView: View {
         )
         .opacity(task.isCompleted ? 0.6 : 1.0)
         .scaleEffect(task.isCompleted ? 0.99 : 1.0, anchor: .leading)
-        .animation(.easeInOut(duration: 0.15), value: task.isCompleted)
+        .animation(.none, value: task.isCompleted)  // Eliminates wobble
     }
     
     private func formatDueDate(_ date: Date) -> String {
@@ -1625,10 +1609,12 @@ struct ChecklistProgressHeader: View {
         let data = progressData
         
         HStack(spacing: 8) {
-            Text("Checklist")
+            Text("checklist")
                 .font(.caption)
                 .fontWeight(.medium)
                 .foregroundColor(theme.textSecondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
 
             // Custom progress bar to avoid SwiftUI issues
             ZStack(alignment: .leading) {
@@ -1639,7 +1625,7 @@ struct ChecklistProgressHeader: View {
                 Capsule()
                     .fill(theme.progress)
                     .frame(width: 50 * data.progress, height: 5)
-                    .animation(.easeInOut(duration: 0.15), value: data.progress)
+                    .animation(.none, value: data.progress)  // Eliminates wobble
             }
 
             Spacer()
@@ -1648,7 +1634,7 @@ struct ChecklistProgressHeader: View {
                 .font(.caption2)
                 .fontWeight(.medium)
                 .foregroundColor(theme.textSecondary)
-                .animation(.easeInOut(duration: 0.15), value: data.completed)
+                .animation(.none, value: data.completed)  // Eliminates wobble
         }
     }
 }

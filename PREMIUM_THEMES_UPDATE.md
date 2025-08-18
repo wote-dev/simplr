@@ -2,9 +2,16 @@
 
 ## Overview
 
-This update transforms the Simplr app's theme system to include premium themes with a new pricing structure. Three beautiful themes are now premium-only: **Kawaii**, **Light Green**, and **Serene**.
+This update transforms the Simplr app's theme system to include premium themes with a new pricing structure. Six beautiful themes are now premium-only: **Light Blue**, **Kawaii**, **Light Green**, **Dark Blue**, **Serene**, and **Coffee**.
 
 ## Premium Themes
+
+### 💙 Light Blue Theme
+
+- **Style**: Sophisticated blue accent with clean, professional design
+- **Colors**: Deep blue primary, lighter blue secondary, sophisticated blue accents
+- **Mood**: Professional, clean, trustworthy
+- **Perfect for**: Users who prefer a sophisticated, business-oriented aesthetic
 
 ### 🌸 Kawaii Theme
 
@@ -51,15 +58,17 @@ This update transforms the Simplr app's theme system to include premium themes w
 ```swift
 // Free themes (always accessible)
 - Light
-- Light Blue
 - Minimal
 - Dark
 - System
 
 // Premium themes (require purchase)
-- Light Green (requires .additionalThemes)
-- Kawaii (requires .kawaiiTheme)
-- Serene (requires .additionalThemes)
+- Light Blue (requires .premiumAccess)
+- Light Green (requires .premiumAccess)
+- Kawaii (requires .premiumAccess)
+- Dark Blue (requires .premiumAccess)
+- Serene (requires .premiumAccess)
+- Coffee (requires .premiumAccess)
 ```
 
 ### Premium Features Mapping

@@ -202,13 +202,49 @@ class UIOptimizer: ObservableObject {
         let devicePerformance = getDevicePerformanceLevel()
         switch devicePerformance {
         case .high:
-            return .spring(response: 0.18, dampingFraction: 0.8, blendDuration: 0.02)
+            return .spring(response: 0.18, dampingFraction: 0.85, blendDuration: 0)
         case .medium:
-            return .spring(response: 0.2, dampingFraction: 0.75, blendDuration: 0.03)
+            return .spring(response: 0.22, dampingFraction: 0.9, blendDuration: 0)
         case .low:
             return .easeInOut(duration: 0.15)
         }
     }
+    
+    /// Ultra-buttery smooth task completion animation optimized for consistent 120fps
+    static func ultraButteryTaskCompletionAnimation() -> Animation {
+        if PerformanceConfig.shouldUseReducedAnimations {
+            return .easeInOut(duration: 0.2)
+        }
+        
+        let devicePerformance = getDevicePerformanceLevel()
+        switch devicePerformance {
+        case .high:
+            return .spring(response: 0.32, dampingFraction: 0.92, blendDuration: 0.02)
+        case .medium:
+            return .spring(response: 0.28, dampingFraction: 0.94, blendDuration: 0.03)
+        case .low:
+            return .easeInOut(duration: 0.25)
+        }
+    }
+    
+    /// Ultra-buttery smooth task removal animation for list disappearance
+    static func ultraButteryTaskRemovalAnimation() -> Animation {
+        if PerformanceConfig.shouldUseReducedAnimations {
+            return .easeInOut(duration: 0.18)
+        }
+        
+        let devicePerformance = getDevicePerformanceLevel()
+        switch devicePerformance {
+        case .high:
+            return .spring(response: 0.28, dampingFraction: 0.95, blendDuration: 0.02)
+        case .medium:
+            return .spring(response: 0.25, dampingFraction: 0.97, blendDuration: 0.03)
+        case .low:
+            return .easeInOut(duration: 0.22)
+        }
+    }
+    
+
     
     /// Ultra-fast particle animation for 120fps completion effects
     static func particleAnimation(delay: Double = 0) -> Animation {

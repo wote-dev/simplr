@@ -69,11 +69,13 @@ struct TaskDetailPreviewView: View {
                 Image(systemName: "checklist")
                     .font(.caption2)
                     .foregroundColor(theme.textSecondary)
-                Text("Checklist")
+                Text("checklist")
                     .font(.caption)
                     .fontWeight(.semibold)
                     .foregroundColor(theme.textSecondary)
-                    .textCase(.uppercase)
+                    .textCase(.lowercase)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.9)
             }
 
             ForEach(task.checklist) { item in
@@ -86,7 +88,7 @@ struct TaskDetailPreviewView: View {
                         Image(systemName: item.isCompleted ? "checkmark.circle.fill" : "circle")
                             .font(.system(size: 16, weight: .medium))
                             .foregroundColor(item.isCompleted ? theme.success : theme.textTertiary)
-                            .animation(.easeInOut(duration: 0.2), value: item.isCompleted)
+                            .animation(.none, value: item.isCompleted)  // Eliminates wobble
                     }
                     .buttonStyle(PlainButtonStyle())
                     .contentShape(Circle())
@@ -106,7 +108,7 @@ struct TaskDetailPreviewView: View {
                         .foregroundColor(item.isCompleted ? theme.textSecondary : theme.text)
                         .strikethrough(item.isCompleted)
                         .opacity(item.isCompleted ? 0.7 : 1.0)
-                        .animation(.easeInOut(duration: 0.2), value: item.isCompleted)
+                        .animation(.none, value: item.isCompleted)  // Eliminates wobble
                     
                     Spacer()
                 }

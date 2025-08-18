@@ -302,9 +302,11 @@ struct AddTaskView: View {
                 // Section Header
                 HStack {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Checklist")
+                        Text("checklist")
                             .font(.system(size: 18, weight: .bold, design: .rounded))
                             .foregroundColor(theme.text)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.9)
                         
                         Text("Break down your task")
                             .font(.caption)

@@ -13,6 +13,7 @@ struct TodayView: View {
     @EnvironmentObject var taskManager: TaskManager
     @EnvironmentObject var categoryManager: CategoryManager
     @EnvironmentObject var themeManager: ThemeManager
+    @EnvironmentObject var profileManager: ProfileManager
     @Environment(\.theme) var theme
     // showingAddTask state is now handled by MainTabView
     @State private var taskToEdit: Task?
@@ -35,6 +36,9 @@ struct TodayView: View {
     
     // Spotlight navigation
     @Binding var selectedTaskId: UUID?
+    
+    // Add task state from MainTabView
+    @Binding var showingAddTask: Bool
     
     enum TaskFilter: CaseIterable {
         case all, pending, overdue
@@ -81,6 +85,9 @@ struct TodayView: View {
         let today = Date()
         
         let baseTasks = taskManager.tasks.filter { task in
+            // Filter by current profile
+            guard task.profileId == profileManager.currentProfile.rawValue else { return false }
+            
             // Exclude completed tasks from today view - they should only appear in completed section
             guard !task.isCompleted else { return false }
             
@@ -182,6 +189,9 @@ struct TodayView: View {
         let today = Date()
         
         return taskManager.tasks.filter { task in
+            // Filter by current profile
+            guard task.profileId == profileManager.currentProfile.rawValue else { return false }
+            
             // Exclude completed tasks
             guard !task.isCompleted else { return false }
             
@@ -316,7 +326,6 @@ struct TodayView: View {
         }
     }
     
-    @StateObject private var profileManager = ProfileManager.shared
     @State private var showingProfileSwitcher = false
     
     private var headerView: some View {
@@ -506,7 +515,9 @@ struct TodayView: View {
             
             // Add task button with ultra-smooth animation
             Button {
-                // Add task functionality is now handled by MainTabView
+                withAnimation(.smoothSpring) {
+                    showingAddTask = true
+                }
                 HapticManager.shared.buttonTap()
             } label: {
                 HStack(spacing: 12) {
@@ -515,7 +526,7 @@ struct TodayView: View {
                     Text("Add Your First Task")
                         .font(.system(size: 16, weight: .semibold, design: .rounded))
                 }
-                .foregroundColor(.white)
+                .foregroundColor(theme.background)
                 .padding(.horizontal, 24)
                 .padding(.vertical, 14)
                 .background(
@@ -605,7 +616,7 @@ struct TodayView: View {
             task: task,
             namespace: taskNamespace,
             onToggleCompletion: {
-                withAnimation(.interpolatingSpring(stiffness: 300, damping: 30)) {
+                withAnimation(UIOptimizer.ultraButteryTaskCompletionAnimation()) {
                     taskManager.toggleTaskCompletion(task)
                 }
             },
@@ -624,9 +635,8 @@ struct TodayView: View {
         )
         .environmentObject(taskManager)
         .padding(.horizontal, 20)
-        .transition(.opacity)
+        .transition(.ultraButteryTaskCompletionTransition)
         .matchedGeometryEffect(id: task.id, in: taskNamespace)
-
     }
     
     private var todayDateString: String {

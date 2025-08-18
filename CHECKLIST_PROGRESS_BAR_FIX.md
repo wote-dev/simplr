@@ -40,7 +40,7 @@ struct ChecklistProgressHeader: View {
         let data = progressData
         
         HStack(spacing: 8) {
-            Text("Checklist")
+            Text("checklist")
                 .font(.caption)
                 .fontWeight(.medium)
                 .foregroundColor(theme.textSecondary)

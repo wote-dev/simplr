@@ -11,6 +11,7 @@ struct UpcomingView: View {
     @EnvironmentObject var taskManager: TaskManager
     @EnvironmentObject var themeManager: ThemeManager
     @EnvironmentObject var categoryManager: CategoryManager
+    @EnvironmentObject var profileManager: ProfileManager
     @Environment(\.theme) var theme
     @State private var taskToEdit: Task?
     @State private var searchText = ""
@@ -54,6 +55,9 @@ struct UpcomingView: View {
         let today = Date()
         
         return taskManager.tasks.filter { task in
+            // Filter by current profile
+            guard task.profileId == profileManager.currentProfile.rawValue else { return false }
+            
             // Exclude completed tasks
             guard !task.isCompleted else { return false }
             
@@ -556,7 +560,7 @@ struct UpcomingView: View {
             task: task,
             namespace: taskNamespace,
             onToggleCompletion: {
-                withAnimation(.interpolatingSpring(stiffness: 300, damping: 30)) {
+                withAnimation(UIOptimizer.ultraButteryTaskCompletionAnimation()) {
                     taskManager.toggleTaskCompletion(task)
                 }
             },
@@ -575,10 +579,7 @@ struct UpcomingView: View {
         )
         .environmentObject(taskManager)
         .padding(.horizontal, 20)
-        .transition(.asymmetric(
-            insertion: .scale(scale: 0.8).combined(with: .opacity).combined(with: .offset(x: 50)),
-            removal: .scale(scale: 0.8).combined(with: .opacity).combined(with: .offset(x: -50))
-        ))
+        .transition(.ultraButteryTaskCompletionTransition)
         .matchedGeometryEffect(id: task.id, in: taskNamespace)
     }
 }

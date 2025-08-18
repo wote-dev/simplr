@@ -265,8 +265,7 @@ struct ThemeOnboardingCard: View {
             return "Easy on the eyes"
         case .darkBlue:
             return "Deep and sophisticated"
-        case .darkPurple:
-            return "Rich and mysterious"
+
         case .system:
             return "Follows your device"
         case .kawaii:

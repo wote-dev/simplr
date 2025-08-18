@@ -114,9 +114,10 @@ struct Task: Identifiable, Codable {
     var completedAt: Date?
     var categoryId: UUID?
     var checklist: [ChecklistItem]
+    var profileId: String? // Profile association for data isolation
 
     
-    init(title: String, description: String = "", dueDate: Date? = nil, hasReminder: Bool = false, reminderDate: Date? = nil, categoryId: UUID? = nil, checklist: [ChecklistItem] = []) {
+    init(title: String, description: String = "", dueDate: Date? = nil, hasReminder: Bool = false, reminderDate: Date? = nil, categoryId: UUID? = nil, checklist: [ChecklistItem] = [], profileId: String? = nil) {
         self.id = UUID()
         self.title = title
         self.description = description
@@ -128,6 +129,7 @@ struct Task: Identifiable, Codable {
         self.completedAt = nil
         self.categoryId = categoryId
         self.checklist = checklist
+        self.profileId = profileId
     }
     
     // MARK: - Task Status Computed Properties

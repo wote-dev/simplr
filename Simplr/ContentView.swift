@@ -23,8 +23,7 @@ extension Image {
             self.init("\(name)-dark")
         case .darkBlue:
             self.init("\(name)-dark") // Use dark icons for dark blue theme
-        case .darkPurple:
-            self.init("\(name)-dark") // Use dark icons for dark purple theme
+
         case .light:
             self.init("\(name)-light")
         case .lightBlue:
@@ -51,8 +50,7 @@ extension Image {
             self.init("bcs-dark")
         case .darkBlue:
             self.init("bcs-dark") // Use dark logo for dark blue theme
-        case .darkPurple:
-            self.init("bcs-dark") // Use dark logo for dark purple theme
+
         case .light:
             self.init("bcs-light")
         case .lightBlue:
@@ -77,7 +75,7 @@ struct ContentView: View {
     @EnvironmentObject var categoryManager: CategoryManager
     @EnvironmentObject var taskManager: TaskManager
     @EnvironmentObject var premiumManager: PremiumManager
-    @StateObject private var profileManager = ProfileManager.shared
+    @EnvironmentObject var profileManager: ProfileManager
     @Environment(\.theme) var theme
     @State private var showingAddTask = false
     @State private var taskToEdit: Task?
@@ -198,7 +196,7 @@ struct ContentView: View {
             task: task,
             namespace: taskNamespace,
             onToggleCompletion: {
-                withAnimation(.interpolatingSpring(stiffness: 300, damping: 30)) {
+                withAnimation(UIOptimizer.ultraButteryTaskCompletionAnimation()) {
                     taskManager.toggleTaskCompletion(task)
                 }
             },
@@ -217,12 +215,8 @@ struct ContentView: View {
         )
         .environmentObject(taskManager)
         .padding(.horizontal, 20)
-        .transition(.asymmetric(
-            insertion: .scale(scale: 0.8).combined(with: .opacity).combined(with: .offset(x: 50)),
-            removal: .scale(scale: 0.8).combined(with: .opacity).combined(with: .offset(x: -50))
-        ))
+        .transition(.ultraButteryTaskCompletionTransition)
         .matchedGeometryEffect(id: task.id, in: taskNamespace)
-
     }
     
 

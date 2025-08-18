@@ -12,35 +12,27 @@ import AudioToolbox
 extension Animation {
     // MARK: - Ultra-Performance Animations (120fps Optimized)
     
-    // iOS 17+ ultra-smooth animations with reduced CPU usage
-    @available(iOS 17.0, *)
-    static let smoothSpring = Animation.smooth(duration: 0.32, extraBounce: 0.08)
+    // Ultra-smooth animations with reduced CPU usage (iOS 16+ compatible)
+    static let smoothSpring = Animation.interpolatingSpring(stiffness: 420, damping: 32, initialVelocity: 0.8)
     
-    @available(iOS 17.0, *)
-    static let snappySpring = Animation.snappy(duration: 0.24)
+    static let snappySpring = Animation.interpolatingSpring(stiffness: 720, damping: 28, initialVelocity: 1.2)
     
-    @available(iOS 17.0, *)
-    static let bouncySpring = Animation.bouncy(duration: 0.42, extraBounce: 0.15)
+    static let bouncySpring = Animation.interpolatingSpring(stiffness: 480, damping: 25, initialVelocity: 1.1)
     
     // Enhanced elastic bounce optimized for 120fps
-    @available(iOS 17.0, *)
-    static let elasticBounce = Animation.spring(duration: 0.52, bounce: 0.32, blendDuration: 0.02)
+    static let elasticBounce = Animation.interpolatingSpring(stiffness: 380, damping: 18, initialVelocity: 1.4)
     
     // Hyper bounce with reduced duration for better responsiveness
-    @available(iOS 17.0, *)
-    static let hyperBounce = Animation.spring(duration: 0.58, bounce: 0.45, blendDuration: 0.01)
+    static let hyperBounce = Animation.interpolatingSpring(stiffness: 850, damping: 12, initialVelocity: 1.5)
     
     // Responsive spring with minimal CPU impact
-    @available(iOS 17.0, *)
-    static let responsiveSpring = Animation.snappy(duration: 0.18)
+    static let responsiveSpring = Animation.interpolatingSpring(stiffness: 720, damping: 28, initialVelocity: 1.2)
     
     // Gentle bounce optimized for battery life
-    @available(iOS 17.0, *)
-    static let gentleBounce = Animation.smooth(duration: 0.42, extraBounce: 0.05)
+    static let gentleBounce = Animation.interpolatingSpring(stiffness: 280, damping: 42, initialVelocity: 0.7)
     
     // Smooth tab transition with reduced motion blur
-    @available(iOS 17.0, *)
-    static let smoothTabTransition = Animation.smooth(duration: 0.28, extraBounce: 0.02)
+    static let smoothTabTransition = Animation.interpolatingSpring(stiffness: 420, damping: 35, initialVelocity: 0.9)
     
     // MARK: - Legacy Optimized Animations (iOS 16+)
     static let smoothSpringLegacy = Animation.interpolatingSpring(stiffness: 420, damping: 32, initialVelocity: 0.8)
@@ -76,38 +68,22 @@ extension Animation {
     
     /// Adaptive animation that automatically adjusts based on device capabilities
     static var adaptiveSmooth: Animation {
-        if #available(iOS 17.0, *) {
-            return .smooth(duration: 0.32, extraBounce: 0.08)
-        } else {
-            return smoothSpringLegacy
-        }
+        smoothSpringLegacy
     }
     
     /// Ultra-responsive animation for immediate feedback
     static var adaptiveSnappy: Animation {
-        if #available(iOS 17.0, *) {
-            return .snappy(duration: 0.18)
-        } else {
-            return Animation.interpolatingSpring(stiffness: 720, damping: 28, initialVelocity: 1.2)
-        }
+        Animation.interpolatingSpring(stiffness: 720, damping: 28, initialVelocity: 1.2)
     }
     
     /// Balanced bounce with performance optimization
     static var adaptiveBouncy: Animation {
-        if #available(iOS 17.0, *) {
-            return .bouncy(duration: 0.42, extraBounce: 0.15)
-        } else {
-            return elasticBounceLegacy
-        }
+        elasticBounceLegacy
     }
     
     /// Elastic animation with reduced CPU usage
     static var adaptiveElastic: Animation {
-        if #available(iOS 17.0, *) {
-            return .spring(duration: 0.52, bounce: 0.32, blendDuration: 0.02)
-        } else {
-            return elasticBounceLegacy
-        }
+        elasticBounceLegacy
     }
     
     // MARK: - Battery-Optimized Legacy Animations
@@ -164,54 +140,38 @@ extension Animation {
     
     /// Ultra-smooth animation for critical interactions
     static func ultraSmooth(duration: Double = 0.28) -> Animation {
-        if #available(iOS 17.0, *) {
-            return .smooth(duration: duration, extraBounce: 0.05)
-        } else {
-            return Animation.interpolatingSpring(
-                stiffness: 450,
-                damping: 32,
-                initialVelocity: 1.0
-            )
-        }
+        Animation.interpolatingSpring(
+            stiffness: 450,
+            damping: 32,
+            initialVelocity: 1.0
+        )
     }
     
     /// Ultra-smooth task card collapse/expand animation with staggered timing
     static func ultraSmoothTaskCard(duration: Double = 0.32) -> Animation {
-        if #available(iOS 17.0, *) {
-            return .smooth(duration: duration, extraBounce: 0.03)
-        } else {
-            return Animation.interpolatingSpring(
-                stiffness: 520,
-                damping: 38,
-                initialVelocity: 0.9
-            )
-        }
+        Animation.interpolatingSpring(
+            stiffness: 520,
+            damping: 38,
+            initialVelocity: 0.9
+        )
     }
     
     /// Ultra-smooth task card entry animation for staggered appearance
     static func ultraSmoothTaskCardEntry(duration: Double = 0.28) -> Animation {
-        if #available(iOS 17.0, *) {
-            return .smooth(duration: duration, extraBounce: 0.02)
-        } else {
-            return Animation.interpolatingSpring(
-                stiffness: 580,
-                damping: 42,
-                initialVelocity: 0.8
-            )
-        }
+        Animation.interpolatingSpring(
+            stiffness: 580,
+            damping: 42,
+            initialVelocity: 0.8
+        )
     }
     
     /// Ultra-smooth task card exit animation for staggered disappearance
     static func ultraSmoothTaskCardExit(duration: Double = 0.25) -> Animation {
-        if #available(iOS 17.0, *) {
-            return .smooth(duration: duration, extraBounce: 0.01)
-        } else {
-            return Animation.interpolatingSpring(
-                stiffness: 620,
-                damping: 45,
-                initialVelocity: 0.7
-            )
-        }
+        Animation.interpolatingSpring(
+            stiffness: 620,
+            damping: 45,
+            initialVelocity: 0.7
+        )
     }
     
     /// Instant response animation for gestures
@@ -220,6 +180,24 @@ extension Animation {
             stiffness: 800,
             damping: 25,
             initialVelocity: 1.3
+        )
+    }
+    
+    /// Ultra-buttery smooth task completion animation optimized for 120fps consistency
+    static func ultraButteryTaskCompletion(duration: Double = 0.32) -> Animation {
+        Animation.interpolatingSpring(
+            stiffness: 580,
+            damping: 48,
+            initialVelocity: 0.85
+        )
+    }
+    
+    /// Ultra-buttery smooth task removal animation for list disappearance
+    static func ultraButteryTaskRemoval(duration: Double = 0.28) -> Animation {
+        Animation.interpolatingSpring(
+            stiffness: 620,
+            damping: 52,
+            initialVelocity: 0.75
         )
     }
 }
@@ -251,16 +229,32 @@ extension AnyTransition {
                 .combined(with: .offset(y: -8))
         )
     }
+    
+    /// Ultra-buttery smooth task completion transition for consistent removal across all views
+    static let ultraButteryTaskCompletionTransition: AnyTransition = AnyTransition.asymmetric(
+        insertion: .identity,
+        removal: .opacity
+            .combined(with: .scale(scale: 0.92, anchor: .center))
+            .combined(with: .offset(y: -12))
+    )
+
+    /// Ultra-buttery smooth task removal with enhanced visual polish
+    static let ultraButteryTaskRemovalTransition: AnyTransition = AnyTransition.asymmetric(
+        insertion: .identity,
+        removal: .opacity
+            .combined(with: .scale(scale: 0.85, anchor: .topLeading))
+            .combined(with: .offset(x: -20, y: -8))
+    )
 }
 
 // MARK: - Ultra-Smooth Animation Extensions
 extension Animation {
     static func ultraSmoothTaskCardEntryAnimation(duration: Double) -> Animation {
-        Animation.smooth(duration: duration, extraBounce: 0.15)
+        Animation.spring(response: duration * 0.8, dampingFraction: 0.85, blendDuration: 0.02)
     }
     
     static func ultraSmoothTaskCardExitAnimation(duration: Double) -> Animation {
-        Animation.smooth(duration: duration, extraBounce: 0.05)
+        Animation.spring(response: duration * 0.7, dampingFraction: 0.9, blendDuration: 0.01)
     }
 }
 

@@ -10,6 +10,7 @@ import SwiftUI
 struct CompletedView: View {
     @EnvironmentObject var taskManager: TaskManager
     @EnvironmentObject var themeManager: ThemeManager
+    @EnvironmentObject var profileManager: ProfileManager
     @Environment(\.theme) var theme
     @State private var searchText = ""
     @State private var showingDeleteAlert = false
@@ -51,6 +52,9 @@ struct CompletedView: View {
     
     private var completedTasks: [Task] {
         taskManager.tasks.filter { task in
+            // Filter by current profile
+            guard task.profileId == profileManager.currentProfile.rawValue else { return false }
+            
             // Only show completed tasks
             guard task.isCompleted else { return false }
             
@@ -509,7 +513,7 @@ struct CompletedView: View {
                 
                 if willBeEmpty {
                     // Special handling when this will be the last task - smooth empty state transition
-                    withAnimation(UIOptimizer.optimizedStateTransitionAnimation()) {
+                    withAnimation(UIOptimizer.ultraButteryTaskCompletionAnimation()) {
                         taskManager.toggleTaskCompletion(task)
                     }
                     
@@ -521,7 +525,7 @@ struct CompletedView: View {
                     }
                 } else {
                     // Standard undo animation for multiple tasks
-                    withAnimation(UIOptimizer.optimizedUndoAnimation()) {
+                    withAnimation(UIOptimizer.ultraButteryTaskCompletionAnimation()) {
                         taskManager.toggleTaskCompletion(task)
                     }
                 }
@@ -542,7 +546,7 @@ struct CompletedView: View {
         .environmentObject(taskManager)
         .padding(.horizontal, 20)
         .opacity(0.8) // Slightly dimmed to show it's completed
-        .transition(optimizedTaskTransition())
+        .transition(.ultraButteryTaskCompletionTransition)
         .matchedGeometryEffect(id: task.id, in: taskNamespace)
     }
     
@@ -557,8 +561,8 @@ struct CompletedView: View {
     private func clearAllCompleted() {
         let completedTasksToDelete = completedTasks
         
-        // Use ultra-smooth animation for seamless transition to empty state
-        withAnimation(UIOptimizer.optimizedStateTransitionAnimation()) {
+        // Use ultra-buttery smooth animation for seamless transition to empty state
+        withAnimation(UIOptimizer.ultraButteryTaskRemovalAnimation()) {
             for task in completedTasksToDelete {
                 taskManager.deleteTask(task)
             }
@@ -567,7 +571,7 @@ struct CompletedView: View {
         // Provide premium haptic feedback for user confirmation
         HapticManager.shared.successFeedback()
         
-        // Ensure ultra-smooth empty state appearance
+        // Ensure ultra-buttery smooth empty state appearance
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) {
             triggerUltraSmoothEmptyStateAnimation()
         }

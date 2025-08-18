@@ -806,11 +806,12 @@ class TaskManager: ObservableObject {
             return cached
         }
         
+        let currentProfileId = profileManager.currentProfile.rawValue
         let filtered: [Task]
         if let categoryId = categoryId {
-            filtered = tasks.filter { $0.categoryId == categoryId }
+            filtered = tasks.filter { $0.categoryId == categoryId && $0.profileId == currentProfileId }
         } else {
-            filtered = tasks.filter { $0.categoryId == nil } // Uncategorized tasks
+            filtered = tasks.filter { $0.categoryId == nil && $0.profileId == currentProfileId } // Uncategorized tasks
         }
         
         // Sort with URGENT category priority
@@ -859,6 +860,10 @@ class TaskManager: ObservableObject {
             
             // Perform filtering
             var filtered = tasks
+            
+            // Profile filter - ensure only tasks for current profile are shown
+            let currentProfileId = profileManager.currentProfile.rawValue
+            filtered = filtered.filter { $0.profileId == currentProfileId }
         
         // Category filter - optimize by using pre-filtered arrays when possible
         if let categoryId = categoryId {

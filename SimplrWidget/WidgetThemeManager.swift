@@ -16,7 +16,7 @@ class WidgetThemeManager {
     
     private var cachedTheme: WidgetTheme?
     private var lastThemeCheck: Date = .distantPast
-    private let cacheTimeout: TimeInterval = 5.0 // 5 second cache to balance performance and responsiveness
+    private let cacheTimeout: TimeInterval = 2.0 // 2 second cache for system theme responsiveness while maintaining performance
     
     private init() {}
     
@@ -50,8 +50,6 @@ class WidgetThemeManager {
             theme = WidgetDarkTheme()
         case .darkBlue:
             theme = WidgetDarkBlueTheme()
-        case .darkPurple:
-            theme = WidgetDarkPurpleTheme()
         case .system:
             theme = isDarkMode ? WidgetDarkTheme() : WidgetLightTheme()
         case .kawaii:
@@ -87,7 +85,7 @@ enum WidgetThemeMode: String, CaseIterable {
     case minimal = "minimal"
     case dark = "dark"
     case darkBlue = "darkBlue"
-    case darkPurple = "darkPurple"
+
     case system = "system"
     case kawaii = "kawaii"
     case serene = "serene"
@@ -352,38 +350,7 @@ struct WidgetDarkBlueTheme: WidgetTheme {
     var shadowOpacity: Double { WidgetBaseTheme.shadowOpacity }
 }
 
-struct WidgetDarkPurpleTheme: WidgetTheme {
-    let backgroundColor = Color(red: 0.08, green: 0.05, blue: 0.15)
-    let surfaceColor = Color(red: 0.12, green: 0.08, blue: 0.2)
-    let primaryTextColor = Color(red: 0.95, green: 0.9, blue: 1.0)
-    let secondaryTextColor = Color(red: 0.8, green: 0.7, blue: 0.9)
-    let accentColor = Color(red: 0.6, green: 0.4, blue: 0.9)
-    let successColor = Color(red: 0.5, green: 0.8, blue: 0.3)
-    let warningColor = Color(red: 1.0, green: 0.7, blue: 0.3)
-    let errorColor = Color(red: 1.0, green: 0.4, blue: 0.4)
-    let borderColor = Color(red: 0.3, green: 0.2, blue: 0.4)
-    let shadowColor = Color.clear
-    
-    var backgroundGradient: LinearGradient {
-        LinearGradient(
-            colors: [backgroundColor, Color(red: 0.06, green: 0.03, blue: 0.12)],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-    }
-    
-    var surfaceGradient: LinearGradient {
-        LinearGradient(
-            colors: [surfaceColor, Color(red: 0.11, green: 0.07, blue: 0.18)],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-    }
-    
-    var cornerRadius: CGFloat { WidgetBaseTheme.cornerRadius }
-    var shadowRadius: CGFloat { WidgetBaseTheme.shadowRadius }
-    var shadowOpacity: Double { 0 }
-}
+
 
 struct WidgetSereneTheme: WidgetTheme {
     let backgroundColor = Color(red: 0.95, green: 0.96, blue: 0.98)

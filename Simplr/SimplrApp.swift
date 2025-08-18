@@ -10,6 +10,7 @@ import UserNotifications
 import CoreSpotlight
 import UIKit
 import RevenueCat
+import WidgetKit
 
 @main
 struct SimplrApp: App {
@@ -155,8 +156,6 @@ struct SimplrApp: App {
             return .dark
         case .darkBlue:
             return .dark // Dark Blue theme uses dark color scheme
-        case .darkPurple:
-            return .dark // Dark Purple theme uses dark color scheme
         case .system:
             return nil
         case .kawaii:
@@ -280,8 +279,12 @@ struct SystemAwareWrapper<Content: View>: View {
                 let newIsDarkMode = newColorScheme == .dark
                 if themeManager.isDarkMode != newIsDarkMode {
                     themeManager.isDarkMode = newIsDarkMode
+                    
                     if themeManager.themeMode == .system {
                         themeManager.updateTheme()
+                        themeManager.syncSystemDarkModeToWidget()
+                        // Force widget reload to pick up new theme
+                        WidgetCenter.shared.reloadAllTimelines()
                     }
                 }
             }
@@ -289,11 +292,15 @@ struct SystemAwareWrapper<Content: View>: View {
                 // Set initial system appearance
                 let newIsDarkMode = systemColorScheme == .dark
                 themeManager.isDarkMode = newIsDarkMode
+                
                 if themeManager.themeMode == .system {
                     themeManager.updateTheme()
+                    themeManager.syncSystemDarkModeToWidget()
                 }
             }
     }
+    
+
 }
 
 // MARK: - AppDelegate
