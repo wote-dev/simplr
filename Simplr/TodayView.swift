@@ -263,21 +263,7 @@ struct TodayView: View {
         } message: { task in
             Text("Are you sure you want to delete '\(task.title)'?")
         }
-        .confirmationDialog("Switch Profile", isPresented: $showingProfileSwitcher) {
-            ForEach(UserProfile.allCases, id: \.self) { profile in
-                Button(role: profile == profileManager.currentProfile ? .cancel : nil) {
-                    if profile != profileManager.currentProfile {
-                        withAnimation(.smoothSpring) {
-                            profileManager.switchToProfile(profile)
-                        }
-                    }
-                } label: {
-                    Label(profile.displayName, systemImage: profile.icon)
-                }
-            }
-        } message: {
-            Text("Switch between your Personal and Work profiles")
-        }
+
         .onChange(of: selectedTaskId) { _, newTaskId in
             handleSpotlightTaskSelection(newTaskId)
         }
@@ -300,6 +286,7 @@ struct TodayView: View {
         .onChange(of: selectedSortOption) { _, newValue in
             saveSortOption(newValue)
         }
+        .profileSwitcherOverlay(isPresented: $showingProfileOverlay)
     }
     
     // MARK: - Spotlight Navigation
@@ -327,6 +314,7 @@ struct TodayView: View {
     }
     
     @State private var showingProfileSwitcher = false
+    @State private var showingProfileOverlay = false
     
     private var headerView: some View {
         VStack(spacing: 0) {
@@ -355,7 +343,7 @@ struct TodayView: View {
                     // Profile selector (if available)
                     if profileManager.shouldShowProfileSwitcher() {
                         Button(action: {
-                            showingProfileSwitcher = true
+                            showingProfileOverlay = true
                             HapticManager.shared.selectionChange()
                         }) {
                             Image(systemName: profileManager.currentProfile.icon)

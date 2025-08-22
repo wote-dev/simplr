@@ -26,11 +26,63 @@ struct AddTaskView: View {
     @FocusState private var isTitleFocused: Bool
     @FocusState private var focusedChecklistIndex: Int?
     @State private var showingSuccess = false
+    @State private var selectedQuickPreset: QuickReminderPreset? = nil
     @State private var isTextFieldActive = false
     @State private var lastTapLocation: CGPoint = .zero
 
     
     let taskToEdit: Task?
+    
+    // Quick reminder presets for streamlined UX
+    private enum QuickReminderPreset: CaseIterable {
+        case in15Minutes
+        case in1Hour
+        case in3Hours
+        case tomorrowMorning
+        case tomorrowAfternoon
+        case custom
+        
+        var title: String {
+            switch self {
+            case .in15Minutes: return "15 min"
+            case .in1Hour: return "1 hour"
+            case .in3Hours: return "3 hours"
+            case .tomorrowMorning: return "Tomorrow AM"
+            case .tomorrowAfternoon: return "Tomorrow PM"
+            case .custom: return "Custom"
+            }
+        }
+        
+        var icon: String {
+            switch self {
+            case .in15Minutes: return "clock.badge.exclamationmark"
+            case .in1Hour: return "clock"
+            case .in3Hours: return "clock.arrow.2.circlepath"
+            case .tomorrowMorning: return "sunrise.fill"
+            case .tomorrowAfternoon: return "sun.max.fill"
+            case .custom: return "slider.horizontal.3"
+            }
+        }
+        
+        func calculateDate(from baseDate: Date = Date()) -> Date {
+            switch self {
+            case .in15Minutes:
+                return Calendar.current.date(byAdding: .minute, value: 15, to: baseDate) ?? baseDate
+            case .in1Hour:
+                return Calendar.current.date(byAdding: .hour, value: 1, to: baseDate) ?? baseDate
+            case .in3Hours:
+                return Calendar.current.date(byAdding: .hour, value: 3, to: baseDate) ?? baseDate
+            case .tomorrowMorning:
+                let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: baseDate) ?? baseDate
+                return Calendar.current.date(bySettingHour: 9, minute: 0, second: 0, of: tomorrow) ?? tomorrow
+            case .tomorrowAfternoon:
+                let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: baseDate) ?? baseDate
+                return Calendar.current.date(bySettingHour: 14, minute: 0, second: 0, of: tomorrow) ?? tomorrow
+            case .custom:
+                return baseDate
+            }
+        }
+    }
     
     init(taskManager: TaskManager, taskToEdit: Task? = nil) {
         self.taskManager = taskManager
@@ -541,8 +593,12 @@ struct AddTaskView: View {
                             .onChange(of: hasReminder) { oldValue, newValue in
                                 if newValue {
                                     HapticManager.shared.selectionChanged()
+                                    if !oldValue {
+                                        setSmartReminderDefault()
+                                    }
                                 } else {
                                     HapticManager.shared.buttonTap()
+                                    selectedQuickPreset = nil
                                 }
                             }
                     }
@@ -560,6 +616,10 @@ struct AddTaskView: View {
                 // Content
                 VStack(spacing: 16) {
                     if hasReminder {
+                        // Quick reminder presets
+                        quickReminderPresets
+                        
+                        // Custom reminder time
                         DatePicker("Reminder time", selection: $reminderDate, displayedComponents: [.date, .hourAndMinute])
                             .datePickerStyle(.compact)
                             .foregroundColor(theme.text)
@@ -592,6 +652,62 @@ struct AddTaskView: View {
             )
             
 
+        }
+    }
+    
+    private var quickReminderPresets: some View {
+        VStack(spacing: 12) {
+            HStack {
+                Image(systemName: "clock.badge.checkmark")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(theme.accent)
+                
+                Text("Quick Reminders")
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(theme.text)
+                
+                Spacer()
+            }
+            
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 10) {
+                    ForEach(QuickReminderPreset.allCases, id: \.self) { preset in
+                        Button(action: {
+                            setQuickReminder(preset)
+                            HapticManager.shared.selectionChanged()
+                            HapticManager.shared.buttonTap()
+                        }) {
+                            VStack(spacing: 4) {
+                                Image(systemName: preset.icon)
+                                    .font(.system(size: 14, weight: .medium))
+                                
+                                Text(preset.title)
+                                    .font(.system(size: 12, weight: .medium))
+                            }
+                            .foregroundColor(selectedQuickPreset == preset ? theme.accent : theme.text)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(selectedQuickPreset == preset ? 
+                                          theme.accent.opacity(0.15) : 
+                                          theme.surfaceSecondary)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .stroke(selectedQuickPreset == preset ? 
+                                                   theme.accent.opacity(0.6) : 
+                                                   theme.border.opacity(0.3), 
+                                                   lineWidth: selectedQuickPreset == preset ? 1.5 : 1)
+                                    )
+                            )
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 2)
+            }
         }
     }
     
@@ -680,7 +796,27 @@ struct AddTaskView: View {
         reminderDate = task.reminderDate ?? Date()
         selectedCategory = categoryManager.categories.first { $0.id == task.categoryId }
         checklistItems = task.checklist
-
+    }
+    
+    private func setSmartReminderDefault() {
+        // Smart default: set reminder for 1 hour from now if no due date,
+        // or 1 hour before due date if due date exists
+        if hasDueDate {
+            reminderDate = Calendar.current.date(byAdding: .hour, value: -1, to: dueDate) ?? Date()
+        } else {
+            reminderDate = Calendar.current.date(byAdding: .hour, value: 1, to: Date()) ?? Date()
+        }
+    }
+    
+    private func setQuickReminder(_ preset: QuickReminderPreset) {
+        selectedQuickPreset = preset
+        switch preset {
+        case .custom:
+            // Custom will use the current reminderDate, no change needed
+            break
+        default:
+            reminderDate = preset.calculateDate()
+        }
     }
     
     private func addChecklistItem() {
@@ -710,12 +846,15 @@ struct AddTaskView: View {
             return
         }
         
+        // Performance optimization: validate reminder before saving
+        let validatedReminderDate = hasReminder ? validateReminderDate(reminderDate) : nil
+        
         if var taskToUpdate = taskToEdit {
             taskToUpdate.title = trimmedTitle
             taskToUpdate.description = description
             taskToUpdate.dueDate = hasDueDate ? dueDate : nil
             taskToUpdate.hasReminder = hasReminder
-            taskToUpdate.reminderDate = hasReminder ? reminderDate : nil
+            taskToUpdate.reminderDate = validatedReminderDate
             taskToUpdate.categoryId = selectedCategory?.id
             taskToUpdate.checklist = checklistItems
 
@@ -726,7 +865,7 @@ struct AddTaskView: View {
                 description: description,
                 dueDate: hasDueDate ? dueDate : nil,
                 hasReminder: hasReminder,
-                reminderDate: hasReminder ? reminderDate : nil,
+                reminderDate: validatedReminderDate,
                 categoryId: selectedCategory?.id,
                 checklist: checklistItems,
                 profileId: ProfileManager.shared.currentProfile.rawValue
@@ -744,6 +883,12 @@ struct AddTaskView: View {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
             dismiss()
         }
+    }
+    
+    private func validateReminderDate(_ date: Date) -> Date {
+        // Ensure reminder is not in the past
+        let minimumDate = Date().addingTimeInterval(60) // At least 1 minute in future
+        return max(date, minimumDate)
     }
     
     private func hideKeyboardSmoothly() {
