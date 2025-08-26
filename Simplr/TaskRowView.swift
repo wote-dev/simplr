@@ -107,6 +107,11 @@ struct TaskRowView: View {
     @State private var urgentGlowIntensity: CGFloat = 0.0
     @State private var urgentTintOpacity: CGFloat = 0.0
     
+    // iPad-specific width adaptation caching
+    @State private var cachedTaskTitleWidth: CGFloat?
+    @State private var lastCalculatedTitle: String = ""
+    @State private var lastCalculatedTheme: String = ""
+    
     // Optimized constants for gesture thresholds
     private let actionThreshold: CGFloat = -110 // Reduced for easier activation
     private let maxDragDistance: CGFloat = 140 // Slightly reduced for smoother feel
@@ -125,6 +130,74 @@ struct TaskRowView: View {
     
     private var cachedEditIconColor: Color {
         getIconColor(for: isInCompletedView ? theme.warning : theme.primary)
+    }
+    
+    /// Optimized task title width for iPad content adaptation
+    private var optimizedTaskTitleWidth: CGFloat? {
+        // Use dynamic width based on title length for iPadOS, full width for iPhone
+        guard UIDevice.current.userInterfaceIdiom == .pad else {
+            return .infinity
+        }
+        
+        // Performance optimization: cache calculated width
+        let currentThemeId = getThemeId()
+        if cachedTaskTitleWidth != nil && 
+           lastCalculatedTitle == task.title && 
+           lastCalculatedTheme == currentThemeId {
+            return cachedTaskTitleWidth
+        }
+        
+        // Calculate and cache new width
+        let calculatedWidth = calculateTaskTitleWidth()
+        cachedTaskTitleWidth = calculatedWidth
+        lastCalculatedTitle = task.title
+        lastCalculatedTheme = currentThemeId
+        
+        return calculatedWidth
+    }
+    
+    /// Calculate optimal width for task title on iPad
+    private func calculateTaskTitleWidth() -> CGFloat {
+        let baseFont = UIFont.preferredFont(forTextStyle: .headline)
+        let fontWeight: UIFont.Weight = isUrgentTask && !task.isCompleted ? 
+            (theme.background == .black ? .bold : .medium) : .semibold
+        
+        let font = UIFont.systemFont(ofSize: baseFont.pointSize, weight: fontWeight)
+        
+        let attributes: [NSAttributedString.Key: Any] = [
+            .font: font
+        ]
+        
+        let textSize = (task.title as NSString).size(withAttributes: attributes)
+        
+        // Add padding for icons, spacing, and comfortable reading
+        let basePadding: CGFloat = 60 // For completion button and spacing
+        let urgentIconPadding: CGFloat = isUrgentTask && !task.isCompleted ? 24 : 0
+        let comfortablePadding: CGFloat = 40 // Extra space for better UX
+        
+        let calculatedWidth = textSize.width + basePadding + urgentIconPadding + comfortablePadding
+        
+        // Constrain to reasonable bounds for iPad
+        let minWidth: CGFloat = 300
+        let maxWidth: CGFloat = 600
+        
+        return max(minWidth, min(maxWidth, calculatedWidth))
+    }
+    
+    /// Get theme identifier for caching
+    private func getThemeId() -> String {
+        switch theme {
+        case is MinimalTheme: return "minimal"
+        case is PlainLightTheme: return "plainLight"
+        case is LightGreenTheme: return "lightGreen"
+        case is LightTheme: return "lightBlue"
+        case is DarkTheme: return "dark"
+        case is DarkBlueTheme: return "darkBlue"
+        case is KawaiiTheme: return "kawaii"
+        case is SereneTheme: return "serene"
+        case is CoffeeTheme: return "coffee"
+        default: return "unknown"
+        }
     }
     
     // Category-based glow effect properties removed
@@ -303,7 +376,7 @@ struct TaskRowView: View {
                                 )
                                 .animation(.none, value: task.isCompleted)  // Eliminates wobble
                                 .matchedGeometryEffect(id: "\(task.id)-title", in: namespace)
-                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .frame(maxWidth: optimizedTaskTitleWidth, alignment: .leading)
                         }
 
                         // Task description with fade animation
@@ -378,7 +451,8 @@ struct TaskRowView: View {
                 
                 // Action buttons removed - edit functionality moved to swipe gesture
             }
-            .padding(.horizontal, 16)
+            .padding(.leading, UIDevice.current.userInterfaceIdiom == .pad ? 8 : 16)
+            .padding(.trailing, UIDevice.current.userInterfaceIdiom == .pad ? 0 : 16)
             .padding(.vertical, 20)
             .background(
                 // Clean background without confining borders
@@ -503,22 +577,22 @@ struct TaskRowView: View {
                                         
                                         // Strict scroll gesture detection - only trigger for clear vertical movement
                                         let isStrictScrollGesture = (
-                                            // Angle-based detection: > 35 degrees from horizontal
-                                            angleInDegrees > 35 ||
-                                            // Distance-based: vertical movement significantly exceeds horizontal
-                                            (verticalDistance > 25 && verticalDistance > horizontalDistance * 1.8) ||
-                                            // Velocity-based: strong vertical velocity with minimal horizontal
-                                            (verticalVelocity > 800 && verticalVelocity > horizontalVelocity * 2.5)
+                                            // Angle-based detection: > 35 degrees from horizontal (45 on iPad for better touch tolerance)
+                                            angleInDegrees > (UIDevice.current.userInterfaceIdiom == .pad ? 45 : 35) ||
+                                            // Distance-based: vertical movement significantly exceeds horizontal (relaxed on iPad)
+                                            (verticalDistance > (UIDevice.current.userInterfaceIdiom == .pad ? 40 : 25) && verticalDistance > horizontalDistance * (UIDevice.current.userInterfaceIdiom == .pad ? 1.5 : 1.8)) ||
+                                            // Velocity-based: strong vertical velocity with minimal horizontal (relaxed on iPad)
+                                            (verticalVelocity > (UIDevice.current.userInterfaceIdiom == .pad ? 600 : 800) && verticalVelocity > horizontalVelocity * (UIDevice.current.userInterfaceIdiom == .pad ? 2.0 : 2.5))
                                         )
                                         
                                         // Enhanced horizontal swipe detection - allow moderate diagonal movement
                                         let isValidHorizontalSwipe = (
-                                            // Must have meaningful horizontal movement
-                                            horizontalDistance > 8 &&
-                                            // Angle must be within 30 degrees of horizontal
-                                            angleInDegrees <= 30 &&
-                                            // Horizontal movement should dominate
-                                            horizontalDistance > verticalDistance * 0.8 &&
+                                            // Must have meaningful horizontal movement (increased to 12 on iPad for larger touch areas)
+                                            horizontalDistance > (UIDevice.current.userInterfaceIdiom == .pad ? 12 : 8) &&
+                                            // Angle must be within 30 degrees of horizontal (40 on iPad for better diagonal tolerance)
+                                            angleInDegrees <= (UIDevice.current.userInterfaceIdiom == .pad ? 40 : 30) &&
+                                            // Horizontal movement should dominate (relaxed on iPad)
+                                            horizontalDistance > verticalDistance * (UIDevice.current.userInterfaceIdiom == .pad ? 0.6 : 0.8) &&
                                             // Not already marked as scroll gesture
                                             !gestureState.isScrollGesture
                                         )
@@ -545,14 +619,14 @@ struct TaskRowView: View {
                     
                     // Strict completion criteria - prevent diagonal swipe completion
                     let isValidSwipeCompletion = (
-                        // Must have sufficient horizontal movement
-                        horizontalDistance > 12 &&
-                        // Angle must be within 25 degrees of horizontal
-                        angleInDegrees <= 25 &&
-                        // Horizontal movement must clearly dominate
-                        horizontalDistance > verticalDistance * 1.2 &&
-                        // Either sufficient distance or velocity
-                        (horizontalDistance > 40 || horizontalVelocity > 600) &&
+                        // Must have sufficient horizontal movement (increased on iPad)
+                        horizontalDistance > (UIDevice.current.userInterfaceIdiom == .pad ? 16 : 12) &&
+                        // Angle must be within 25 degrees of horizontal (35 on iPad)
+                        angleInDegrees <= (UIDevice.current.userInterfaceIdiom == .pad ? 35 : 25) &&
+                        // Horizontal movement must clearly dominate (relaxed on iPad)
+                        horizontalDistance > verticalDistance * (UIDevice.current.userInterfaceIdiom == .pad ? 1.0 : 1.2) &&
+                        // Either sufficient distance or velocity (adjusted for iPad)
+                        (horizontalDistance > (UIDevice.current.userInterfaceIdiom == .pad ? 60 : 40) || horizontalVelocity > (UIDevice.current.userInterfaceIdiom == .pad ? 500 : 600)) &&
                         // Not marked as scroll gesture
                         !gestureState.isScrollGesture
                     )
@@ -624,6 +698,12 @@ struct TaskRowView: View {
                 stopUrgentPulsatingAnimation()
             }
         }
+        .onDisappear {
+            // Clean up cached values for memory optimization
+            cachedTaskTitleWidth = nil
+            lastCalculatedTitle = ""
+            lastCalculatedTheme = ""
+        }
     }
     
     // MARK: - Context Menu
@@ -678,6 +758,7 @@ struct TaskRowView: View {
             .environmentObject(categoryManager)
             .environmentObject(themeManager)
             .environmentObject(taskManager)
+            .environment(\.theme, themeManager.currentTheme)
             .onAppear {
                 HapticManager.shared.previewAppears()
             }

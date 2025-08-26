@@ -270,7 +270,8 @@ struct CategorySectionHeaderView: View {
             
             Spacer()
         }
-        .padding(.horizontal, 20)
+        .padding(.leading, UIDevice.current.userInterfaceIdiom == .pad ? 16 : 20)
+        .padding(.trailing, UIDevice.current.userInterfaceIdiom == .pad ? 0 : 20)
         .padding(.vertical, 12)
         .background(Color.clear)
         .animation(.adaptiveSnappy, value: isPressed)

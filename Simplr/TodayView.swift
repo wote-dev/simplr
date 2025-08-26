@@ -213,28 +213,25 @@ struct TodayView: View {
     }
     
     var body: some View {
-        NavigationView {
-            ZStack {
-                // Background
-                theme.backgroundGradient
-                    .ignoresSafeArea()
+        ZStack {
+            // Background
+            theme.backgroundGradient
+                .ignoresSafeArea()
+            
+            VStack(spacing: 0) {
+                headerView
                 
-                VStack(spacing: 0) {
-                    headerView
-                    
-                    if showEmptyState {
-                        emptyStateView
-                    } else {
-                        taskListView
-                    }
+                if showEmptyState {
+                    emptyStateView
+                } else {
+                    taskListView
                 }
-                .onChange(of: todayTasks.isEmpty) { _, isEmpty in
-                    handleEmptyStateTransition(isEmpty: isEmpty)
-                }
-                
-                // Floating action button now handled by MainTabView
             }
-            .navigationBarHidden(true)
+            .onChange(of: todayTasks.isEmpty) { _, isEmpty in
+                handleEmptyStateTransition(isEmpty: isEmpty)
+            }
+            
+            // Floating action button now handled by MainTabView
         }
         .searchable(text: $searchText, prompt: "Search today's tasks...")
         // Add task sheet is now handled by MainTabView
@@ -286,7 +283,7 @@ struct TodayView: View {
         .onChange(of: selectedSortOption) { _, newValue in
             saveSortOption(newValue)
         }
-        .profileSwitcherOverlay(isPresented: $showingProfileOverlay)
+        .adaptiveProfileSwitcherOverlay(isPresented: $showingProfileOverlay)
     }
     
     // MARK: - Spotlight Navigation
@@ -538,13 +535,13 @@ struct TodayView: View {
     
     private var taskListView: some View {
         ScrollView(.vertical, showsIndicators: false) {
-            LazyVStack(spacing: 16, pinnedViews: []) {
+            LazyVStack(alignment: UIDevice.current.userInterfaceIdiom == .pad ? .leading : .center, spacing: 16, pinnedViews: []) {
                 let groupedTasks = categoryManager.groupTasksByCategory(todayTasks)
                 
                 ForEach(Array(groupedTasks.indices), id: \.self) { index in
                     let categoryGroup = groupedTasks[index]
                     if !categoryGroup.tasks.isEmpty {
-                        VStack(spacing: 8) {
+                        VStack(alignment: UIDevice.current.userInterfaceIdiom == .pad ? .leading : .center, spacing: 8) {
                             // Category section header
                             CategorySectionHeaderView(
                                 category: categoryGroup.category,
@@ -555,7 +552,7 @@ struct TodayView: View {
                             let isCollapsed = categoryManager.isCategoryCollapsed(categoryGroup.category)
                             
                             if !isCollapsed {
-                                LazyVStack(spacing: 8) {
+                                LazyVStack(alignment: UIDevice.current.userInterfaceIdiom == .pad ? .leading : .center, spacing: 8) {
                                     ForEach(Array(categoryGroup.tasks.enumerated()), id: \.element.id) { index, task in
                                         taskRowWithEffects(task)
                                             .id("task-\(task.id.uuidString)")
@@ -571,7 +568,8 @@ struct TodayView: View {
                                 }
                                 .padding(.top, 4)
                                 .padding(.bottom, 8)
-                                .padding(.horizontal, 8)
+                                .padding(.leading, 8)
+                                .padding(.trailing, UIDevice.current.userInterfaceIdiom == .pad ? 0 : 8)
                                 .clipped() // Optimize rendering performance
                                 .animation(.ultraSmooth(duration: 0.35), value: isCollapsed)
                             } else {
@@ -588,6 +586,8 @@ struct TodayView: View {
             }
             .padding(.top, 8)
             .padding(.bottom, 100)
+            .padding(.leading, UIDevice.current.userInterfaceIdiom == .pad ? 8 : 0)
+            .padding(.trailing, UIDevice.current.userInterfaceIdiom == .pad ? 0 : 0)
         }
         .scrollContentBackground(.hidden)
         .scrollBounceBehavior(.automatic)

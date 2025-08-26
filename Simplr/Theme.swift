@@ -9,6 +9,7 @@ import SwiftUI
 
 // MARK: - Theme Protocol
 protocol Theme {
+    var id: String { get } // Unique identifier for theme caching and comparison
     var primary: Color { get }
     var secondary: Color { get }
     var accent: Color { get }
@@ -69,6 +70,7 @@ struct NeumorphicShadowStyle {
 
 // MARK: - Minimal Theme (Ultra-Clean White)
 struct MinimalTheme: Theme {
+    let id = "minimal"
     let primary = Color.black
     let secondary = Color.gray.opacity(0.6)
     let accent = Color.black
@@ -185,6 +187,7 @@ struct MinimalTheme: Theme {
 
 // MARK: - Plain Light Theme (Monochromatic)
 struct PlainLightTheme: Theme {
+    let id = "plainLight"
     let primary = Color.black
     let secondary = Color.gray
     let accent = Color.black
@@ -310,6 +313,7 @@ struct PlainLightTheme: Theme {
 
 // MARK: - Light Green Theme (Sophisticated Teal Green Accent)
 struct LightGreenTheme: Theme {
+    let id = "lightGreen"
     let primary = Color(red: 0.2, green: 0.7, blue: 0.6) // Sophisticated teal green primary
     let secondary = Color(red: 0.4, green: 0.8, blue: 0.7) // Lighter teal green secondary
     let accent = Color(red: 0.1, green: 0.6, blue: 0.5) // Deep teal green accent
@@ -435,6 +439,7 @@ struct LightGreenTheme: Theme {
 
 // MARK: - Light Blue Theme (Sophisticated Blue Accent)
 struct LightTheme: Theme {
+    let id = "lightBlue"
     let primary = Color(red: 0.2, green: 0.4, blue: 0.8) // Sophisticated blue primary
     let secondary = Color(red: 0.4, green: 0.6, blue: 0.9) // Lighter blue secondary
     let accent = Color(red: 0.1, green: 0.3, blue: 0.7) // Deep blue accent
@@ -560,6 +565,7 @@ struct LightTheme: Theme {
 
 // MARK: - Dark Theme (Monochromatic: Black with White accents)
 struct DarkTheme: Theme {
+    let id = "dark"
     let primary = Color.white
     let secondary = Color(red: 0.85, green: 0.85, blue: 0.85)
     let accent = Color.white
@@ -685,6 +691,7 @@ struct DarkTheme: Theme {
 
 // MARK: - Dark Blue Theme (Premium)
 struct DarkBlueTheme: Theme {
+    let id = "darkBlue"
     let primary = Color(red: 0.4, green: 0.6, blue: 0.9) // Bright blue primary for contrast
     let secondary = Color(red: 0.5, green: 0.7, blue: 0.95) // Lighter blue secondary
     let accent = Color(red: 0.3, green: 0.5, blue: 0.85) // Deep blue accent
@@ -810,6 +817,7 @@ struct DarkBlueTheme: Theme {
 
 // MARK: - Kawaii Theme (Premium)
 struct KawaiiTheme: Theme {
+    let id = "kawaii"
     let primary = Color(red: 0.98, green: 0.85, blue: 0.88) // Soft blush pink
     let secondary = Color(red: 0.7, green: 0.95, blue: 0.8) // Mint green
     let accent = Color(red: 0.85, green: 0.45, blue: 0.55) // Deeper Hello Kitty pink for better contrast
@@ -932,6 +940,7 @@ struct KawaiiTheme: Theme {
 
 // MARK: - Coffee Theme (Warm Sepia and Brown Tones)
 struct CoffeeTheme: Theme {
+    let id = "coffee"
     let primary = Color(red: 0.55, green: 0.42, blue: 0.32) // Rich coffee brown
     let secondary = Color(red: 0.72, green: 0.58, blue: 0.45) // Warm caramel
     let accent = Color(red: 0.45, green: 0.32, blue: 0.22) // Deep espresso brown for contrast
@@ -1057,6 +1066,7 @@ struct CoffeeTheme: Theme {
 
 // MARK: - Serene Theme (Soft Lavender and Dusty Rose)
 struct SereneTheme: Theme {
+    let id = "serene"
     let primary = Color(red: 0.75, green: 0.68, blue: 0.85) // Soft lavender primary
     let secondary = Color(red: 0.85, green: 0.72, blue: 0.78) // Dusty rose secondary
     let accent = Color(red: 0.68, green: 0.58, blue: 0.82) // Deeper lavender accent for better contrast

@@ -196,23 +196,20 @@ struct UpcomingView: View {
     }
     
     var body: some View {
-        NavigationView {
-            ZStack {
-                // Background
-                theme.backgroundGradient
-                    .ignoresSafeArea()
+        ZStack {
+            // Background
+            theme.backgroundGradient
+                .ignoresSafeArea()
+            
+            VStack(spacing: 0) {
+                headerView
                 
-                VStack(spacing: 0) {
-                    headerView
-                    
-                    if upcomingTasks.isEmpty {
-                        emptyStateView
-                    } else {
-                        taskListView
-                    }
+                if upcomingTasks.isEmpty {
+                    emptyStateView
+                } else {
+                    taskListView
                 }
             }
-            .navigationBarHidden(true)
         }
         .searchable(text: $searchText, prompt: "Search upcoming tasks...")
         .sheet(item: $taskToEdit) { task in

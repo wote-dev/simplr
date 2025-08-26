@@ -148,7 +148,7 @@ struct ReminderSchedulerView: View {
                              DatePicker(
                                  "Reminder \(pickerMode.title)",
                                  selection: $selectedDateTime,
-                                 in: Date()...,
+                                 in: Date().addingTimeInterval(60)...,
                                  displayedComponents: pickerMode.components
                              )
                              .datePickerStyle(.wheel)
@@ -156,14 +156,6 @@ struct ReminderSchedulerView: View {
                              .background(Color.clear)
                              .clipShape(RoundedRectangle(cornerRadius: 12))
                              .padding(.vertical, 16)
-                             .background(
-                                 RoundedRectangle(cornerRadius: 12)
-                                     .fill(theme.background)
-                                     .overlay(
-                                         RoundedRectangle(cornerRadius: 12)
-                                             .stroke(theme.surfaceSecondary, lineWidth: 1)
-                                     )
-                             )
                          }
                           .padding(.horizontal)
                           
@@ -371,7 +363,7 @@ struct ReminderSchedulerView: View {
      }
      
      private var isValidReminderTime: Bool {
-         selectedDateTime > Date()
+         selectedDateTime > Date().addingTimeInterval(60)
      }
      
      private var timeUntilReminder: String {

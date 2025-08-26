@@ -619,11 +619,84 @@ struct AddTaskView: View {
                         // Quick reminder presets
                         quickReminderPresets
                         
-                        // Custom reminder time
-                        DatePicker("Reminder time", selection: $reminderDate, displayedComponents: [.date, .hourAndMinute])
+                        // Custom reminder time with performance optimization
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Image(systemName: selectedQuickPreset == .custom ? "slider.horizontal.3" : "clock")
+                                    .font(.system(size: 14, weight: .medium))
+                                    .foregroundColor(selectedQuickPreset == .custom ? theme.accent : theme.textSecondary)
+                                    .animation(.easeInOut(duration: 0.2), value: selectedQuickPreset)
+                                
+                                Text(selectedQuickPreset == .custom ? "Custom Time" : "Reminder Time")
+                                    .font(.system(size: 15, weight: .semibold))
+                                    .foregroundColor(theme.text)
+                                    .animation(.easeInOut(duration: 0.2), value: selectedQuickPreset)
+                                
+                                Spacer()
+                                
+                                if selectedQuickPreset == .custom {
+                                    Text("Custom")
+                                        .font(.system(size: 12, weight: .medium))
+                                        .foregroundColor(theme.accent)
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 2)
+                                        .background(
+                                            Capsule()
+                                                .fill(theme.accent.opacity(0.15))
+                                        )
+                                        .transition(.scale.combined(with: .opacity))
+                                }
+                            }
+                            
+                            // Performance-optimized DatePicker with lazy state updates
+                            DatePicker(
+                                "Reminder time",
+                                selection: Binding(
+                                    get: { reminderDate },
+                                    set: { newValue in
+                                        // Debounced state update for better performance
+                                        let timeDifference = abs(newValue.timeIntervalSince(reminderDate))
+                                        
+                                        // Update immediately for user feedback
+                                        reminderDate = newValue
+                                        
+                                        // Only process preset matching for significant changes
+                                        if timeDifference > 30 {
+                                            // Optimized preset matching with early exit
+                                            let matchesPreset = QuickReminderPreset.allCases.lazy
+                                                .filter { $0 != .custom }
+                                                .contains { preset in
+                                                    let presetDate = preset.calculateDate(from: Date())
+                                                    return abs(newValue.timeIntervalSince(presetDate)) < 30
+                                                }
+                                            
+                                            if !matchesPreset && selectedQuickPreset != .custom {
+                                                withAnimation(.easeInOut(duration: 0.2)) {
+                                                    selectedQuickPreset = .custom
+                                                }
+                                                HapticManager.shared.selectionChanged()
+                                            } else if selectedQuickPreset == nil {
+                                                withAnimation(.easeInOut(duration: 0.2)) {
+                                                    selectedQuickPreset = .custom
+                                                }
+                                            }
+                                        }
+                                    }
+                                ),
+                                in: Date()...,
+                                displayedComponents: [.date, .hourAndMinute]
+                            )
                             .datePickerStyle(.compact)
                             .foregroundColor(theme.text)
-                            .transition(.opacity)
+                            .background(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(selectedQuickPreset == .custom ? 
+                                          theme.accent.opacity(0.05) : 
+                                          Color.clear)
+                                    .animation(.easeInOut(duration: 0.2), value: selectedQuickPreset)
+                            )
+                        }
+                         .transition(.opacity)
                     }
                 }
                 .padding(.horizontal, 20)
@@ -813,8 +886,14 @@ struct AddTaskView: View {
         switch preset {
         case .custom:
             // Custom will use the current reminderDate, no change needed
+            // Ensure the date is at least 1 minute in the future for better UX
+            let minimumDate = Date().addingTimeInterval(60)
+            if reminderDate < minimumDate {
+                reminderDate = minimumDate
+            }
             break
         default:
+            // Performance optimization: Calculate date once and reuse
             reminderDate = preset.calculateDate()
         }
     }

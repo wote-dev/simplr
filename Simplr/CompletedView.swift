@@ -160,27 +160,24 @@ struct CompletedView: View {
     }
     
     var body: some View {
-        NavigationView {
-            ZStack {
-                // Background
-                theme.backgroundGradient
-                    .ignoresSafeArea()
+        ZStack {
+            // Background
+            theme.backgroundGradient
+                .ignoresSafeArea()
+            
+            VStack(spacing: 0) {
+                headerView
                 
-                VStack(spacing: 0) {
-                    headerView
-                    
-                    // Optimized state transition with performance monitoring
-                    Group {
-                        if completedTasks.isEmpty {
-                            emptyStateView
-                        } else {
-                            taskListView
-                        }
+                // Optimized state transition with performance monitoring
+                Group {
+                    if completedTasks.isEmpty {
+                        emptyStateView
+                    } else {
+                        taskListView
                     }
-                    .animation(UIOptimizer.optimizedStateTransitionAnimation(), value: completedTasks.isEmpty)
                 }
+                .animation(UIOptimizer.optimizedStateTransitionAnimation(), value: completedTasks.isEmpty)
             }
-            .navigationBarHidden(true)
         }
         .searchable(text: $searchText, prompt: "Search completed tasks...")
         .sheet(item: $taskToEdit) { task in
