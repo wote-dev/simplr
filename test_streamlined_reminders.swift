@@ -178,6 +178,11 @@ class StreamlinedReminderTests: XCTestCase {
         let tomorrow = calendar.date(byAdding: .day, value: 1, to: now)
         let expectedTomorrowAM = calendar.date(bySettingHour: 9, minute: 0, second: 0, of: tomorrow!)
         XCTAssertEqual(tomorrowAM, expectedTomorrowAM)
+        
+        // Test tomorrow afternoon (6PM)
+        let tomorrowPM = QuickReminderPreset.tomorrowAfternoon.calculateDate(from: now)
+        let expectedTomorrowPM = calendar.date(bySettingHour: 18, minute: 0, second: 0, of: tomorrow!)
+        XCTAssertEqual(tomorrowPM, expectedTomorrowPM)
     }
     
     func testSmartReminderDefaults() {

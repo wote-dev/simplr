@@ -77,7 +77,7 @@ struct AddTaskView: View {
                 return Calendar.current.date(bySettingHour: 9, minute: 0, second: 0, of: tomorrow) ?? tomorrow
             case .tomorrowAfternoon:
                 let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: baseDate) ?? baseDate
-                return Calendar.current.date(bySettingHour: 14, minute: 0, second: 0, of: tomorrow) ?? tomorrow
+                return Calendar.current.date(bySettingHour: 18, minute: 0, second: 0, of: tomorrow) ?? tomorrow
             case .custom:
                 return baseDate
             }
